@@ -1,0 +1,24 @@
+package box.bookstorebe.common;
+
+public final class Const {
+    public static final String BASE_PACKAGE = "box.bookstorebe";
+
+    public enum EventType {
+        BOOK_CREATE
+    }
+
+    public static class DateTime {
+        public static final String TIME_ZONE = "Asia/Ho_Chi_Minh";
+        public static final String SECOND_PRECISION_FORMAT = "yyyy/MM/dd-HH:mm:ss";
+        public static final String DATETIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
+        public static final String DATE_FORMAT = "yyyy-MM-dd";
+        public static final String DATE_FORMAT_1 = "dd/MM/yyyy";
+        public static final String DATE_FORMAT_2 = "dd-MM-yyyy";
+    }
+
+    public static class ResultCode {
+        public static final boolean SUCCESS = true;
+        public static final boolean ERROR = false;
+    }
+
+}

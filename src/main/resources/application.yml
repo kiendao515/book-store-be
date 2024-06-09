@@ -1,0 +1,16 @@
+server:
+  port: ${PORT:8080}
+spring:
+  data:
+    mongodb:
+      uri: ${MONGO_URI:mongodb://localhost:27017}
+springdoc:
+  swagger-ui:
+    csrf:
+      enabled: true
+
+application:
+  security:
+    jwt:
+      secret-key: ${JWT_SECRET_KEY:secret_key}
+      expiration: ${JWT_EXPIRATION:86400000}
