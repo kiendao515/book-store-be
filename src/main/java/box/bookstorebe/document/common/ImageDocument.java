@@ -1,0 +1,28 @@
+package box.bookstorebe.document.common;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
+
+import java.time.ZonedDateTime;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Document("images")
+public class ImageDocument {
+    @Id
+    private String id;
+
+    @Field("link")
+    private String link;
+
+    @Field("created_at")
+    private ZonedDateTime createdAt;
+
+    @Field("updated_at")
+    private ZonedDateTime updatedAt;
+}
