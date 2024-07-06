@@ -17,7 +17,7 @@ import java.util.List;
 public class BookStoreDto {
     private String id;
     private String name;
-    private List<BookStoreDocument.Address> addresses;
+    private List<BookStoreDocument.Address> address;
     private List<BookStoreDocument.OtherInformation> otherInformation;
     private ZonedDateTime createdAt;
     private ZonedDateTime updatedAt;

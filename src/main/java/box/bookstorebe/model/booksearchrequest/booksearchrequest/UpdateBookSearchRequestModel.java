@@ -1,7 +1,6 @@
 package box.bookstorebe.model.booksearchrequest.booksearchrequest;
 
-import box.bookstorebe.document.book.BookDocument;
-import box.bookstorebe.document.booksearchrequest.BookSearchRequestDocument;
+import box.bookstorebe.common.Const;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.AllArgsConstructor;
@@ -19,5 +18,15 @@ public class UpdateBookSearchRequestModel {
     private String fullName;
     private String email;
     private String phoneNumber;
-    private List<BookSearchRequestDocument.BookRequest> bookRequests;
+    private List<BookRequest> bookRequests;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+    public static class BookRequest {
+        private String bookName;
+        private String authorName;
+        private Const.BookSearchRequestStatus status;
+    }
 }

@@ -1,19 +1,13 @@
 package box.bookstorebe.api.user;
 
 import box.bookstorebe.common.Const;
-import box.bookstorebe.dto.auth.AuthResponseDto;
 import box.bookstorebe.dto.common.BasePagingResponse;
 import box.bookstorebe.dto.common.BaseResponse;
 import box.bookstorebe.dto.user.UserDto;
 import box.bookstorebe.exception.BizException;
-import box.bookstorebe.model.auth.LoginRequestModel;
-import box.bookstorebe.model.auth.RegisterRequestModel;
 import box.bookstorebe.model.user.UserModel;
-import box.bookstorebe.service.auth.AuthService;
 import box.bookstorebe.service.user.UserService;
 import jakarta.validation.Valid;
-import jakarta.websocket.server.PathParam;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 

@@ -1,14 +1,9 @@
 package box.bookstorebe.service.book;
 
-import box.bookstorebe.document.book.BookRelatedPersonDocument;
 import box.bookstorebe.document.book.CategoryDocument;
-import box.bookstorebe.dto.book.BookRelatedPersonDto;
 import box.bookstorebe.dto.book.CategoryDto;
 import box.bookstorebe.exception.BizException;
-import box.bookstorebe.mapper.book.BookRelatedPersonMapper;
 import box.bookstorebe.mapper.book.CategoryMapper;
-import box.bookstorebe.model.book.bookrelatedperson.CreateBookRelatedPersonModel;
-import box.bookstorebe.model.book.bookrelatedperson.UpdateBookRelatedPersonModel;
 import box.bookstorebe.model.book.category.CreateCategoryModel;
 import box.bookstorebe.model.book.category.UpdateCategoryModel;
 import box.bookstorebe.repository.book.CategoryRepository;
@@ -39,7 +34,7 @@ public class CategoryService {
     }
 
     public CategoryDto findById(String id) throws BizException {
-        CategoryDocument categoryDocument = categoryRepository.findById(id).orElseThrow(() -> new BizException("Invalid book related person id"));
+        CategoryDocument categoryDocument = categoryRepository.findById(id).orElseThrow(() -> new BizException("Invalid category id"));
         return CategoryMapper.INSTANCE.entityToDto(categoryDocument);
     }
 

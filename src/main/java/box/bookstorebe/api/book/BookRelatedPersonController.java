@@ -1,23 +1,16 @@
 package box.bookstorebe.api.book;
 
 import box.bookstorebe.common.Const;
-import box.bookstorebe.dto.book.BookDto;
 import box.bookstorebe.dto.book.BookRelatedPersonDto;
 import box.bookstorebe.dto.common.BasePagingResponse;
 import box.bookstorebe.dto.common.BaseResponse;
 import box.bookstorebe.exception.BizException;
-import box.bookstorebe.model.book.book.CreateBookModel;
-import box.bookstorebe.model.book.book.UpdateBookModel;
 import box.bookstorebe.model.book.bookrelatedperson.CreateBookRelatedPersonModel;
 import box.bookstorebe.model.book.bookrelatedperson.UpdateBookRelatedPersonModel;
-import box.bookstorebe.service.book.BookRealityService;
 import box.bookstorebe.service.book.BookRelatedPersonService;
-import box.bookstorebe.service.book.BookService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/book-related-people")

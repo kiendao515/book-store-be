@@ -1,16 +1,12 @@
 package box.bookstorebe.api.book;
 
 import box.bookstorebe.common.Const;
-import box.bookstorebe.dto.book.CategoryDto;
 import box.bookstorebe.dto.book.CollectionDto;
 import box.bookstorebe.dto.common.BasePagingResponse;
 import box.bookstorebe.dto.common.BaseResponse;
 import box.bookstorebe.exception.BizException;
-import box.bookstorebe.model.book.category.CreateCategoryModel;
-import box.bookstorebe.model.book.category.UpdateCategoryModel;
 import box.bookstorebe.model.book.collection.CreateCollectionModel;
 import box.bookstorebe.model.book.collection.UpdateCollectionModel;
-import box.bookstorebe.service.book.CategoryService;
 import box.bookstorebe.service.book.CollectionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

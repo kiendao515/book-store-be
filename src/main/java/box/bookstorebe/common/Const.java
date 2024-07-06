@@ -21,4 +21,16 @@ public final class Const {
         public static final boolean ERROR = false;
     }
 
+    public enum BookSearchRequestStatus {
+        NEW,
+        IN_PROGRESS,
+        COMPLETED,
+        CANCELED
+    }
+
+    public enum BookRealityStatus {
+        AVAILABLE,
+        UNAVAILABLE
+    }
+
 }
