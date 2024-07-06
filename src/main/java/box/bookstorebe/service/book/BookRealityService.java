@@ -1,29 +1,20 @@
 package box.bookstorebe.service.book;
 
+import box.bookstorebe.common.Const;
 import box.bookstorebe.document.book.BookDocument;
 import box.bookstorebe.document.book.BookRealityDocument;
-import box.bookstorebe.document.book.CategoryDocument;
 import box.bookstorebe.dto.book.BookDto;
 import box.bookstorebe.dto.book.BookRealityDto;
-import box.bookstorebe.dto.book.CategoryDto;
 import box.bookstorebe.exception.BizException;
-import box.bookstorebe.mapper.book.CategoryMapper;
 import box.bookstorebe.model.book.bookreality.CreateBookRealityModel;
 import box.bookstorebe.model.book.bookreality.UpdateBookRealityModel;
-import box.bookstorebe.model.book.category.CreateCategoryModel;
-import box.bookstorebe.model.book.category.UpdateCategoryModel;
 import box.bookstorebe.repository.book.BookRealityRepository;
 import box.bookstorebe.repository.book.BookRepository;
-import box.bookstorebe.repository.book.CategoryRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Service;
 
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @AllArgsConstructor
 @Service
@@ -50,7 +41,7 @@ public class BookRealityService {
         BookRealityDocument bookRealityDocument = new BookRealityDocument();
         bookRealityDocument.setBookId(bookDocument.getId());
         bookRealityDocument.setType(bookRealityModel.getType());
-        bookRealityDocument.setStatus(bookRealityModel.getStatus());
+        bookRealityDocument.setStatus(Const.BookRealityStatus.AVAILABLE.name());
         bookRealityDocument.setPrice(bookRealityModel.getPrice());
         bookRealityDocument.setCreatedAt(ZonedDateTime.now());
         bookRealityDocument.setUpdatedAt(ZonedDateTime.now());
@@ -62,7 +53,7 @@ public class BookRealityService {
         BookDocument bookDocument = bookRepository.findById(bookRealityDocument.getBookId()).orElseThrow(() -> new BizException("Invalid book id"));
         bookRealityDocument.setType(bookRealityModel.getType());
         bookRealityDocument.setBookId(bookDocument.getId());
-        bookRealityDocument.setStatus(bookRealityModel.getStatus());
+        bookRealityDocument.setStatus(bookRealityModel.getStatus().name());
         bookRealityDocument.setPrice(bookRealityModel.getPrice());
         bookRealityDocument.setUpdatedAt(ZonedDateTime.now());
         bookRealityRepository.save(bookRealityDocument);

@@ -1,6 +1,5 @@
 package box.bookstorebe.service.auth;
 
-import box.bookstorebe.document.user.Role;
 import box.bookstorebe.document.user.UserDocument;
 import box.bookstorebe.dto.auth.AuthResponseDto;
 import box.bookstorebe.exception.BizException;

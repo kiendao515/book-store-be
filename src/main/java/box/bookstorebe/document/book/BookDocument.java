@@ -62,8 +62,8 @@ public class BookDocument {
     public static class Description {
         @Field("type")
         private String type;
-        @Field("content")
-        private String content;
+        @Field("value")
+        private String value;
     }
 
     @Data

@@ -23,13 +23,13 @@ public class BookController {
     @GetMapping()
     public BasePagingResponse<BookDto> getBooks(
             @RequestParam(name = "name", required = false) String name,
-            @RequestParam(name = "categoryIds", required = false) List<String> categoryIds,
-            @RequestParam(name = "collectionIds", required = false) List<String> collectionIds,
-            @RequestParam(name = "relatedPersonIds", required = false) List<String> relatedPersonIds,
-            @RequestParam(name = "storeId", required = false) String storeId,
+            @RequestParam(name = "category_ids", required = false) List<String> categoryIds,
+            @RequestParam(name = "collection_ids", required = false) List<String> collectionIds,
+            @RequestParam(name = "related_person_ids", required = false) List<String> relatedPersonIds,
+            @RequestParam(name = "store_id", required = false) String storeId,
             @RequestParam(name = "page", required = false) Integer page,
             @RequestParam(name = "size", required = false) Integer size
-    ) {
+    ) throws BizException {
         return new BasePagingResponse<>(bookService.getBooks(name, categoryIds, collectionIds, relatedPersonIds, storeId, page, size));
     }
 

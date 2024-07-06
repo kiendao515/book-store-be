@@ -1,6 +1,5 @@
 package box.bookstorebe.model.book.bookreality;
 
-import box.bookstorebe.document.book.BookDocument;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.AllArgsConstructor;
@@ -15,7 +14,6 @@ import java.util.List;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class CreateBookRealityModel {
     private Double price;
-    private String status;
     private String type;
     private List<String> imageIds;
     private String bookId;

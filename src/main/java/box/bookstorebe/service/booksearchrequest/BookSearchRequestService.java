@@ -1,18 +1,13 @@
 package box.bookstorebe.service.booksearchrequest;
 
+import box.bookstorebe.common.Const;
 import box.bookstorebe.document.booksearchrequest.BookSearchRequestDocument;
-import box.bookstorebe.document.bookstore.BookStoreDocument;
 import box.bookstorebe.dto.booksearchrequest.BookSearchRequestDto;
-import box.bookstorebe.dto.bookstore.BookStoreDto;
 import box.bookstorebe.exception.BizException;
 import box.bookstorebe.mapper.booksearchrequest.BookSearchRequestMapper;
-import box.bookstorebe.mapper.bookstore.BookStoreMapper;
 import box.bookstorebe.model.booksearchrequest.booksearchrequest.CreateBookSearchRequestModel;
 import box.bookstorebe.model.booksearchrequest.booksearchrequest.UpdateBookSearchRequestModel;
-import box.bookstorebe.model.bookstore.CreateBookStoreModel;
-import box.bookstorebe.model.bookstore.UpdateBookStoreModel;
 import box.bookstorebe.repository.booksearchrequest.BookSearchRequestRepository;
-import box.bookstorebe.repository.bookstore.BookStoreRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -49,7 +44,15 @@ public class BookSearchRequestService {
         bookSearchRequestDocument.setFullName(bookSearchRequestModel.getFullName());
         bookSearchRequestDocument.setEmail(bookSearchRequestModel.getEmail());
         bookSearchRequestDocument.setPhoneNumber(bookSearchRequestModel.getPhoneNumber());
-        bookSearchRequestDocument.setBookRequests(bookSearchRequestModel.getBookRequests());
+        List<BookSearchRequestDocument.BookRequest> bookRequests = new ArrayList<>();
+        for (CreateBookSearchRequestModel.BookRequest bookStoreDocument : bookSearchRequestModel.getBookRequests()) {
+            BookSearchRequestDocument.BookRequest bookRequest = new BookSearchRequestDocument.BookRequest();
+            bookRequest.setBookName(bookStoreDocument.getBookName());
+            bookRequest.setAuthorName(bookStoreDocument.getAuthorName());
+            bookRequest.setStatus(Const.BookSearchRequestStatus.NEW.name());
+            bookRequests.add(bookRequest);
+        }
+        bookSearchRequestDocument.setBookRequests(bookRequests);
         bookSearchRequestDocument.setCreatedAt(ZonedDateTime.now());
         bookSearchRequestDocument.setUpdatedAt(ZonedDateTime.now());
         bookSearchRequestRepository.save(bookSearchRequestDocument);
@@ -60,7 +63,15 @@ public class BookSearchRequestService {
         bookSearchRequestDocument.setFullName(bookSearchRequestModel.getFullName());
         bookSearchRequestDocument.setEmail(bookSearchRequestModel.getEmail());
         bookSearchRequestDocument.setPhoneNumber(bookSearchRequestModel.getPhoneNumber());
-        bookSearchRequestDocument.setBookRequests(bookSearchRequestModel.getBookRequests());
+        List<BookSearchRequestDocument.BookRequest> bookRequests = new ArrayList<>();
+        for (UpdateBookSearchRequestModel.BookRequest bookStoreDocument : bookSearchRequestModel.getBookRequests()) {
+            BookSearchRequestDocument.BookRequest bookRequest = new BookSearchRequestDocument.BookRequest();
+            bookRequest.setBookName(bookStoreDocument.getBookName());
+            bookRequest.setAuthorName(bookStoreDocument.getAuthorName());
+            bookRequest.setStatus(bookStoreDocument.getStatus().name());
+            bookRequests.add(bookRequest);
+        }
+        bookSearchRequestDocument.setBookRequests(bookRequests);
         bookSearchRequestDocument.setUpdatedAt(ZonedDateTime.now());
         bookSearchRequestRepository.save(bookSearchRequestDocument);
     }

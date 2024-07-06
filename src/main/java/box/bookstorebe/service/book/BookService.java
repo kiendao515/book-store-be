@@ -37,7 +37,7 @@ public class BookService {
     private final BookStoreRepository bookStoreRepository;
     private final BookRealityRepository bookRealityRepository;
 
-    public Page<BookDto> getBooks(String name, List<String> categoryIds, List<String> collectionIds, List<String> relatedPersonIds, String storeId, Integer page, Integer size) {
+    public Page<BookDto> getBooks(String name, List<String> categoryIds, List<String> collectionIds, List<String> relatedPersonIds, String storeId, Integer page, Integer size) throws BizException {
         Page<BookDocument> bookDocuments = bookRepository.getBooks(name, categoryIds, collectionIds, relatedPersonIds, storeId, page, size);
 
         List<String> resultCategoryIds = new ArrayList<>();
@@ -52,7 +52,6 @@ public class BookService {
             resultRelatedImageIds.addAll(bookDocument.getRelatedImages().stream().map(BookDocument.RelatedImage::getImageId).toList());
         }
 
-        BookStoreDocument bookStoreDocument = bookStoreRepository.findById(storeId).orElse(new BookStoreDocument());
         List<CategoryDocument> categoryDocuments = categoryRepository.findAllById(resultCategoryIds);
         Map<String, CategoryDocument> categoryMap = categoryDocuments.stream().collect(Collectors.toMap(CategoryDocument::getId, categoryDocument -> categoryDocument));
 
@@ -74,7 +73,7 @@ public class BookService {
             List<BookDto.Description> descriptions = new ArrayList<>();
             bookDocument.getDescriptions().forEach(description -> {
                 if (description.getType().equals("description")) {
-                    descriptions.add(new BookDto.Description(description.getType(), description.getContent()));
+                    descriptions.add(new BookDto.Description(description.getType(), description.getValue()));
                 }
             });
             bookDto.setDescriptions(descriptions);
@@ -114,6 +113,8 @@ public class BookService {
             });
             bookDto.setRelatedImages(relatedImages);
 
+            BookStoreDocument bookStoreDocument = bookStoreRepository.findById(bookDocument.getStoreId()).orElseThrow(() -> new BizException("Invalid store id"));
+
             BookDto.Store store = new BookDto.Store();
             store.setId(bookStoreDocument.getId());
             store.setName(bookStoreDocument.getName());
@@ -152,7 +153,7 @@ public class BookService {
         bookDto.setName(bookDocument.getName());
         List<BookDto.Description> descriptions = new ArrayList<>();
         bookDocument.getDescriptions().forEach(description -> {
-            descriptions.add(new BookDto.Description(description.getType(), description.getContent()));
+            descriptions.add(new BookDto.Description(description.getType(), description.getValue()));
         });
         bookDto.setDescriptions(descriptions);
 

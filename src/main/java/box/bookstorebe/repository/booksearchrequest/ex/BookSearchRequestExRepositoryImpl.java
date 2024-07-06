@@ -1,8 +1,6 @@
 package box.bookstorebe.repository.booksearchrequest.ex;
 
 import box.bookstorebe.document.booksearchrequest.BookSearchRequestDocument;
-import box.bookstorebe.document.bookstore.BookStoreDocument;
-import box.bookstorebe.repository.bookstore.ex.BookStoreExRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -19,7 +17,7 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.newA
 
 @Repository
 @AllArgsConstructor
-public class BoxSearchRequestExRepositoryImpl implements BookSearchRequestExRepository {
+public class BookSearchRequestExRepositoryImpl implements BookSearchRequestExRepository {
     private final MongoTemplate mongoTemplate;
 
     @Override

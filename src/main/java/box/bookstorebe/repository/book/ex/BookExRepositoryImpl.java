@@ -1,9 +1,6 @@
-package box.bookstorebe.repository.bookstore.ex;
+package box.bookstorebe.repository.book.ex;
 
 import box.bookstorebe.document.book.BookDocument;
-import box.bookstorebe.document.bookstore.BookStoreDocument;
-import box.bookstorebe.repository.book.ex.BookExRepository;
-import box.bookstorebe.repository.bookstore.BookStoreRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -22,11 +19,11 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.newA
 
 @Repository
 @AllArgsConstructor
-public class BoxStoreExRepositoryImpl implements BookStoreExRepository {
+public class BookExRepositoryImpl implements BookExRepository {
     private final MongoTemplate mongoTemplate;
 
     @Override
-    public Page<BookStoreDocument> getBookStores(String name, Integer page, Integer size) {
+    public Page<BookDocument> getBooks(String name, List<String> categoryIds, List<String> collectionIds, List<String> relatedPersonIds, String storeId, Integer page, Integer size) {
         PageRequest pageRequest;
 
         Criteria criteria = new Criteria();
@@ -34,13 +31,30 @@ public class BoxStoreExRepositoryImpl implements BookStoreExRepository {
             criteria = criteria.and("name").regex(".*" + name + ".*");
         }
 
+        if (categoryIds != null) {
+            criteria = criteria.and("category_id").in(categoryIds);
+        }
+
+        if (collectionIds != null) {
+            criteria = criteria.and("collection_id").in(collectionIds);
+        }
+
+        if (storeId != null) {
+            criteria = criteria.and("store_id").is(storeId);
+        }
+
+        if (relatedPersonIds != null) {
+            criteria = criteria.and("related_person.related_person_id").in(relatedPersonIds);
+        }
+
+
+        long totalElement = mongoTemplate.count(new Query().addCriteria(criteria), BookDocument.class);
+
         if (page == null || size == null) {
-            pageRequest = PageRequest.of(0, 10);
+            pageRequest = PageRequest.of(0, (int) totalElement);
         } else {
             pageRequest = PageRequest.of(page, size);
         }
-
-        long totalElement = mongoTemplate.count(new Query().addCriteria(criteria), BookStoreDocument.class);
 
         AggregationOperation matchOperations = match(criteria);
 
@@ -56,7 +70,7 @@ public class BoxStoreExRepositoryImpl implements BookStoreExRepository {
                 limitOperation
         );
 
-        AggregationResults<BookStoreDocument> result = mongoTemplate.aggregate(aggregation, "book_stores", BookStoreDocument.class);
+        AggregationResults<BookDocument> result = mongoTemplate.aggregate(aggregation, "books", BookDocument.class);
         return new PageImpl<>(result.getMappedResults(), pageRequest, totalElement);
     }
 }

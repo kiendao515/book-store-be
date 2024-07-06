@@ -1,17 +1,11 @@
 package box.bookstorebe.service.bookstore;
 
-import box.bookstorebe.document.book.CategoryDocument;
 import box.bookstorebe.document.bookstore.BookStoreDocument;
-import box.bookstorebe.dto.book.CategoryDto;
 import box.bookstorebe.dto.bookstore.BookStoreDto;
 import box.bookstorebe.exception.BizException;
-import box.bookstorebe.mapper.book.CategoryMapper;
 import box.bookstorebe.mapper.bookstore.BookStoreMapper;
-import box.bookstorebe.model.book.category.CreateCategoryModel;
-import box.bookstorebe.model.book.category.UpdateCategoryModel;
 import box.bookstorebe.model.bookstore.CreateBookStoreModel;
 import box.bookstorebe.model.bookstore.UpdateBookStoreModel;
-import box.bookstorebe.repository.book.CategoryRepository;
 import box.bookstorebe.repository.bookstore.BookStoreRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
