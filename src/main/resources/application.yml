@@ -3,7 +3,7 @@ server:
 spring:
   data:
     mongodb:
-      uri: ${MONGO_URI:mongodb://localhost:27017}
+      uri: ${MONGO_URI:mongodb+srv://hungtk281001:jFnQZbCKDabuYoAk@box-book-store.bxyk4be.mongodb.net/box-book-store}
 springdoc:
   swagger-ui:
     csrf:
@@ -12,5 +12,5 @@ springdoc:
 application:
   security:
     jwt:
-      secret-key: ${JWT_SECRET_KEY:secret_key}
+      secret-key: ${JWT_SECRET_KEY:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
       expiration: ${JWT_EXPIRATION:86400000}
