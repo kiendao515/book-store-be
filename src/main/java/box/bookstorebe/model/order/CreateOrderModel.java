@@ -19,5 +19,5 @@ public class CreateOrderModel {
     private String customerName;
     private String customerPhone;
     private String email;
-    private List<String> books;
+    private List<BookOrder> books;
 }
