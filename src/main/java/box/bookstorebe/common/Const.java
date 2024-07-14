@@ -33,4 +33,12 @@ public final class Const {
         UNAVAILABLE
     }
 
+    public static class OrderStatus {
+        public static final String CREATED =  "CREATED";
+        public static final String CANCEL =  "CANCEL";
+        public static final String CONFIRM =  "CONFIRM";
+        public static final String SHIPPING =  "SHIPPING";
+        public static final String DONE =  "DONE";
+    }
+
 }

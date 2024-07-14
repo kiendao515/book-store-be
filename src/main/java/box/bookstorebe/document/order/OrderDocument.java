@@ -40,7 +40,7 @@ public class OrderDocument {
     private ZonedDateTime updatedAt;
 
     @Field(name = "status")
-    private String status;
+    private String status;// created -> cancel -> confirm -> shipping -> done
 
     @Field(name = "items")
     private List<BookRealityDocument> items;
