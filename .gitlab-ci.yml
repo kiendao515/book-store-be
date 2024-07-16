@@ -1,43 +1,32 @@
+image: openjdk:11
+
 stages:
   - build
   - test
   - deploy
 
-# Cache Maven dependencies
-cache:
-  paths:
-    - .m2/repository
-
-# Build stage
 build:
   stage: build
   script:
-    - mvn clean package -DskipTests=true
+    - chmod +x ./mvnw
+    - ./mvnw package
   artifacts:
     paths:
-      - target/*.jar
+      - target/demo-0.0.1-SNAPSHOT.jar
 
-# Test stage
 test:
   stage: test
   script:
-    - mvn test
+    - chmod +x ./mvnw
+    - ./mvnw test
 
-# Deploy stage
 deploy:
   stage: deploy
+  image: ruby:latest
   script:
-    - echo "Starting deployment to Heroku..."
-    - curl https://cli-assets.heroku.com/install.sh | sh # Install Heroku CLI
-    - heroku auth:token
-    - echo $HEROKU_API_KEY | docker login --username=_ --password-stdin registry.heroku.com
-    - docker build -t registry.heroku.com/$HEROKU_APP_NAME/web .
-    - docker push registry.heroku.com/$HEROKU_APP_NAME/web
-    - heroku container:release web --app $HEROKU_APP_NAME
+    - apt-get update -qy
+    - apt-get install -y ruby-dev
+    - gem install dpl
+    - dpl --provider=heroku --app=$HEROKU_APP_NAME --api-key=$HEROKU_API_KEY
   only:
     - main
-
-# Define environment variables
-variables:
-  HEROKU_API_KEY: $HEROKU_API_KEY
-  HEROKU_APP_NAME: $HEROKU_APP_NAME
