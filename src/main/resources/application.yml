@@ -14,3 +14,10 @@ application:
     jwt:
       secret-key: ${JWT_SECRET_KEY:secret_key}
       expiration: ${JWT_EXPIRATION:86400000}
+
+aws:
+  endpointUrl: ${endpoint:https://video-storage-v1.s3.ap-south-1.amazonaws.com}
+  accessKey: ${ACCESS_KEY:AKIA4MTWGUI7UYFLIF5K}
+  secretKey: ${SECRET_KEY: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}
+  bucketName: ${BUCKET_NAME:video-storage-v1}
+  region: ${REGION:ap-south-1}
