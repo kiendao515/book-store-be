@@ -72,9 +72,7 @@ public class BookService {
             bookDto.setName(bookDocument.getName());
             List<BookDto.Description> descriptions = new ArrayList<>();
             bookDocument.getDescriptions().forEach(description -> {
-                if (description.getType().equals("description")) {
-                    descriptions.add(new BookDto.Description(description.getType(), description.getValue()));
-                }
+                descriptions.add(new BookDto.Description(description.getType(), description.getValue()));
             });
             bookDto.setDescriptions(descriptions);
             List<BookDto.Category> categories = new ArrayList<>();
@@ -212,12 +210,12 @@ public class BookService {
         List<ImageDocument> imageDocuments = imageRepository.findAllById(bookModel.getRelatedImages().stream().map(BookDocument.RelatedImage::getImageId).toList());
         List<BookDocument.RelatedPerson> relatedPeople = new ArrayList<>();
         bookRelatedPersonDocuments.forEach(relatedPerson -> {
-            relatedPeople.add(new BookDocument.RelatedPerson(relatedPerson.getId(), relatedPerson.getType()));
+            relatedPeople.add(new BookDocument.RelatedPerson(relatedPerson.getType(), relatedPerson.getId()));
         });
         List<BookDocument.RelatedImage> relatedImages = new ArrayList<>();
         bookModel.getRelatedImages().forEach(relatedImage -> {
             if (imageDocuments.stream().anyMatch(imageDocument -> imageDocument.getId().equals(relatedImage.getImageId()))) {
-                relatedImages.add(new BookDocument.RelatedImage(relatedImage.getImageId(), relatedImage.getType()));
+                relatedImages.add(new BookDocument.RelatedImage(relatedImage.getType(), relatedImage.getImageId()));
             }
         });
 

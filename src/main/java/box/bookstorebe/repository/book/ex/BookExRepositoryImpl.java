@@ -32,11 +32,11 @@ public class BookExRepositoryImpl implements BookExRepository {
         }
 
         if (categoryIds != null) {
-            criteria = criteria.and("category_id").in(categoryIds);
+            criteria = criteria.and("category_ids").in(categoryIds);
         }
 
         if (collectionIds != null) {
-            criteria = criteria.and("collection_id").in(collectionIds);
+            criteria = criteria.and("collection_ids").in(collectionIds);
         }
 
         if (storeId != null) {

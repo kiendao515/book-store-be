@@ -1,5 +1,7 @@
 package box.bookstorebe.document.book;
 
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -49,6 +51,7 @@ public class BookDocument {
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public static class RelatedPerson {
         @Field("type")
         private String type;
@@ -59,6 +62,7 @@ public class BookDocument {
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public static class Description {
         @Field("type")
         private String type;
@@ -69,6 +73,7 @@ public class BookDocument {
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
+    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public static class RelatedImage {
         @Field("type")
         private String type;

@@ -14,4 +14,5 @@ import lombok.NoArgsConstructor;
 public class APIResponse {
     private String message;
     private String url;
+    private String id;
 }

@@ -1,11 +1,20 @@
 package box.bookstorebe.common;
 
+import java.util.List;
+
 public final class Const {
     public static final String BASE_PACKAGE = "box.bookstorebe";
 
     public enum EventType {
         BOOK_CREATE
     }
+
+    public static final String[] AUTH_WHITELIST = {
+//            "/api/v1/auth/**",
+//            "/api/v1/collections/**",
+//            "/api/v1/orders/**"
+            "**"
+    };
 
     public static class DateTime {
         public static final String TIME_ZONE = "Asia/Ho_Chi_Minh";

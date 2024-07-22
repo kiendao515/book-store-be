@@ -1,9 +1,11 @@
 package box.bookstorebe.api.common;
 
 import box.bookstorebe.common.Const;
+import box.bookstorebe.document.common.ImageDocument;
 import box.bookstorebe.dto.common.BaseResponse;
 import box.bookstorebe.dto.file.APIResponse;
 import box.bookstorebe.exception.BizException;
+import box.bookstorebe.repository.common.image.ImageRepository;
 import box.bookstorebe.service.common.AmazonProperty;
 import box.bookstorebe.service.file.FileService;
 import com.amazonaws.AmazonServiceException;
@@ -28,6 +30,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -40,6 +43,7 @@ import java.util.Objects;
 @AllArgsConstructor
 public class FileUploadController {
     private final FileService fileService;
+    private final ImageRepository imageRepository;
     private AmazonProperty amazonProperty;
 
     @PostMapping("/upload")
@@ -52,9 +56,17 @@ public class FileUploadController {
 
         if (isValidFile && allowedFileExtensions.contains(FilenameUtils.getExtension(multipartFile.getOriginalFilename()))){
             String fileName = fileService.uploadFile(multipartFile);
+            String link = amazonProperty.getEndpointUrl()+"/"+fileName;
+            ImageDocument imageDocument = ImageDocument.builder()
+                    .link(amazonProperty.getEndpointUrl()+"/"+fileName)
+                    .createdAt(ZonedDateTime.now())
+                    .updatedAt(ZonedDateTime.now())
+                    .build();
+            ImageDocument image = imageRepository.save(imageDocument);
             APIResponse apiResponse = APIResponse.builder()
                     .message("file "+ fileName+ " uploaded successfully")
-                    .url(amazonProperty.getEndpointUrl()+"/"+fileName)
+                    .url(link)
+                    .id(image.getId())
                     .build();
             return new BaseResponse<>(Const.ResultCode.SUCCESS, apiResponse);
         } else throw new BizException("Invalid File. File extension or File name is not supported");
