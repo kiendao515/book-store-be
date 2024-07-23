@@ -7,7 +7,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 
 @Data
@@ -20,6 +19,9 @@ public class CollectionDocument {
 
     @Field(name = "name")
     private String name;
+
+    @Field(name = "image_id")
+    private String imageId;
 
     @Field(name = "description")
     private String description;

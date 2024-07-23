@@ -27,6 +27,9 @@ public class BookStoreDocument {
     @Field("other_information")
     private List<OtherInformation> otherInformation;
 
+    @Field("image_id")
+    private String imageId;
+
     @Field("created_at")
     private ZonedDateTime createdAt;
 

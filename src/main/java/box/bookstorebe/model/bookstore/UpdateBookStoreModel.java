@@ -15,6 +15,7 @@ import java.util.List;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class UpdateBookStoreModel {
     private String name;
+    private String imageId;
     private List<BookStoreDocument.Address> address;
     private List<BookStoreDocument.OtherInformation> otherInformation;
 }
