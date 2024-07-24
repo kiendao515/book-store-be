@@ -4,6 +4,15 @@ stages:
   - build
   - test
   - deploy
+variables:
+  MONGO_URI: mongodb+srv://hungtk281001:jFnQZbCKDabuYoAk@box-book-store.bxyk4be.mongodb.net/box-book-store
+  ACCESS_KEY: AKIA4MTWGUI7UYFLIF5K
+  BUCKET_NAME: video-storage-v1
+  JWT_SECRET_KEY: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+  REGION: ap-southeast-1
+  SECRET_KEY: g4Q1+hgRA04GazNqoOkN/TpOTFfX8zvu6jwl2m6U
+  endpoint: https://video-storage-v1.s3.ap-south-1.amazonaws.com
+
 
 build:
   stage: build
