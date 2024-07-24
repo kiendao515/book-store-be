@@ -1,5 +1,6 @@
 package box.bookstorebe.model.book.book;
 
+import box.bookstorebe.document.book.BookCommon;
 import box.bookstorebe.document.book.BookDocument;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
@@ -15,10 +16,10 @@ import java.util.List;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class CreateBookModel {
     private String name;
-    private List<BookDocument.Description> descriptions;
-    private List<BookDocument.RelatedPerson> relatedPeople;
+    private List<BookCommon.Description> descriptions;
+    private List<BookCommon.RelatedPerson> relatedPeople;
     private List<String> collectionIds;
     private List<String> categoryIds;
-    private List<BookDocument.RelatedImage> relatedImages;
+    private List<BookCommon.RelatedImage> relatedImages;
     private String storeId;
 }

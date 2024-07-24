@@ -1,6 +1,7 @@
 package box.bookstorebe.service.order;
 
 import box.bookstorebe.common.Const;
+import box.bookstorebe.document.book.BookCommon;
 import box.bookstorebe.document.book.BookDocument;
 import box.bookstorebe.document.book.BookRealityDocument;
 import box.bookstorebe.document.book.CategoryDocument;
@@ -87,13 +88,11 @@ public class OrderService {
             for(BookRealityDocument book: order.getItems()){
                 BookRealityDto bookDto = new BookRealityDto();
                 bookDto.setId(book.getId());
-                bookDto.setType(book.getType());
-                bookDto.setStatus(book.getStatus());
+//                bookDto.setType(book.getType());
+//                bookDto.setStatus(book.getStatus());
                 bookDto.setPrice(book.getPrice());
-                bookDto.setImageLinks(book.getImageIds());
+                List<String> bookImageIds = book.getRelatedImages().stream().map(BookCommon.RelatedImage::getImageId).toList();
                 bookDto.setCreatedAt(book.getCreatedAt());
-                BookDto b = bookService.findById(book.getBookId());
-                bookDto.setBookDetail(b);
                 bookDtos.add(bookDto);
             }
             orderDto.setBooks(bookDtos);

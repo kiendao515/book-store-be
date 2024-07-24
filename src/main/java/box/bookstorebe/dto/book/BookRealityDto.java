@@ -1,25 +1,21 @@
 package box.bookstorebe.dto.book;
 
+import box.bookstorebe.common.Const;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.ZonedDateTime;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class BookRealityDto {
-    private String id;
+public class BookRealityDto extends BookCommonDto {
     private Double price;
-    private String status;
-    private String type;
-    private List<String> imageLinks;
-    private BookDto bookDetail;
-    private ZonedDateTime createdAt;
-    private ZonedDateTime updatedAt;
+    private Const.BookRealityStatus status;
+    private Const.BookRealityType type;
 }

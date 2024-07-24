@@ -1,13 +1,14 @@
 package box.bookstorebe.service.book;
 
-import box.bookstorebe.document.book.BookDocument;
-import box.bookstorebe.document.book.BookRelatedPersonDocument;
-import box.bookstorebe.document.book.CategoryDocument;
-import box.bookstorebe.document.book.CollectionDocument;
+import box.bookstorebe.common.Const;
+import box.bookstorebe.document.book.*;
 import box.bookstorebe.document.bookstore.BookStoreDocument;
 import box.bookstorebe.document.common.ImageDocument;
+import box.bookstorebe.dto.book.BookCommonDto;
 import box.bookstorebe.dto.book.BookDto;
+import box.bookstorebe.dto.book.BookRealityDto;
 import box.bookstorebe.exception.BizException;
+import box.bookstorebe.mapper.book.BookRealityMapper;
 import box.bookstorebe.model.book.book.CreateBookModel;
 import box.bookstorebe.model.book.book.UpdateBookModel;
 import box.bookstorebe.repository.book.*;
@@ -72,7 +73,7 @@ public class BookService {
             bookDto.setName(bookDocument.getName());
             List<BookDto.Description> descriptions = new ArrayList<>();
             bookDocument.getDescriptions().forEach(description -> {
-                descriptions.add(new BookDto.Description(description.getType(), description.getValue()));
+                descriptions.add(new BookDto.Description(Const.BookDescriptionType.valueOf(description.getType()), description.getValue()));
             });
             bookDto.setDescriptions(descriptions);
             List<BookDto.Category> categories = new ArrayList<>();
@@ -95,7 +96,7 @@ public class BookService {
                 BookRelatedPersonDocument bookRelatedPersonDocument = relatedPersonMap.getOrDefault(relatedPerson.getRelatedPersonId(), new BookRelatedPersonDocument());
                 relatedPersonDto.setId(bookRelatedPersonDocument.getId());
                 relatedPersonDto.setName(bookRelatedPersonDocument.getName());
-                relatedPersonDto.setType(relatedPerson.getType());
+                relatedPersonDto.setType(Const.BookRelatedPersonType.valueOf(relatedPerson.getType()));
                 relatedPeople.add(relatedPersonDto);
             });
             bookDto.setRelatedPeople(relatedPeople);
@@ -105,11 +106,51 @@ public class BookService {
                 BookDto.RelatedImage relatedImageDto = new BookDto.RelatedImage();
                 ImageDocument imageDocument = relatedImageMap.getOrDefault(relatedImage.getImageId(), new ImageDocument());
                 relatedImageDto.setId(imageDocument.getId());
-                relatedImageDto.setType(relatedImage.getType());
+                relatedImageDto.setType(Const.BookImageType.valueOf(relatedImage.getType()));
                 relatedImageDto.setLink(imageDocument.getLink());
                 relatedImages.add(relatedImageDto);
             });
             bookDto.setRelatedImages(relatedImages);
+
+            List<BookRealityDocument> bookRealityDocuments = bookRealityRepository.findAllByBookId(bookDocument.getId());
+            List<BookRealityDto> bookRealities = new ArrayList<>();
+            bookRealityDocuments.forEach(bookRealityDocument -> {
+                BookRealityDto bookRealityDto = new BookRealityDto();
+                bookRealityDto.setId(bookRealityDocument.getId());
+                bookRealityDto.setType(Const.BookRealityType.valueOf(bookRealityDocument.getType()));
+                bookRealityDto.setStatus(Const.BookRealityStatus.valueOf(bookRealityDocument.getStatus()));
+                bookRealityDto.setPrice(bookRealityDocument.getPrice());
+                List<BookCommonDto.Description> bookDescriptions = new ArrayList<>();
+                bookRealityDocument.getDescriptions().forEach(description -> {
+                    bookDescriptions.add(new BookCommonDto.Description(Const.BookDescriptionType.valueOf(description.getType()), description.getValue()));
+                });
+                bookRealityDto.setDescriptions(bookDescriptions);
+
+                List<BookCommonDto.RelatedImage> bookRelatedImages = new ArrayList<>();
+                bookRealityDocument.getRelatedImages().forEach(relatedImage -> {
+                    BookCommonDto.RelatedImage relatedImageDto = new BookCommonDto.RelatedImage();
+                    ImageDocument imageDocument = relatedImageMap.getOrDefault(relatedImage.getImageId(), new ImageDocument());
+                    relatedImageDto.setId(imageDocument.getId());
+                    relatedImageDto.setType(Const.BookImageType.valueOf(relatedImage.getType()));
+                    relatedImageDto.setLink(imageDocument.getLink());
+                    bookRelatedImages.add(relatedImageDto);
+                });
+                bookRealityDto.setRelatedImages(bookRelatedImages);
+
+                List<BookCommonDto.RelatedPerson> bookRelatedPeople = new ArrayList<>();
+                bookRealityDocument.getRelatedPeople().forEach(relatedPerson -> {
+                    BookCommonDto.RelatedPerson relatedPersonDto = new BookCommonDto.RelatedPerson();
+                    BookRelatedPersonDocument bookRelatedPersonDocument = relatedPersonMap.getOrDefault(relatedPerson.getRelatedPersonId(), new BookRelatedPersonDocument());
+                    relatedPersonDto.setId(bookRelatedPersonDocument.getId());
+                    relatedPersonDto.setName(bookRelatedPersonDocument.getName());
+                    relatedPersonDto.setType(Const.BookRelatedPersonType.valueOf(relatedPerson.getType()));
+                    bookRelatedPeople.add(relatedPersonDto);
+                });
+                bookRealityDto.setRelatedPeople(bookRelatedPeople);
+
+                bookRealities.add(bookRealityDto);
+            });
+            bookDto.setBookRealities(bookRealities);
 
             BookStoreDocument bookStoreDocument = bookStoreRepository.findById(bookDocument.getStoreId()).orElseThrow(() -> new BizException("Invalid store id"));
 
@@ -151,7 +192,7 @@ public class BookService {
         bookDto.setName(bookDocument.getName());
         List<BookDto.Description> descriptions = new ArrayList<>();
         bookDocument.getDescriptions().forEach(description -> {
-            descriptions.add(new BookDto.Description(description.getType(), description.getValue()));
+            descriptions.add(new BookDto.Description(Const.BookDescriptionType.valueOf(description.getType()), description.getValue()));
         });
         bookDto.setDescriptions(descriptions);
 
@@ -175,7 +216,7 @@ public class BookService {
             BookRelatedPersonDocument bookRelatedPersonDocument = relatedPersonMap.getOrDefault(relatedPerson.getRelatedPersonId(), new BookRelatedPersonDocument());
             relatedPersonDto.setId(bookRelatedPersonDocument.getId());
             relatedPersonDto.setName(bookRelatedPersonDocument.getName());
-            relatedPersonDto.setType(relatedPerson.getType());
+            relatedPersonDto.setType(Const.BookRelatedPersonType.valueOf(relatedPerson.getType()));
             relatedPeople.add(relatedPersonDto);
         });
         bookDto.setRelatedPeople(relatedPeople);
@@ -185,11 +226,51 @@ public class BookService {
             BookDto.RelatedImage relatedImageDto = new BookDto.RelatedImage();
             ImageDocument imageDocument = relatedImageMap.getOrDefault(relatedImage.getImageId(), new ImageDocument());
             relatedImageDto.setId(imageDocument.getId());
-            relatedImageDto.setType(relatedImage.getType());
+            relatedImageDto.setType(Const.BookImageType.valueOf(relatedImage.getType()));
             relatedImageDto.setLink(imageDocument.getLink());
             relatedImages.add(relatedImageDto);
         });
         bookDto.setRelatedImages(relatedImages);
+
+        List<BookRealityDocument> bookRealityDocuments = bookRealityRepository.findAllByBookId(bookDocument.getId());
+        List<BookRealityDto> bookRealities = new ArrayList<>();
+        bookRealityDocuments.forEach(bookRealityDocument -> {
+            BookRealityDto bookRealityDto = new BookRealityDto();
+            bookRealityDto.setId(bookRealityDocument.getId());
+            bookRealityDto.setType(Const.BookRealityType.valueOf(bookRealityDocument.getType()));
+            bookRealityDto.setStatus(Const.BookRealityStatus.valueOf(bookRealityDocument.getStatus()));
+            bookRealityDto.setPrice(bookRealityDocument.getPrice());
+            List<BookCommonDto.Description> bookDescriptions = new ArrayList<>();
+            bookRealityDocument.getDescriptions().forEach(description -> {
+                bookDescriptions.add(new BookCommonDto.Description(Const.BookDescriptionType.valueOf(description.getType()), description.getValue()));
+            });
+            bookRealityDto.setDescriptions(bookDescriptions);
+
+            List<BookCommonDto.RelatedImage> bookRelatedImages = new ArrayList<>();
+            bookRealityDocument.getRelatedImages().forEach(relatedImage -> {
+                BookCommonDto.RelatedImage relatedImageDto = new BookCommonDto.RelatedImage();
+                ImageDocument imageDocument = relatedImageMap.getOrDefault(relatedImage.getImageId(), new ImageDocument());
+                relatedImageDto.setId(imageDocument.getId());
+                relatedImageDto.setType(Const.BookImageType.valueOf(relatedImage.getType()));
+                relatedImageDto.setLink(imageDocument.getLink());
+                bookRelatedImages.add(relatedImageDto);
+            });
+            bookRealityDto.setRelatedImages(bookRelatedImages);
+
+            List<BookCommonDto.RelatedPerson> bookRelatedPeople = new ArrayList<>();
+            bookRealityDocument.getRelatedPeople().forEach(relatedPerson -> {
+                BookCommonDto.RelatedPerson relatedPersonDto = new BookCommonDto.RelatedPerson();
+                BookRelatedPersonDocument bookRelatedPersonDocument = relatedPersonMap.getOrDefault(relatedPerson.getRelatedPersonId(), new BookRelatedPersonDocument());
+                relatedPersonDto.setId(bookRelatedPersonDocument.getId());
+                relatedPersonDto.setName(bookRelatedPersonDocument.getName());
+                relatedPersonDto.setType(Const.BookRelatedPersonType.valueOf(relatedPerson.getType()));
+                bookRelatedPeople.add(relatedPersonDto);
+            });
+            bookRealityDto.setRelatedPeople(bookRelatedPeople);
+
+            bookRealities.add(bookRealityDto);
+        });
+        bookDto.setBookRealities(bookRealities);
 
         BookDto.Store store = new BookDto.Store();
         store.setId(bookStoreDocument.getId());
@@ -209,8 +290,10 @@ public class BookService {
         List<BookRelatedPersonDocument> bookRelatedPersonDocuments = bookRelatedPersonDocumentRepository.findAllById(bookModel.getRelatedPeople().stream().map(BookDocument.RelatedPerson::getRelatedPersonId).toList());
         List<ImageDocument> imageDocuments = imageRepository.findAllById(bookModel.getRelatedImages().stream().map(BookDocument.RelatedImage::getImageId).toList());
         List<BookDocument.RelatedPerson> relatedPeople = new ArrayList<>();
-        bookRelatedPersonDocuments.forEach(relatedPerson -> {
-            relatedPeople.add(new BookDocument.RelatedPerson(relatedPerson.getType(), relatedPerson.getId()));
+        bookModel.getRelatedPeople().forEach(relatedPerson -> {
+            if (bookRelatedPersonDocuments.stream().anyMatch(bookRelatedPersonDocument -> bookRelatedPersonDocument.getId().equals(relatedPerson.getRelatedPersonId()))) {
+                relatedPeople.add(new BookDocument.RelatedPerson(relatedPerson.getType(), relatedPerson.getRelatedPersonId()));
+            }
         });
         List<BookDocument.RelatedImage> relatedImages = new ArrayList<>();
         bookModel.getRelatedImages().forEach(relatedImage -> {

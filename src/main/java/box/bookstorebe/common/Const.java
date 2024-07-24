@@ -42,6 +42,32 @@ public final class Const {
         UNAVAILABLE
     }
 
+    public enum BookRealityType {
+        OLD,
+        MEDIUM,
+        NEW
+    }
+
+    public enum BookDescriptionType {
+        PUBLICATION_YEAR,
+        SUMMARY,
+        NUMBER_OF_PAGE,
+        PUBLISHING_COMPANY
+    }
+
+    public enum BookRelatedPersonType {
+        AUTHOR,
+        EDITOR,
+        TRANSLATOR,
+        COVER_DRAWER
+    }
+
+    public enum BookImageType {
+        COVER,
+        DETAIL,
+        DEMO
+    }
+
     public static class OrderStatus {
         public static final String CREATED =  "CREATED";
         public static final String CANCEL =  "CANCEL";
