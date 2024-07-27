@@ -41,6 +41,8 @@ public class OrderDocument {
 
     @Field(name = "status")
     private String status;// created -> cancel -> confirm -> shipping -> done
+    @Field(name = "payment_type")
+    private boolean paymentType; // 0 for cod, 1 for pay by wallet
 
     @Field(name = "items")
     private List<BookRealityDocument> items;

@@ -76,4 +76,10 @@ public final class Const {
         public static final String DONE =  "DONE";
     }
 
+    public static class BookStatus{
+        public static final String NEW = "tốt";
+        public static final String NORMAL = "tạm";
+        public static final String TB = "trung bình";
+    }
+
 }

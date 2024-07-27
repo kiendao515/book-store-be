@@ -29,7 +29,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.awt.print.Book;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @AllArgsConstructor
@@ -38,36 +40,55 @@ import java.util.stream.Collectors;
 public class OrderService {
     private final OrderRepository orderRepository;
     private final BookRealityRepository bookRealityRepository;
+    private final BookRepository bookRepository;
     private final BookService bookService;
     private final BookRealityService bookRealityService;
+    private final PaymentService paymentService;
     @Transactional
     public void createOrder(CreateOrderModel order) throws BizException {
         OrderDocument orderDocument = new OrderDocument();
         List<String> bookIds = order.getBooks().stream()
-                .map(BookOrder::getBookId)
+                .map(BookOrder::getId)
                 .collect(Collectors.toList());
 
-        List<BookRealityDocument> listBook = bookRealityRepository.findAllById(bookIds);
-        if (listBook.size() < bookIds.size()) {
+        List<BookDocument> listBook = bookRepository.findAllById(bookIds);
+        Set<String> set = new HashSet<>(bookIds);
+        List<String> distinctList = new ArrayList<>(set);
+        List<BookRealityDocument> orderBooks = new ArrayList<>();
+        if (listBook.size() < distinctList.size()) {
             throw new BizException("bookId is invalid!");
         }
-        List<BookRealityDocument> availableBooks = listBook.stream()
-                .filter(book -> Const.BookRealityStatus.AVAILABLE.toString().equals(book.getStatus()))
-                .collect(Collectors.toList());
-        if (availableBooks.size() < listBook.size()) {
-            throw new BizException("Book is unavailable!");
-        }
+        for (int i = 0; i <order.getBooks().size(); i++) {
+            List<BookRealityDocument> bookRealityDocuments= bookRealityRepository.findAllByBookId(order.getBooks().get(i).getId());
+            int finalI = i;
+            if(bookRealityDocuments.stream().filter(bookRealityDocument ->
+                    ( bookRealityDocument.getType().equals(order.getBooks().get(finalI).getType()) &&
+                            bookRealityDocument.getStatus().equals(Const.BookRealityStatus.AVAILABLE.toString()))).count()
+                    < order.getBooks().get(finalI).getQuantity()){
+                throw new BizException("số lượng sách "+order.getBooks().get(finalI).getName()+
+                        "có tình trạng " +order.getBooks().get(finalI).getType() +" không đủ!");
+            }
+            List<BookRealityDocument> availableBooks = bookRealityDocuments.stream().filter(bookRealityDocument ->
+                    bookRealityDocument.getType().equals(order.getBooks().get(finalI).getType())).limit(order.getBooks().get(finalI).getQuantity()).toList();
+            for(BookRealityDocument bookRealityDocument:availableBooks){
+                bookRealityDocument.setStatus(Const.BookRealityStatus.UNAVAILABLE.toString());
+                bookRealityRepository.save(bookRealityDocument);
+                orderBooks.add(bookRealityDocument);
+            }
 
+        }
         orderDocument.setCreatedAt(ZonedDateTime.now());
         orderDocument.setAddress(order.getAddress());
         orderDocument.setCustomerName(order.getCustomerName());
         orderDocument.setCustomerPhone(order.getCustomerPhone());
         orderDocument.setEmail(order.getEmail());
-        orderDocument.setItems(availableBooks);
-        orderDocument.setStatus(Const.OrderStatus.CREATED);
-        for(BookRealityDocument bookRealityDocument:availableBooks){
-            bookRealityDocument.setStatus(Const.BookRealityStatus.UNAVAILABLE.toString());
-            bookRealityRepository.save(bookRealityDocument);
+        orderDocument.setItems(orderBooks);
+        if(order.isPaymentMethod()){
+            // chuyển khoản trc
+//            paymentService.createOrder();
+
+        }else {
+            orderDocument.setStatus(Const.OrderStatus.CREATED);
         }
         orderRepository.save(orderDocument);
     }
