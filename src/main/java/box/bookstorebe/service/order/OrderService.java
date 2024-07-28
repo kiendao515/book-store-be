@@ -17,6 +17,7 @@ import box.bookstorebe.model.order.UpdateOrderModel;
 import box.bookstorebe.repository.book.BookRealityRepository;
 import box.bookstorebe.repository.book.BookRepository;
 import box.bookstorebe.repository.order.OrderRepository;
+import box.bookstorebe.repository.payment.PaymentRepository;
 import box.bookstorebe.service.book.BookRealityService;
 import box.bookstorebe.service.book.BookService;
 import lombok.AllArgsConstructor;
@@ -45,11 +46,12 @@ public class OrderService {
     private final BookRealityService bookRealityService;
     private final PaymentService paymentService;
     @Transactional
-    public void createOrder(CreateOrderModel order) throws BizException {
+    public String createOrder(CreateOrderModel order) throws BizException {
         OrderDocument orderDocument = new OrderDocument();
         List<String> bookIds = order.getBooks().stream()
                 .map(BookOrder::getId)
                 .collect(Collectors.toList());
+        int total=0;
 
         List<BookDocument> listBook = bookRepository.findAllById(bookIds);
         Set<String> set = new HashSet<>(bookIds);
@@ -69,11 +71,13 @@ public class OrderService {
                         "có tình trạng " +order.getBooks().get(finalI).getType() +" không đủ!");
             }
             List<BookRealityDocument> availableBooks = bookRealityDocuments.stream().filter(bookRealityDocument ->
-                    bookRealityDocument.getType().equals(order.getBooks().get(finalI).getType())).limit(order.getBooks().get(finalI).getQuantity()).toList();
+                    bookRealityDocument.getType().equals(order.getBooks().get(finalI).getType()) &&
+                            bookRealityDocument.getStatus().equals(Const.BookRealityStatus.AVAILABLE.toString())).limit(order.getBooks().get(finalI).getQuantity()).toList();
             for(BookRealityDocument bookRealityDocument:availableBooks){
                 bookRealityDocument.setStatus(Const.BookRealityStatus.UNAVAILABLE.toString());
                 bookRealityRepository.save(bookRealityDocument);
                 orderBooks.add(bookRealityDocument);
+                total+=bookRealityDocument.getPrice();
             }
 
         }
@@ -83,14 +87,18 @@ public class OrderService {
         orderDocument.setCustomerPhone(order.getCustomerPhone());
         orderDocument.setEmail(order.getEmail());
         orderDocument.setItems(orderBooks);
+        OrderDocument savedOrder= orderRepository.save(orderDocument);
+        orderDocument.setPaymentType(order.isPaymentMethod());
         if(order.isPaymentMethod()){
             // chuyển khoản trc
-//            paymentService.createOrder();
-
+            String url = paymentService.createOrder(total,savedOrder.getId().toString(),"http://localhost:8080");
+            System.out.println(url);
+            return url;
         }else {
             orderDocument.setStatus(Const.OrderStatus.CREATED);
         }
         orderRepository.save(orderDocument);
+        return "order successfully!";
     }
 
     public Page<OrderDto> getOrders(Integer page, Integer size) throws BizException {

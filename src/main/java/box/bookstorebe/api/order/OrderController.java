@@ -21,6 +21,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.view.RedirectView;
 
 import java.util.List;
 
@@ -33,8 +34,8 @@ public class OrderController {
 
     @PostMapping
     public BaseResponse<String> createOrder(@RequestBody @Valid CreateOrderModel orderModel) throws BizException {
-        orderService.createOrder(orderModel);
-        return new BaseResponse<>(Const.ResultCode.SUCCESS, "Create order successfully");
+        String paymentUrl = orderService.createOrder(orderModel);
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, paymentUrl);
     }
 
     @GetMapping()
@@ -66,20 +67,19 @@ public class OrderController {
     }
 
     @GetMapping("/payment")
-    public String getPayment(HttpServletRequest request, Model model){
+    public RedirectView getPayment(HttpServletRequest request, Model model) throws BizException {
         int paymentStatus =paymentService.orderReturn(request);
-
         String orderInfo = request.getParameter("vnp_OrderInfo");
         String paymentTime = request.getParameter("vnp_PayDate");
         String transactionId = request.getParameter("vnp_TransactionNo");
         String totalPrice = request.getParameter("vnp_Amount");
+        if(paymentStatus == 1){
+            //payment success
+            paymentService.createPayment(Integer.valueOf(totalPrice),orderInfo,paymentTime,transactionId);
+        }else{
 
-        model.addAttribute("orderId", orderInfo);
-        model.addAttribute("totalPrice", totalPrice);
-        model.addAttribute("paymentTime", paymentTime);
-        model.addAttribute("transactionId", transactionId);
-
-        return paymentStatus == 1 ? "Payment successfully!" : "Payment fail!";
+        }
+        return new RedirectView("http://localhost:5173/checkout");
     }
 
 }
