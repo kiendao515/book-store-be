@@ -5,6 +5,7 @@ import box.bookstorebe.document.user.PasswordResetToken;
 import box.bookstorebe.document.user.UserDocument;
 import box.bookstorebe.document.user.VerificationToken;
 import box.bookstorebe.dto.auth.AuthResponseDto;
+import box.bookstorebe.dto.user.UserDto;
 import box.bookstorebe.eventlistener.event.OnRegistrationCompleteEvent;
 import box.bookstorebe.exception.BizException;
 import box.bookstorebe.model.auth.ChangePasswordRequestModel;
@@ -72,7 +73,13 @@ public class AuthService extends BaseService {
             throw new BizException("Please confirm your email");
         }
         String jwtToken = jwtService.generateToken(user);
-        return new AuthResponseDto(jwtToken);
+        UserDto userDto = new UserDto();
+        userDto.setId(user.getId());
+        userDto.setEmail(user.getEmail());
+        userDto.setFirstName(user.getFirstName());
+        userDto.setLastName(user.getLastName());
+
+        return new AuthResponseDto(jwtToken, userDto);
     }
 
     public String confirmRegistration(String token) throws BizException {
