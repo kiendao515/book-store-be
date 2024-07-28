@@ -31,6 +31,8 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(Const.AUTH_WHITELIST)
                         .permitAll()
+                        .requestMatchers("/api/v1/auth/change-password")
+                        .authenticated()
                         .anyRequest()
                         .authenticated()
                 )
@@ -41,7 +43,7 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    WebMvcConfigurer webMvcConfigurer(){
+    WebMvcConfigurer webMvcConfigurer() {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {

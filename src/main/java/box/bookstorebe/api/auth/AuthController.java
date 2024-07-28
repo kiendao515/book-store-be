@@ -4,9 +4,9 @@ import box.bookstorebe.common.Const;
 import box.bookstorebe.dto.auth.AuthResponseDto;
 import box.bookstorebe.dto.common.BaseResponse;
 import box.bookstorebe.exception.BizException;
-import box.bookstorebe.model.auth.LoginRequestModel;
-import box.bookstorebe.model.auth.RegisterRequestModel;
+import box.bookstorebe.model.auth.*;
 import box.bookstorebe.service.auth.AuthService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,4 +30,20 @@ public class AuthController {
     public BaseResponse<String> confirmRegistration(@RequestParam("token") String token) throws BizException {
         return new BaseResponse<>(Const.ResultCode.SUCCESS, authService.confirmRegistration(token));
     }
+
+    @PostMapping("/send-reset-password")
+    public BaseResponse<String> sendResetPassword(@RequestBody SendResetPasswordRequestModel model) throws BizException {
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, authService.sendResetPassword(model.getEmail()));
+    }
+
+    @PostMapping("/reset-password")
+    public BaseResponse<String> resetPassword(@RequestBody @Valid ResetPasswordRequestModel model) throws BizException {
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, authService.resetPassword(model.getToken(), model.getNewPassword()));
+    }
+
+    @PutMapping("/change-password")
+    public BaseResponse<String> changePassword(@RequestBody @Valid ChangePasswordRequestModel model) throws BizException {
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, authService.changePassword(model));
+    }
+
 }

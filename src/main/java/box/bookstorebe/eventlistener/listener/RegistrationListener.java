@@ -3,6 +3,7 @@ package box.bookstorebe.eventlistener.listener;
 import box.bookstorebe.document.user.UserDocument;
 import box.bookstorebe.eventlistener.event.OnRegistrationCompleteEvent;
 import box.bookstorebe.service.auth.AuthService;
+import box.bookstorebe.service.common.MailService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.mail.SimpleMailMessage;
@@ -19,20 +20,22 @@ import java.util.UUID;
 public class RegistrationListener {
     private final AuthService authService;
     private final JavaMailSender mailSender;
+    private final MailService mailService;
 
-    public RegistrationListener(AuthService authService, JavaMailSender mailSender) {
+    public RegistrationListener(AuthService authService, JavaMailSender mailSender, MailService mailService) {
         this.mailSender = mailSender;
         this.authService = authService;
+        this.mailService = mailService;
     }
 
     @EventListener
     @Async
     void handleEvent(OnRegistrationCompleteEvent event) {
-        try{
+        try {
             UserDocument user = event.getUser();
             String token = UUID.randomUUID().toString();
             this.authService.createVerificationTokenForUser(user, token);
-            SimpleMailMessage email = this.constructEmailMessage(event, user, token);
+            SimpleMailMessage email = mailService.constructEmailMessage(event, user, token);
             mailSender.send(email);
 
         } catch (Exception ex) {
@@ -40,16 +43,4 @@ public class RegistrationListener {
         }
     }
 
-    private SimpleMailMessage constructEmailMessage(OnRegistrationCompleteEvent event, UserDocument user, String token) {
-        String recipientAddress = user.getEmail();
-        String subject = "Complete Registration";
-        String confirmationUrl = event.getAppUrl() + "/registration/confirm?token=" + token;
-        String message = "To confirm your account, please click the link below:\n"
-                + confirmationUrl;
-        SimpleMailMessage email = new SimpleMailMessage();
-        email.setTo(recipientAddress);
-        email.setSubject(subject);
-        email.setText(message);
-        return email;
-    }
 }

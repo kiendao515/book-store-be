@@ -1,7 +1,5 @@
 package box.bookstorebe.common;
 
-import java.util.List;
-
 public final class Const {
     public static final String BASE_PACKAGE = "box.bookstorebe";
 
@@ -10,11 +8,14 @@ public final class Const {
     }
 
     public static final String[] AUTH_WHITELIST = {
-//            "/api/v1/auth/**",
-//            "/api/v1/collections/**",
-//            "/api/v1/orders/**"
-            "**"
+            "/api/v1/auth/**",
+            "/api/v1/collections/**",
+            "/api/v1/books/**",
+            "/api/v1/users/**",
+            "/api/v1/orders/**"
     };
+
+
 
     public static class DateTime {
         public static final String TIME_ZONE = "Asia/Ho_Chi_Minh";
@@ -69,11 +70,11 @@ public final class Const {
     }
 
     public static class OrderStatus {
-        public static final String CREATED =  "CREATED";
-        public static final String CANCEL =  "CANCEL";
-        public static final String CONFIRM =  "CONFIRM";
-        public static final String SHIPPING =  "SHIPPING";
-        public static final String DONE =  "DONE";
+        public static final String CREATED = "CREATED";
+        public static final String CANCEL = "CANCEL";
+        public static final String CONFIRM = "CONFIRM";
+        public static final String SHIPPING = "SHIPPING";
+        public static final String DONE = "DONE";
     }
 
 }
