@@ -35,6 +35,9 @@ public class UserDocument implements UserDetails {
     @Indexed(unique = true)
     private String email;
 
+    @Field(name = "enabled")
+    private boolean enabled = false;
+
     private Role role;
 
 

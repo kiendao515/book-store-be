@@ -1,19 +1,19 @@
-package box.bookstorebe.dto.auth;
+package box.bookstorebe.model.auth;
 
-import box.bookstorebe.dto.user.UserDto;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class AuthResponseDto {
+public class ResetPasswordRequestModel {
+    @NotNull
     private String token;
-    private UserDto user;
+    @NotNull
+    private String newPassword;
 }

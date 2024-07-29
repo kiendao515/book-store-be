@@ -4,6 +4,15 @@ spring:
   data:
     mongodb:
       uri: ${MONGO_URI:mongodb://localhost:27017}
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:xxx@gmail.com}
+    password: ${MAIL_PASSWORD:xxx}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.ssl.protocols: TLSv1.2
 springdoc:
   swagger-ui:
     csrf:
