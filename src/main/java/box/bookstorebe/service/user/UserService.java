@@ -38,8 +38,7 @@ public class UserService {
         UserDocument newUser = new UserDocument();
         newUser.setEmail(userModel.getEmail());
         newUser.setPassword(passwordEncoder.encode(userModel.getPassword()));
-        newUser.setFirstName(userModel.getFirstName());
-        newUser.setLastName(userModel.getLastName());
+        newUser.setFullName(userModel.getFullName());
         newUser.setRole(Role.USER);
         return userRepository.save(newUser);
     }
@@ -54,8 +53,7 @@ public class UserService {
 
         updatedUser.setEmail(userModel.getEmail());
         updatedUser.setPassword(passwordEncoder.encode(userModel.getPassword()));
-        updatedUser.setFirstName(userModel.getFirstName());
-        updatedUser.setLastName(userModel.getLastName());
+        updatedUser.setFullName(userModel.getFullName());
         updatedUser.setRole(Role.USER);
         userRepository.save(updatedUser);
     }

@@ -18,8 +18,9 @@ import box.bookstorebe.repository.user.VerificationTokenRepository;
 import box.bookstorebe.service.BaseService;
 import box.bookstorebe.service.common.MailService;
 import box.bookstorebe.service.user.UserService;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.mail.MailAuthenticationException;
 import org.springframework.mail.SimpleMailMessage;
@@ -36,7 +37,7 @@ import java.util.concurrent.Executors;
 
 @Service
 @Slf4j
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class AuthService extends BaseService {
     private final UserRepository userRepository;
     private final JwtService jwtService;
@@ -49,17 +50,17 @@ public class AuthService extends BaseService {
     private final JavaMailSenderImpl mailSender;
     private final PasswordEncoder passwordEncoder;
     private final ExecutorService executor = Executors.newFixedThreadPool(10);
+    @Value("${app.client.url}")
+    private String clientUrl;
 
     public String register(RegisterRequestModel request) throws BizException {
         UserModel userModel = new UserModel();
         userModel.setEmail(request.getEmail());
         userModel.setPassword(request.getPassword());
-        userModel.setFirstName(request.getFirstName());
-        userModel.setLastName(request.getLastName());
+        userModel.setFullName(request.getFullName());
 
         UserDocument user = userService.createUser(userModel);
-        String appUrl = "http://localhost:8080/api/v1/auth";
-        applicationEventPublisher.publishEvent(new OnRegistrationCompleteEvent(this, user, appUrl));
+        applicationEventPublisher.publishEvent(new OnRegistrationCompleteEvent(this, user, clientUrl));
         return "Register successfully. Please check your email to confirm your account.";
     }
 
@@ -76,8 +77,7 @@ public class AuthService extends BaseService {
         UserDto userDto = new UserDto();
         userDto.setId(user.getId());
         userDto.setEmail(user.getEmail());
-        userDto.setFirstName(user.getFirstName());
-        userDto.setLastName(user.getLastName());
+        userDto.setFullName(user.getFullName());
 
         return new AuthResponseDto(jwtToken, userDto);
     }
@@ -99,8 +99,7 @@ public class AuthService extends BaseService {
         String token = UUID.randomUUID().toString();
         this.createPasswordResetTokenForUser(user, token);
         try {
-            String appUrl = "http://localhost:8080/api/v1/auth";
-            SimpleMailMessage emailMessage = mailService.constructResetTokenEmail(appUrl, token, user, "You have requested to reset your password");
+            SimpleMailMessage emailMessage = mailService.constructResetTokenEmail(clientUrl, token, user, "You have requested to reset your password");
             executor.execute(() -> {
                 mailSender.send(emailMessage);
             });

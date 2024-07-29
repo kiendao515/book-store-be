@@ -1,5 +1,7 @@
 server:
   port: ${PORT:8080}
+  address: ${SERVER_URL:0.0.0.0}
+
 spring:
   data:
     mongodb:
@@ -33,3 +35,6 @@ aws:
   secretKey: ${SECRET_KEY:g4Q1+hgRA04GazNqoOkN/TpOTFfX8zvu6jwl2m6U}
   bucketName: ${BUCKET_NAME:video-storage-v1}
   region: ${REGION:ap-south-1}
+app:
+  client:
+    url: ${CLIENT_URL:http://localhost:5173}

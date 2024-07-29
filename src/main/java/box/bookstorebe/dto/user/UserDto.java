@@ -12,10 +12,8 @@ public class UserDto {
     private String id;
     @Field("email")
     private String email;
-    @Field("first_name")
-    private String firstName;
-    @Field("last_name")
-    private String lastName;
+    @Field("full_name")
+    private String fullName;
     @Field("role")
     private Role role;
 }
