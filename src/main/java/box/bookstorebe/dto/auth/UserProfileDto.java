@@ -1,19 +1,20 @@
-package box.bookstorebe.dto.user;
+package box.bookstorebe.dto.auth;
 
-import box.bookstorebe.document.user.Role;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import org.springframework.data.mongodb.core.mapping.Field;
+import lombok.NoArgsConstructor;
 
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class UserDto {
+public class UserProfileDto {
     private String id;
-    @Field("email")
     private String email;
-    @Field("full_name")
     private String fullName;
-    @Field("role")
-    private Role role;
+    private String role;
 }

@@ -5,19 +5,19 @@ import box.bookstorebe.eventlistener.event.OnRegistrationCompleteEvent;
 import box.bookstorebe.service.auth.AuthService;
 import box.bookstorebe.service.common.MailService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.event.EventListener;
+import org.springframework.context.ApplicationListener;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
 @Slf4j
-@Service
 @Component
-public class RegistrationListener {
+@EnableAsync
+public class RegistrationListener implements ApplicationListener<OnRegistrationCompleteEvent> {
     private final AuthService authService;
     private final JavaMailSender mailSender;
     private final MailService mailService;
@@ -28,9 +28,9 @@ public class RegistrationListener {
         this.mailService = mailService;
     }
 
-    @EventListener
+    @Override
     @Async
-    void handleEvent(OnRegistrationCompleteEvent event) {
+    public void onApplicationEvent(OnRegistrationCompleteEvent event) {
         try {
             UserDocument user = event.getUser();
             String token = UUID.randomUUID().toString();

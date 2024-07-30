@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 public class MailService {
 
     public SimpleMailMessage constructResetTokenEmail(String baseUrl, String token, UserDocument user, String message) {
-        final String url = baseUrl + "/reset-password?id=" + user.getId() + "&token=" + token;
+        final String url = baseUrl + "/reset-password?token=" + token;
         final SimpleMailMessage email = new SimpleMailMessage();
         email.setTo(user.getEmail());
         email.setSubject("Reset Password");
@@ -25,7 +25,7 @@ public class MailService {
     public SimpleMailMessage constructEmailMessage(OnRegistrationCompleteEvent event, UserDocument user, String token) {
         String recipientAddress = user.getEmail();
         String subject = "Complete Registration";
-        String confirmationUrl = event.getAppUrl() + "/registration/confirm?token=" + token;
+        String confirmationUrl = event.getAppUrl() + "/confirm-registration?token=" + token;
         String message = "To confirm your account, please click the link below:\n" + confirmationUrl;
         SimpleMailMessage email = new SimpleMailMessage();
         email.setTo(recipientAddress);

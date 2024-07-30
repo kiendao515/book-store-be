@@ -31,7 +31,7 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(Const.AUTH_WHITELIST)
                         .permitAll()
-                        .requestMatchers("/api/v1/auth/change-password")
+                        .requestMatchers("/api/v1/auth/change-password", "/api/v1/auth/profile")
                         .authenticated()
                         .anyRequest()
                         .authenticated()

@@ -25,11 +25,8 @@ public class UserDocument implements UserDetails {
     @Field(name = "password")
     private String password;
 
-    @Field(name = "first_name")
-    private String firstName;
-
-    @Field(name = "last_name")
-    private String lastName;
+    @Field(name = "full_name")
+    private String fullName;
 
     @Field(name = "email")
     @Indexed(unique = true)
