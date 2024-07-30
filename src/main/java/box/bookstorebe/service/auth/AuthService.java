@@ -5,6 +5,7 @@ import box.bookstorebe.document.user.PasswordResetToken;
 import box.bookstorebe.document.user.UserDocument;
 import box.bookstorebe.document.user.VerificationToken;
 import box.bookstorebe.dto.auth.AuthResponseDto;
+import box.bookstorebe.dto.auth.UserProfileDto;
 import box.bookstorebe.dto.user.UserDto;
 import box.bookstorebe.eventlistener.event.OnRegistrationCompleteEvent;
 import box.bookstorebe.exception.BizException;
@@ -146,6 +147,20 @@ public class AuthService extends BaseService {
     public void createPasswordResetTokenForUser(UserDocument user, String token) {
         PasswordResetToken passwordResetToken = new PasswordResetToken(token, user.getId());
         passwordResetTokenRepository.save(passwordResetToken);
+    }
+
+    public UserProfileDto getUserProfile() throws BizException {
+        RequestScope currentUser = this.getCurrentUserInfo();
+        if (currentUser == null) {
+            throw new BizException("Invalid token");
+        }
+        UserDocument user = userRepository.findById(currentUser.getUserId()).orElseThrow(() -> new BizException("Invalid user"));
+        UserProfileDto userProfileDto = new UserProfileDto();
+        userProfileDto.setId(user.getId());
+        userProfileDto.setEmail(user.getEmail());
+        userProfileDto.setFullName(user.getFullName());
+        userProfileDto.setRole(user.getRole().name());
+        return userProfileDto;
     }
 
 

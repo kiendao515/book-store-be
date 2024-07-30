@@ -2,6 +2,7 @@ package box.bookstorebe.api.auth;
 
 import box.bookstorebe.common.Const;
 import box.bookstorebe.dto.auth.AuthResponseDto;
+import box.bookstorebe.dto.auth.UserProfileDto;
 import box.bookstorebe.dto.common.BaseResponse;
 import box.bookstorebe.exception.BizException;
 import box.bookstorebe.model.auth.*;
@@ -29,6 +30,11 @@ public class AuthController {
     @GetMapping("/registration/confirm")
     public BaseResponse<String> confirmRegistration(@RequestParam("token") String token) throws BizException {
         return new BaseResponse<>(Const.ResultCode.SUCCESS, authService.confirmRegistration(token));
+    }
+
+    @GetMapping("/profile")
+    public BaseResponse<UserProfileDto> getUserProfile() throws BizException {
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, authService.getUserProfile());
     }
 
     @PostMapping("/send-reset-password")
