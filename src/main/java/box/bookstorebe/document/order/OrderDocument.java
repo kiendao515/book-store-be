@@ -46,5 +46,9 @@ public class OrderDocument {
 
     @Field(name = "items")
     private List<BookRealityDocument> items;
+    @Field(name = "order_id")
+    private String orderId;
+    @Field(name = "note")
+    private String note;
 
 }

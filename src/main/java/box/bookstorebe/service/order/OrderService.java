@@ -6,6 +6,7 @@ import box.bookstorebe.document.book.BookDocument;
 import box.bookstorebe.document.book.BookRealityDocument;
 import box.bookstorebe.document.book.CategoryDocument;
 import box.bookstorebe.document.order.OrderDocument;
+import box.bookstorebe.document.payment.PaymentDocument;
 import box.bookstorebe.dto.book.BookDto;
 import box.bookstorebe.dto.book.BookRealityDto;
 import box.bookstorebe.dto.order.OrderDto;
@@ -22,17 +23,19 @@ import box.bookstorebe.service.book.BookRealityService;
 import box.bookstorebe.service.book.BookService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.annotation.Order;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.awt.print.Book;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 @AllArgsConstructor
@@ -45,6 +48,12 @@ public class OrderService {
     private final BookService bookService;
     private final BookRealityService bookRealityService;
     private final PaymentService paymentService;
+    private static final AtomicLong counter = new AtomicLong();
+    private final MongoTemplate mongoTemplate;
+
+    public static long generateOrderId() {
+        return counter.incrementAndGet();
+    }
     @Transactional
     public String createOrder(CreateOrderModel order) throws BizException {
         OrderDocument orderDocument = new OrderDocument();
@@ -87,17 +96,15 @@ public class OrderService {
         orderDocument.setCustomerPhone(order.getCustomerPhone());
         orderDocument.setEmail(order.getEmail());
         orderDocument.setItems(orderBooks);
-        OrderDocument savedOrder= orderRepository.save(orderDocument);
         orderDocument.setPaymentType(order.isPaymentMethod());
+        orderDocument.setOrderId(UUID.randomUUID().toString());
+        orderDocument.setStatus(Const.OrderStatus.CREATED);
+        orderDocument.setNote(order.getNote());
+        OrderDocument savedOrder= orderRepository.save(orderDocument);
         if(order.isPaymentMethod()){
-            // chuyển khoản trc
             String url = paymentService.createOrder(total,savedOrder.getId().toString(),"http://localhost:8080");
-            System.out.println(url);
             return url;
-        }else {
-            orderDocument.setStatus(Const.OrderStatus.CREATED);
         }
-        orderRepository.save(orderDocument);
         return "order successfully!";
     }
 
@@ -131,6 +138,33 @@ public class OrderService {
     }
     public OrderDto findById(String id) throws BizException {
         OrderDocument orderDocument = orderRepository.findById(id).orElseThrow(()-> new BizException("orderId is invalid"));
+        List<BookRealityDocument> list= bookRealityRepository.findAllById(orderDocument.getItems().
+                stream().map(bookRealityDocument -> bookRealityDocument.getId()).collect(Collectors.toList()));
+        List<BookRealityDto> bookRealityDtoList = new ArrayList<>();
+        for(BookRealityDocument bookRealityDocument: list){
+            BookRealityDto bookDto = bookRealityService.findById(bookRealityDocument.getId());
+            bookRealityDtoList.add(bookDto);
+        }
+        PaymentDocument paymentDocument = paymentService.getPaymentByOrderId(id);
+        boolean isPaid=false;
+        if(paymentDocument != null){
+            isPaid= true;
+        }
+        return OrderDto.builder()
+                .id(orderDocument.getId())
+                .address(orderDocument.getAddress())
+                .email(orderDocument.getEmail())
+                .customerName(orderDocument.getCustomerName())
+                .customerPhone(orderDocument.getCustomerPhone())
+                .status(orderDocument.getStatus())
+                .createdAt(orderDocument.getCreatedAt())
+                .books(bookRealityDtoList)
+                .isPaid(isPaid)
+                .paymentType(orderDocument.isPaymentType())
+                .build();
+    }
+    public OrderDto findByOrderId(String id) throws BizException{
+        OrderDocument orderDocument = mongoTemplate.findOne(new Query(Criteria.where("order_id").is(id)), OrderDocument.class);
         List<BookRealityDocument> list= bookRealityRepository.findAllById(orderDocument.getItems().
                 stream().map(bookRealityDocument -> bookRealityDocument.getId()).collect(Collectors.toList()));
         List<BookRealityDto> bookRealityDtoList = new ArrayList<>();

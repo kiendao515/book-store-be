@@ -7,9 +7,15 @@ import box.bookstorebe.document.payment.PaymentDocument;
 import box.bookstorebe.exception.BizException;
 import box.bookstorebe.repository.order.OrderRepository;
 import box.bookstorebe.repository.payment.PaymentRepository;
+import box.bookstorebe.service.common.MailService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Service;
 
 import java.io.UnsupportedEncodingException;
@@ -17,6 +23,8 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @AllArgsConstructor
 @Service
@@ -24,6 +32,10 @@ import java.util.*;
 public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
+    private final MailService mailService;
+    private final ExecutorService executor = Executors.newFixedThreadPool(10);
+    private final JavaMailSenderImpl mailSender;
+    private final MongoTemplate mongoTemplate;
     public String createOrder(int total, String orderInfor, String urlReturn){
         String vnp_Version = "2.1.0";
         String vnp_Command = "pay";
@@ -136,11 +148,18 @@ public class PaymentService {
         if(totalPrice != price/100){
             throw new BizException("Số tiền không khớp!");
         }
-        PaymentDocument checkExisted = paymentRepository.findOne({orderId:orderId})
+//        PaymentDocument checkExisted = paymentRepository.findOne({orderId:orderId})
         PaymentDocument paymentDocument= PaymentDocument.builder().paymentTime(paymentTime).
                 totalPrice(price/100).order(orderDocument).transactionId(transactionId).build();
         orderDocument.setStatus(Const.OrderStatus.CONFIRM);
         orderRepository.save(orderDocument);
         paymentRepository.save(paymentDocument);
+        SimpleMailMessage simpleMailMessage= mailService.sendMailOrderDetail(orderDocument.getEmail(),orderDocument);
+        executor.execute(() -> {
+            mailSender.send(simpleMailMessage);
+        });
+    }
+    public PaymentDocument getPaymentByOrderId(String orderId) throws BizException{
+        return mongoTemplate.findOne(new Query(Criteria.where("order._id").is(orderId)), PaymentDocument.class);
     }
 }

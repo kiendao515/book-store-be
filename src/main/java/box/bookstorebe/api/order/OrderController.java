@@ -51,6 +51,11 @@ public class OrderController {
         return new BaseResponse<>(Const.ResultCode.SUCCESS, orderService.findById(id));
     }
 
+    @GetMapping("/detail/{id}")
+    public BaseResponse<OrderDto> searchOrderResult(@PathVariable String id) throws BizException {
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, orderService.findById(id));
+    }
+
     @PutMapping("{id}")
     public BaseResponse<String> updateOrder(@PathVariable String id, @RequestBody @Valid UpdateOrderModel order) throws BizException {
         orderService.updateOrder(id, order);
@@ -76,10 +81,8 @@ public class OrderController {
         if(paymentStatus == 1){
             //payment success
             paymentService.createPayment(Integer.valueOf(totalPrice),orderInfo,paymentTime,transactionId);
-        }else{
-
         }
-        return new RedirectView("http://localhost:5173/checkout");
+        return new RedirectView("http://localhost:5173/checkout?orderId="+orderInfo);
     }
 
 }
