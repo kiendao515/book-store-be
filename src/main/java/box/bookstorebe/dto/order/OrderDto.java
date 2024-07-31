@@ -28,4 +28,6 @@ public class OrderDto {
     private List<BookRealityDto> books;
     private ZonedDateTime createdAt;
     private ZonedDateTime updatedAt;
+    private boolean isPaid;
+    private boolean paymentType;
 }

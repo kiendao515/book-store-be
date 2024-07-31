@@ -1,6 +1,21 @@
 package box.bookstorebe.service.order;
+import box.bookstorebe.common.Const;
 import box.bookstorebe.configuration.payment.PaymentConfig;
+import box.bookstorebe.document.book.BookRealityDocument;
+import box.bookstorebe.document.order.OrderDocument;
+import box.bookstorebe.document.payment.PaymentDocument;
+import box.bookstorebe.exception.BizException;
+import box.bookstorebe.repository.order.OrderRepository;
+import box.bookstorebe.repository.payment.PaymentRepository;
+import box.bookstorebe.service.common.MailService;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Service;
 
 import java.io.UnsupportedEncodingException;
@@ -8,9 +23,19 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
+@AllArgsConstructor
 @Service
+@Slf4j
 public class PaymentService {
+    private final PaymentRepository paymentRepository;
+    private final OrderRepository orderRepository;
+    private final MailService mailService;
+    private final ExecutorService executor = Executors.newFixedThreadPool(10);
+    private final JavaMailSenderImpl mailSender;
+    private final MongoTemplate mongoTemplate;
     public String createOrder(int total, String orderInfor, String urlReturn){
         String vnp_Version = "2.1.0";
         String vnp_Command = "pay";
@@ -113,5 +138,28 @@ public class PaymentService {
         } else {
             return -1;
         }
+    }
+    public void createPayment(int price,String orderId,String paymentTime,String transactionId) throws BizException {
+        OrderDocument orderDocument= orderRepository.findById(orderId).orElseThrow(()->new BizException("invalid orderId"));
+        int totalPrice =0;
+        for (BookRealityDocument b :orderDocument.getItems()){
+            totalPrice += b.getPrice();
+        }
+        if(totalPrice != price/100){
+            throw new BizException("Số tiền không khớp!");
+        }
+//        PaymentDocument checkExisted = paymentRepository.findOne({orderId:orderId})
+        PaymentDocument paymentDocument= PaymentDocument.builder().paymentTime(paymentTime).
+                totalPrice(price/100).order(orderDocument).transactionId(transactionId).build();
+        orderDocument.setStatus(Const.OrderStatus.CONFIRM);
+        orderRepository.save(orderDocument);
+        paymentRepository.save(paymentDocument);
+        SimpleMailMessage simpleMailMessage= mailService.sendMailOrderDetail(orderDocument.getEmail(),orderDocument);
+        executor.execute(() -> {
+            mailSender.send(simpleMailMessage);
+        });
+    }
+    public PaymentDocument getPaymentByOrderId(String orderId) throws BizException{
+        return mongoTemplate.findOne(new Query(Criteria.where("order._id").is(orderId)), PaymentDocument.class);
     }
 }

@@ -6,6 +6,7 @@ import box.bookstorebe.document.book.BookDocument;
 import box.bookstorebe.document.book.BookRealityDocument;
 import box.bookstorebe.document.book.CategoryDocument;
 import box.bookstorebe.document.order.OrderDocument;
+import box.bookstorebe.document.payment.PaymentDocument;
 import box.bookstorebe.dto.book.BookDto;
 import box.bookstorebe.dto.book.BookRealityDto;
 import box.bookstorebe.dto.order.OrderDto;
@@ -17,19 +18,24 @@ import box.bookstorebe.model.order.UpdateOrderModel;
 import box.bookstorebe.repository.book.BookRealityRepository;
 import box.bookstorebe.repository.book.BookRepository;
 import box.bookstorebe.repository.order.OrderRepository;
+import box.bookstorebe.repository.payment.PaymentRepository;
 import box.bookstorebe.service.book.BookRealityService;
 import box.bookstorebe.service.book.BookService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.annotation.Order;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.awt.print.Book;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 @AllArgsConstructor
@@ -38,38 +44,68 @@ import java.util.stream.Collectors;
 public class OrderService {
     private final OrderRepository orderRepository;
     private final BookRealityRepository bookRealityRepository;
+    private final BookRepository bookRepository;
     private final BookService bookService;
     private final BookRealityService bookRealityService;
+    private final PaymentService paymentService;
+    private static final AtomicLong counter = new AtomicLong();
+    private final MongoTemplate mongoTemplate;
+
+    public static long generateOrderId() {
+        return counter.incrementAndGet();
+    }
     @Transactional
-    public void createOrder(CreateOrderModel order) throws BizException {
+    public String createOrder(CreateOrderModel order) throws BizException {
         OrderDocument orderDocument = new OrderDocument();
         List<String> bookIds = order.getBooks().stream()
-                .map(BookOrder::getBookId)
+                .map(BookOrder::getId)
                 .collect(Collectors.toList());
+        int total=0;
 
-        List<BookRealityDocument> listBook = bookRealityRepository.findAllById(bookIds);
-        if (listBook.size() < bookIds.size()) {
+        List<BookDocument> listBook = bookRepository.findAllById(bookIds);
+        Set<String> set = new HashSet<>(bookIds);
+        List<String> distinctList = new ArrayList<>(set);
+        List<BookRealityDocument> orderBooks = new ArrayList<>();
+        if (listBook.size() < distinctList.size()) {
             throw new BizException("bookId is invalid!");
         }
-        List<BookRealityDocument> availableBooks = listBook.stream()
-                .filter(book -> Const.BookRealityStatus.AVAILABLE.toString().equals(book.getStatus()))
-                .collect(Collectors.toList());
-        if (availableBooks.size() < listBook.size()) {
-            throw new BizException("Book is unavailable!");
-        }
+        for (int i = 0; i <order.getBooks().size(); i++) {
+            List<BookRealityDocument> bookRealityDocuments= bookRealityRepository.findAllByBookId(order.getBooks().get(i).getId());
+            int finalI = i;
+            if(bookRealityDocuments.stream().filter(bookRealityDocument ->
+                    ( bookRealityDocument.getType().equals(order.getBooks().get(finalI).getType()) &&
+                            bookRealityDocument.getStatus().equals(Const.BookRealityStatus.AVAILABLE.toString()))).count()
+                    < order.getBooks().get(finalI).getQuantity()){
+                throw new BizException("số lượng sách "+order.getBooks().get(finalI).getName()+
+                        "có tình trạng " +order.getBooks().get(finalI).getType() +" không đủ!");
+            }
+            List<BookRealityDocument> availableBooks = bookRealityDocuments.stream().filter(bookRealityDocument ->
+                    bookRealityDocument.getType().equals(order.getBooks().get(finalI).getType()) &&
+                            bookRealityDocument.getStatus().equals(Const.BookRealityStatus.AVAILABLE.toString())).limit(order.getBooks().get(finalI).getQuantity()).toList();
+            for(BookRealityDocument bookRealityDocument:availableBooks){
+                bookRealityDocument.setStatus(Const.BookRealityStatus.UNAVAILABLE.toString());
+                bookRealityRepository.save(bookRealityDocument);
+                orderBooks.add(bookRealityDocument);
+                total+=bookRealityDocument.getPrice();
+            }
 
+        }
         orderDocument.setCreatedAt(ZonedDateTime.now());
         orderDocument.setAddress(order.getAddress());
         orderDocument.setCustomerName(order.getCustomerName());
         orderDocument.setCustomerPhone(order.getCustomerPhone());
         orderDocument.setEmail(order.getEmail());
-        orderDocument.setItems(availableBooks);
+        orderDocument.setItems(orderBooks);
+        orderDocument.setPaymentType(order.isPaymentMethod());
+        orderDocument.setOrderId(UUID.randomUUID().toString());
         orderDocument.setStatus(Const.OrderStatus.CREATED);
-        for(BookRealityDocument bookRealityDocument:availableBooks){
-            bookRealityDocument.setStatus(Const.BookRealityStatus.UNAVAILABLE.toString());
-            bookRealityRepository.save(bookRealityDocument);
+        orderDocument.setNote(order.getNote());
+        OrderDocument savedOrder= orderRepository.save(orderDocument);
+        if(order.isPaymentMethod()){
+            String url = paymentService.createOrder(total,savedOrder.getId().toString(),"http://localhost:8080");
+            return url;
         }
-        orderRepository.save(orderDocument);
+        return "order successfully!";
     }
 
     public Page<OrderDto> getOrders(Integer page, Integer size) throws BizException {
@@ -102,6 +138,33 @@ public class OrderService {
     }
     public OrderDto findById(String id) throws BizException {
         OrderDocument orderDocument = orderRepository.findById(id).orElseThrow(()-> new BizException("orderId is invalid"));
+        List<BookRealityDocument> list= bookRealityRepository.findAllById(orderDocument.getItems().
+                stream().map(bookRealityDocument -> bookRealityDocument.getId()).collect(Collectors.toList()));
+        List<BookRealityDto> bookRealityDtoList = new ArrayList<>();
+        for(BookRealityDocument bookRealityDocument: list){
+            BookRealityDto bookDto = bookRealityService.findById(bookRealityDocument.getId());
+            bookRealityDtoList.add(bookDto);
+        }
+        PaymentDocument paymentDocument = paymentService.getPaymentByOrderId(id);
+        boolean isPaid=false;
+        if(paymentDocument != null){
+            isPaid= true;
+        }
+        return OrderDto.builder()
+                .id(orderDocument.getId())
+                .address(orderDocument.getAddress())
+                .email(orderDocument.getEmail())
+                .customerName(orderDocument.getCustomerName())
+                .customerPhone(orderDocument.getCustomerPhone())
+                .status(orderDocument.getStatus())
+                .createdAt(orderDocument.getCreatedAt())
+                .books(bookRealityDtoList)
+                .isPaid(isPaid)
+                .paymentType(orderDocument.isPaymentType())
+                .build();
+    }
+    public OrderDto findByOrderId(String id) throws BizException{
+        OrderDocument orderDocument = mongoTemplate.findOne(new Query(Criteria.where("order_id").is(id)), OrderDocument.class);
         List<BookRealityDocument> list= bookRealityRepository.findAllById(orderDocument.getItems().
                 stream().map(bookRealityDocument -> bookRealityDocument.getId()).collect(Collectors.toList()));
         List<BookRealityDto> bookRealityDtoList = new ArrayList<>();

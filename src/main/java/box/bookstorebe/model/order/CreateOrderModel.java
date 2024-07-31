@@ -20,4 +20,6 @@ public class CreateOrderModel {
     private String customerPhone;
     private String email;
     private List<BookOrder> books;
+    private boolean paymentMethod;
+    private String note;
 }

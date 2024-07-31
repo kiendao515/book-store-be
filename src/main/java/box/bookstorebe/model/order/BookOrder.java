@@ -10,6 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BookOrder{
-    private String bookId;
-//    private int quantity;
+    private String id;
+    private int quantity;
+    private String type;
+    private String name;
 }
