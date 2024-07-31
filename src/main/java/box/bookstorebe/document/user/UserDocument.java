@@ -33,7 +33,7 @@ public class UserDocument implements UserDetails {
     private String email;
 
     @Field(name = "enabled")
-    private boolean enabled = false;
+    private Integer enabled = 0;
 
     private Role role;
 

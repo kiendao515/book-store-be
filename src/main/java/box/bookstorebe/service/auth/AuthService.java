@@ -66,13 +66,17 @@ public class AuthService extends BaseService {
     }
 
     public AuthResponseDto login(LoginRequestModel request) throws BizException {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-        );
+        UserDocument user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new BizException("thông tin tài khoản hoặc mật khẩu không chính xác"));
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+            );
+        } catch (Exception e) {
+            throw new BizException("thông tin tài khoản hoặc mật khẩu không chính xác");
+        }
 
-        UserDocument user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new BizException("Invalid email/password"));
-        if (!user.isEnabled()) {
-            throw new BizException("Please confirm your email");
+        if (user.getEnabled() == 0) {
+            throw new BizException("tài khoản chưa được xác thực. Vui lòng kiểm tra email để xác thực tài khoản");
         }
         String jwtToken = jwtService.generateToken(user);
         UserDto userDto = new UserDto();
@@ -90,9 +94,9 @@ public class AuthService extends BaseService {
 
         UserDocument user = userRepository.findById(verificationToken.getUserId()).orElseThrow(() -> new BizException("Invalid user"));
         if (verificationToken.getExpiryDate().isBefore(ZonedDateTime.now())) throw new BizException("Token expired");
-        user.setEnabled(true);
+        user.setEnabled(1);
         userRepository.save(user);
-        return "Confirm registration successfully";
+        return "xác thực tài khoản thành công";
     }
 
     public String sendResetPassword(String email) throws BizException {
