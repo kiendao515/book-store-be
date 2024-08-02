@@ -88,5 +88,6 @@ public final class Const {
         public static final String NORMAL = "khá";
         public static final String TB = "tạm";
     }
+    public static final int SHIPPING_FEE = 25000;
 
 }

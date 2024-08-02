@@ -30,4 +30,5 @@ public class OrderDto {
     private ZonedDateTime updatedAt;
     private boolean isPaid;
     private boolean paymentType;
+    private String note;
 }
