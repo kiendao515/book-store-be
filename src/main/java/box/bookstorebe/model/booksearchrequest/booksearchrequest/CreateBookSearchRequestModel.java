@@ -13,7 +13,6 @@ import java.util.List;
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class CreateBookSearchRequestModel {
-    private String userId;
     private String fullName;
     private String email;
     private String phoneNumber;
@@ -25,6 +24,6 @@ public class CreateBookSearchRequestModel {
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public static class BookRequest {
         private String bookName;
-        private String authorName;
+        private String author;
     }
 }

@@ -25,6 +25,7 @@ public class UpdateBookSearchRequestModel {
     @AllArgsConstructor
     @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
     public static class BookRequest {
+        private String id;
         private String bookName;
         private String authorName;
         private Const.BookSearchRequestStatus status;

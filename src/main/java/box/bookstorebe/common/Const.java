@@ -17,6 +17,7 @@ public final class Const {
             "/api/v1/categories/**",
             "/api/v1/book-stores/**",
             "/api/v1/collections/**",
+            "/api/v1/book-search-requests/**"
     };
 
 

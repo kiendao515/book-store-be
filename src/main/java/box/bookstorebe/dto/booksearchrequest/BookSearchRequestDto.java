@@ -1,6 +1,6 @@
 package box.bookstorebe.dto.booksearchrequest;
 
-import box.bookstorebe.document.booksearchrequest.BookSearchRequestDocument;
+import box.bookstorebe.document.booksearchrequest.BookRequestDocument;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.AllArgsConstructor;
@@ -20,7 +20,7 @@ public class BookSearchRequestDto {
     private String fullName;
     private String email;
     private String phoneNumber;
-    private List<BookSearchRequestDocument.BookRequest> bookRequests;
+    private List<BookRequestDocument> bookRequests;
     private ZonedDateTime createdAt;
     private ZonedDateTime updatedAt;
 }

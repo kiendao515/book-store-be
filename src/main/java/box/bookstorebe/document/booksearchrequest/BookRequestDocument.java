@@ -1,5 +1,7 @@
 package box.bookstorebe.document.booksearchrequest;
 
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,27 +10,27 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.ZonedDateTime;
-import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Document("book_search_requests")
-public class BookSearchRequestDocument {
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+@Document("book_requests")
+public class BookRequestDocument {
     @Id
     private String id;
 
-    @Field
-    private String userId;
+    @Field("book_name")
+    private String bookName;
 
-    @Field("full_name")
-    private String fullName;
+    @Field("author")
+    private String author;
 
-    @Field("email")
-    private String email;
+    @Field("status")
+    private String status;
 
-    @Field("phone_number")
-    private String phoneNumber;
+    @Field("book_search_request_id")
+    private String bookSearchRequestId;
 
     @Field("created_at")
     private ZonedDateTime createdAt;
