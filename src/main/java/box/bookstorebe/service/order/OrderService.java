@@ -21,6 +21,8 @@ import box.bookstorebe.repository.order.OrderRepository;
 import box.bookstorebe.repository.payment.PaymentRepository;
 import box.bookstorebe.service.book.BookRealityService;
 import box.bookstorebe.service.book.BookService;
+import box.bookstorebe.service.common.MailService;
+import jakarta.mail.MessagingException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
@@ -50,12 +52,13 @@ public class OrderService {
     private final PaymentService paymentService;
     private static final AtomicLong counter = new AtomicLong();
     private final MongoTemplate mongoTemplate;
+    private final MailService mailService;
 
     public static long generateOrderId() {
         return counter.incrementAndGet();
     }
     @Transactional
-    public String createOrder(CreateOrderModel order) throws BizException {
+    public String createOrder(CreateOrderModel order) throws BizException, MessagingException {
         OrderDocument orderDocument = new OrderDocument();
         List<String> bookIds = order.getBooks().stream()
                 .map(BookOrder::getId)
@@ -100,12 +103,34 @@ public class OrderService {
         orderDocument.setOrderId(UUID.randomUUID().toString());
         orderDocument.setStatus(Const.OrderStatus.CREATED);
         orderDocument.setNote(order.getNote());
+        if(total < 500000){
+            total += Const.SHIPPING_FEE;
+        }
         OrderDocument savedOrder= orderRepository.save(orderDocument);
         if(order.isPaymentMethod()){
             String url = paymentService.createOrder(total,savedOrder.getId().toString(),"http://localhost:8080");
             return url;
+        }else{
+            mailService.sendEmailOrderDetail(orderDocument.getEmail(),orderDocument);
         }
         return "order successfully!";
+    }
+
+    public String retryPayment(String id) throws BizException {
+        int total=0;
+        OrderDocument orderDocument = orderRepository.findById(id).orElseThrow(()-> new BizException("orderId is invalid"));
+        PaymentDocument paymentDocument = paymentService.getPaymentByOrderId(id);
+        if(paymentDocument == null && orderDocument.isPaymentType()==true){
+            for (BookRealityDocument b:orderDocument.getItems()) {
+                total += b.getPrice();
+            }
+            if(total < 500000){
+                total += Const.SHIPPING_FEE;
+            }
+            String url = paymentService.createOrder(total,id,"http://localhost:8080");
+            return url;
+        }
+        return "create link payment success!";
     }
 
     public Page<OrderDto> getOrders(Integer page, Integer size) throws BizException {
@@ -161,6 +186,7 @@ public class OrderService {
                 .books(bookRealityDtoList)
                 .isPaid(isPaid)
                 .paymentType(orderDocument.isPaymentType())
+                .note(orderDocument.getNote())
                 .build();
     }
     public OrderDto findByOrderId(String id) throws BizException{

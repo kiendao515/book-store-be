@@ -16,6 +16,7 @@ import box.bookstorebe.model.order.UpdateOrderModel;
 import box.bookstorebe.service.auth.AuthService;
 import box.bookstorebe.service.order.OrderService;
 import box.bookstorebe.service.order.PaymentService;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +34,7 @@ public class OrderController {
     private final PaymentService paymentService;
 
     @PostMapping
-    public BaseResponse<String> createOrder(@RequestBody @Valid CreateOrderModel orderModel) throws BizException {
+    public BaseResponse<String> createOrder(@RequestBody @Valid CreateOrderModel orderModel) throws BizException, MessagingException {
         String paymentUrl = orderService.createOrder(orderModel);
         return new BaseResponse<>(Const.ResultCode.SUCCESS, paymentUrl);
     }
@@ -56,6 +57,18 @@ public class OrderController {
         return new BaseResponse<>(Const.ResultCode.SUCCESS, orderService.findById(id));
     }
 
+    @GetMapping("/test")
+    public BaseResponse<OrderDto> test() throws BizException, MessagingException {
+        paymentService.createPayment(1000,"66a762fe6f1dde243174f560","2101902828922","abbdbđ");
+        return new BaseResponse<>(Const.ResultCode.SUCCESS,"oke");
+    }
+
+    @GetMapping("/repayment/{id}")
+    public BaseResponse<String> retryPayment(@PathVariable String id) throws BizException, MessagingException {
+        String url = orderService.retryPayment(id);
+        return new BaseResponse<>(Const.ResultCode.SUCCESS,url);
+    }
+
     @PutMapping("{id}")
     public BaseResponse<String> updateOrder(@PathVariable String id, @RequestBody @Valid UpdateOrderModel order) throws BizException {
         orderService.updateOrder(id, order);
@@ -72,7 +85,7 @@ public class OrderController {
     }
 
     @GetMapping("/payment")
-    public RedirectView getPayment(HttpServletRequest request, Model model) throws BizException {
+    public RedirectView getPayment(HttpServletRequest request, Model model) throws BizException, MessagingException {
         int paymentStatus =paymentService.orderReturn(request);
         String orderInfo = request.getParameter("vnp_OrderInfo");
         String paymentTime = request.getParameter("vnp_PayDate");

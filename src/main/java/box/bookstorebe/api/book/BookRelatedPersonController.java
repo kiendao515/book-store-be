@@ -1,6 +1,8 @@
 package box.bookstorebe.api.book;
 
 import box.bookstorebe.common.Const;
+import box.bookstorebe.dto.book.AuthorDto;
+import box.bookstorebe.dto.book.BookDto;
 import box.bookstorebe.dto.book.BookRelatedPersonDto;
 import box.bookstorebe.dto.common.BasePagingResponse;
 import box.bookstorebe.dto.common.BaseResponse;
@@ -11,6 +13,8 @@ import box.bookstorebe.service.book.BookRelatedPersonService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/book-related-people")
@@ -28,6 +32,19 @@ public class BookRelatedPersonController {
         return new BasePagingResponse<>(bookRelatedPersonService.getBookRelatedPersons(name, type, page, size));
     }
 
+    @GetMapping("/author")
+    public BaseResponse<List<AuthorDto>> getAuthorWithLetter(
+            @RequestParam(name = "name", required = false) String name
+    ) throws BizException {
+        return new BaseResponse<>(Const.ResultCode.SUCCESS,bookRelatedPersonService.getAuthorWithLetter(name));
+    }
+
+    @GetMapping("/books")
+    public BaseResponse<List<BookDto>> getBookOfAuthor(
+            @RequestParam(name = "authorId", required = true) String authorId
+    ) throws BizException {
+        return new BaseResponse<>(Const.ResultCode.SUCCESS,bookRelatedPersonService.getBookOfAuthor(authorId));
+    }
     @GetMapping("{id}")
     public BaseResponse<BookRelatedPersonDto> getBookRelatedPersonDetail(@PathVariable String id) throws BizException {
         return new BaseResponse<>(Const.ResultCode.SUCCESS, bookRelatedPersonService.findById(id));

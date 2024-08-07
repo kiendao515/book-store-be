@@ -17,7 +17,8 @@ public final class Const {
             "/api/v1/categories/**",
             "/api/v1/book-stores/**",
             "/api/v1/collections/**",
-            "/api/v1/book-search-requests/**"
+            "/api/v1/book-search-requests/**",
+            "/api/v1/book-related-people/**"
     };
 
 
@@ -88,5 +89,6 @@ public final class Const {
         public static final String NORMAL = "khá";
         public static final String TB = "tạm";
     }
+    public static final int SHIPPING_FEE = 25000;
 
 }

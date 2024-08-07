@@ -8,6 +8,7 @@ import box.bookstorebe.exception.BizException;
 import box.bookstorebe.repository.order.OrderRepository;
 import box.bookstorebe.repository.payment.PaymentRepository;
 import box.bookstorebe.service.common.MailService;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -67,7 +68,7 @@ public class PaymentService {
         String vnp_CreateDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
 
-        cld.add(Calendar.MINUTE, 15);
+        cld.add(Calendar.MINUTE, 1);
         String vnp_ExpireDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
 
@@ -139,25 +140,28 @@ public class PaymentService {
             return -1;
         }
     }
-    public void createPayment(int price,String orderId,String paymentTime,String transactionId) throws BizException {
+    public void createPayment(int price,String orderId,String paymentTime,String transactionId) throws BizException, MessagingException {
         OrderDocument orderDocument= orderRepository.findById(orderId).orElseThrow(()->new BizException("invalid orderId"));
         int totalPrice =0;
         for (BookRealityDocument b :orderDocument.getItems()){
             totalPrice += b.getPrice();
         }
+        if(totalPrice < 500000){
+            totalPrice += Const.SHIPPING_FEE;
+        }
         if(totalPrice != price/100){
             throw new BizException("Số tiền không khớp!");
         }
-//        PaymentDocument checkExisted = paymentRepository.findOne({orderId:orderId})
+        PaymentDocument checkExisted = mongoTemplate.findOne(new Query(Criteria.where("order._id").is(orderId)), PaymentDocument.class);
+        if(checkExisted !=null){
+            throw new BizException("Đơn hàng đã được thanh toán");
+        }
         PaymentDocument paymentDocument= PaymentDocument.builder().paymentTime(paymentTime).
                 totalPrice(price/100).order(orderDocument).transactionId(transactionId).build();
         orderDocument.setStatus(Const.OrderStatus.CONFIRM);
         orderRepository.save(orderDocument);
         paymentRepository.save(paymentDocument);
-        SimpleMailMessage simpleMailMessage= mailService.sendMailOrderDetail(orderDocument.getEmail(),orderDocument);
-        executor.execute(() -> {
-            mailSender.send(simpleMailMessage);
-        });
+        mailService.sendEmailOrderDetail(orderDocument.getEmail(),orderDocument);
     }
     public PaymentDocument getPaymentByOrderId(String orderId) throws BizException{
         return mongoTemplate.findOne(new Query(Criteria.where("order._id").is(orderId)), PaymentDocument.class);
