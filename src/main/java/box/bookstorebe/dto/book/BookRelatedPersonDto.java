@@ -21,4 +21,5 @@ public class BookRelatedPersonDto {
     private List<BookRelatedPersonDocument.Description> descriptions;
     private ZonedDateTime createdAt;
     private ZonedDateTime updatedAt;
+    private boolean nationality;
 }

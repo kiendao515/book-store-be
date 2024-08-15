@@ -18,4 +18,5 @@ public class CreateBookRelatedPersonModel {
     private String name;
     private List<BookRelatedPersonDocument.Description> descriptions;
     private String type;
+    private boolean nationality;
 }
