@@ -75,12 +75,14 @@ public class BookRelatedPersonService {
     }
 
     public void createNewBookRelatedPerson(CreateBookRelatedPersonModel relatedPersonModel) {
+        System.out.println(relatedPersonModel.isNationality());
         BookRelatedPersonDocument bookRelatedPersonDocument = new BookRelatedPersonDocument();
         bookRelatedPersonDocument.setName(relatedPersonModel.getName());
         bookRelatedPersonDocument.setDescriptions(relatedPersonModel.getDescriptions());
         bookRelatedPersonDocument.setType(relatedPersonModel.getType());
         bookRelatedPersonDocument.setCreatedAt(ZonedDateTime.now());
         bookRelatedPersonDocument.setUpdatedAt(ZonedDateTime.now());
+        bookRelatedPersonDocument.setNationality(relatedPersonModel.isNationality());
         bookRelatedPersonRepository.save(bookRelatedPersonDocument);
     }
 
@@ -90,6 +92,7 @@ public class BookRelatedPersonService {
         bookRelatedPersonDocument.setType(relatedPersonModel.getType());
         bookRelatedPersonDocument.setDescriptions(relatedPersonModel.getDescriptions());
         bookRelatedPersonDocument.setUpdatedAt(ZonedDateTime.now());
+        bookRelatedPersonDocument.setNationality(relatedPersonModel.isNationality());
         bookRelatedPersonRepository.save(bookRelatedPersonDocument);
     }
 

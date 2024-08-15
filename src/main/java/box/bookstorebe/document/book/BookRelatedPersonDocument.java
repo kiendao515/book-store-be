@@ -24,6 +24,9 @@ public class BookRelatedPersonDocument {
     @Field(name = "type")
     private String type;
 
+    @Field(name = "nationality")
+    private boolean nationality;
+
     @Field(name = "descriptions")
     private List<Description> descriptions;
 
