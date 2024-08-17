@@ -25,6 +25,9 @@ public class CommonEntity {
     @Field("description")
     private String description;
 
+    @Field("type")
+    private String type;
+
     @Field("thumbnail")
     private String thumbnail;
     @Field("created_at")
