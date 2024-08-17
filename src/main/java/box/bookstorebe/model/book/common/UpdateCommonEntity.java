@@ -12,5 +12,7 @@ import lombok.NoArgsConstructor;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class UpdateCommonEntity {
     private String name;
+    private String thumbnail;
+    private String description;
 
 }

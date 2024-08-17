@@ -19,7 +19,8 @@ public final class Const {
             "/api/v1/collections/**",
             "/api/v1/book-search-requests/**",
             "/api/v1/book-related-people/**",
-            "/api/v1/entity/common/**"
+            "/api/v1/entity/common/**",
+            "/api/v1/file/**"
     };
 
 

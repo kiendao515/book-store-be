@@ -5,6 +5,7 @@ import box.bookstorebe.document.common.CommonEntity;
 import box.bookstorebe.dto.book.BookRelatedPersonDto;
 import box.bookstorebe.dto.common.BasePagingResponse;
 import box.bookstorebe.dto.common.BaseResponse;
+import box.bookstorebe.dto.common.CommonEntityDto;
 import box.bookstorebe.exception.BizException;
 import box.bookstorebe.model.book.book.CreateBookModel;
 import box.bookstorebe.model.book.bookrelatedperson.UpdateBookRelatedPersonModel;
@@ -24,7 +25,7 @@ import org.springframework.web.bind.annotation.*;
 public class CommonEntityController {
     private final CommonEntityService commonEntityService;
     @GetMapping()
-    public BasePagingResponse<CommonEntity> getBookRelatedPeople(
+    public BasePagingResponse<CommonEntityDto> getBookRelatedPeople(
             @RequestParam(name = "type", required = false) String type,
             @RequestParam(name = "page", required = false) Integer page,
             @RequestParam(name = "size", required = false) Integer size
