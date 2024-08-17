@@ -7,5 +7,5 @@ import org.springframework.data.domain.Page;
 import java.util.List;
 
 public interface BookRelatedPersonExRepository {
-    Page<BookRelatedPersonDocument> getBookRelatedPersons(String name, String type, int page, int size);
+    Page<BookRelatedPersonDocument> getBookRelatedPersons(String name, String type, Integer page, Integer size);
 }

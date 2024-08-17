@@ -33,7 +33,7 @@ public class BookRelatedPersonService {
     private final BookRepository bookRepository;
     private final BookService bookService;
 
-    public Page<BookRelatedPersonDto> getBookRelatedPersons(String name, String type, int page, int size) {
+    public Page<BookRelatedPersonDto> getBookRelatedPersons(String name, String type, Integer page, Integer size) {
         Page<BookRelatedPersonDocument> bookRelatedPersonDocuments = bookRelatedPersonRepository.getBookRelatedPersons(name, type, page, size);
 
         List<BookRelatedPersonDto> content = new ArrayList<>();
@@ -42,28 +42,30 @@ public class BookRelatedPersonService {
         }
         return new PageImpl<>(content, bookRelatedPersonDocuments.getPageable(), bookRelatedPersonDocuments.getTotalElements());
     }
+
     public List<AuthorDto> getAuthorWithLetter(String letter) throws BizException {
-        List<AuthorDto> authors= new ArrayList<>();
-        List<BookRelatedPersonDocument> list= bookRelatedPersonRepository.findByNameStartingWithAndType(letter,"AUTHOR");
-        for (BookRelatedPersonDocument author:list) {
-            authors.add(new AuthorDto(author.getId(),author.getName(),null));
+        List<AuthorDto> authors = new ArrayList<>();
+        List<BookRelatedPersonDocument> list = bookRelatedPersonRepository.findByNameStartingWithAndType(letter, "AUTHOR");
+        for (BookRelatedPersonDocument author : list) {
+            authors.add(new AuthorDto(author.getId(), author.getName(), null));
         }
-        if(list.size()>0){
+        if (list.size() > 0) {
             List<BookDocument> bookDocumentList = bookRepository.findBooksByAuthorId(list.get(0).getId());
             List<BookDto> bookDtoList = new ArrayList<>();
-            for(BookDocument b: bookDocumentList){
+            for (BookDocument b : bookDocumentList) {
                 bookDtoList.add(bookService.findById(b.getId()));
             }
             authors.get(0).setBooks(bookDtoList);
         }
         return authors;
     }
+
     public List<BookDto> getBookOfAuthor(String authorId) throws BizException {
         List<BookDto> list = new ArrayList<>();
         BookRelatedPersonDocument bookRelatedPersonDocument = bookRelatedPersonRepository.findById(authorId).
-                orElseThrow(()->new BizException("authorId invalid!"));
+                orElseThrow(() -> new BizException("authorId invalid!"));
         List<BookDocument> bookDocumentList = bookRepository.findBooksByAuthorId(bookRelatedPersonDocument.getId());
-        for(BookDocument b: bookDocumentList){
+        for (BookDocument b : bookDocumentList) {
             list.add(bookService.findById(b.getId()));
         }
         return list;

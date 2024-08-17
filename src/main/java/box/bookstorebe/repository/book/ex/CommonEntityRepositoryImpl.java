@@ -19,8 +19,8 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.newA
 public class CommonEntityRepositoryImpl implements CommonEntityExRepository {
     private final MongoTemplate mongoTemplate;
     @Override
-    public Page<CommonEntity> getCommonEntity(String type, int page, int size) {
-        PageRequest pageRequest = PageRequest.of(page, size);
+    public Page<CommonEntity> getCommonEntity(String type, Integer page, Integer size) {
+        PageRequest pageRequest;
 
         Criteria criteria = new Criteria();
         if (type != null) {
@@ -28,6 +28,11 @@ public class CommonEntityRepositoryImpl implements CommonEntityExRepository {
         }
 
         long totalElement = mongoTemplate.count(new Query().addCriteria(criteria), CommonEntity.class);
+        if(page==null || size ==null) {
+            pageRequest = PageRequest.of(0, (int) totalElement);
+        } else {
+            pageRequest = PageRequest.of(page, size);
+        }
 
         AggregationOperation matchOperations = match(criteria);
 

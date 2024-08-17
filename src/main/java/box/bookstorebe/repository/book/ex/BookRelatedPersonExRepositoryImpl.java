@@ -1,6 +1,7 @@
 package box.bookstorebe.repository.book.ex;
 
 import box.bookstorebe.document.book.BookRelatedPersonDocument;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -21,9 +22,8 @@ public class BookRelatedPersonExRepositoryImpl implements BookRelatedPersonExRep
     private final MongoTemplate mongoTemplate;
 
     @Override
-    public Page<BookRelatedPersonDocument> getBookRelatedPersons(String name, String type, int page, int size) {
-        PageRequest pageRequest = PageRequest.of(page, size);
-
+    public Page<BookRelatedPersonDocument> getBookRelatedPersons(String name, String type, Integer page, Integer size) {
+        PageRequest pageRequest;
         Criteria criteria = new Criteria();
         if (name != null) {
             criteria = criteria.and("name").regex(".*" + name + ".*");
@@ -34,6 +34,11 @@ public class BookRelatedPersonExRepositoryImpl implements BookRelatedPersonExRep
         }
 
         long totalElement = mongoTemplate.count(new Query().addCriteria(criteria), BookRelatedPersonDocument.class);
+        if (page == null || size == null) {
+            pageRequest = PageRequest.of(0, (int) totalElement);
+        } else {
+            pageRequest = PageRequest.of(page, size);
+        }
 
         AggregationOperation matchOperations = match(criteria);
 

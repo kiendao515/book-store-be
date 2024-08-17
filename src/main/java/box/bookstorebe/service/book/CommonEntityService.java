@@ -45,7 +45,7 @@ public class CommonEntityService {
         commonEntity.setUpdatedAt(ZonedDateTime.now());
         commonEntityRepository.save(commonEntity);
     }
-    public Page<CommonEntityDto> getEntity(String type, int page, int size) {
+    public Page<CommonEntityDto> getEntity(String type, Integer page, Integer size) {
         Page<CommonEntity> commonEntities = commonEntityRepository.getCommonEntity(type, page, size);
         List<CommonEntityDto> content = new ArrayList<>();
         for (CommonEntity commonEntity : commonEntities.getContent()) {
