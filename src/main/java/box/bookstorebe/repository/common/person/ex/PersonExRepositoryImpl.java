@@ -1,7 +1,6 @@
-package box.bookstorebe.repository.book.ex;
+package box.bookstorebe.repository.common.person.ex;
 
-import box.bookstorebe.document.book.BookRelatedPersonDocument;
-import io.swagger.v3.oas.models.security.SecurityScheme;
+import box.bookstorebe.document.common.PersonDocument;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -18,11 +17,11 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.newA
 
 @Repository
 @AllArgsConstructor
-public class BookRelatedPersonExRepositoryImpl implements BookRelatedPersonExRepository {
+public class PersonExRepositoryImpl implements PersonExRepository {
     private final MongoTemplate mongoTemplate;
 
     @Override
-    public Page<BookRelatedPersonDocument> getBookRelatedPersons(String name, String type, Integer page, Integer size) {
+    public Page<PersonDocument> getPeople(String name, String type, Integer page, Integer size) {
         PageRequest pageRequest;
         Criteria criteria = new Criteria();
         if (name != null) {
@@ -33,7 +32,7 @@ public class BookRelatedPersonExRepositoryImpl implements BookRelatedPersonExRep
             criteria = criteria.and("type").is(type);
         }
 
-        long totalElement = mongoTemplate.count(new Query().addCriteria(criteria), BookRelatedPersonDocument.class);
+        long totalElement = mongoTemplate.count(new Query().addCriteria(criteria), PersonDocument.class);
         if (page == null || size == null) {
             pageRequest = PageRequest.of(0, (int) totalElement);
         } else {
@@ -54,7 +53,7 @@ public class BookRelatedPersonExRepositoryImpl implements BookRelatedPersonExRep
                 limitOperation
         );
 
-        AggregationResults<BookRelatedPersonDocument> result = mongoTemplate.aggregate(aggregation, "book_related_people", BookRelatedPersonDocument.class);
+        AggregationResults<PersonDocument> result = mongoTemplate.aggregate(aggregation, "people", PersonDocument.class);
         return new PageImpl<>(result.getMappedResults(), pageRequest, totalElement);
     }
 }

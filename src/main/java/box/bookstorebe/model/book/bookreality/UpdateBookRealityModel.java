@@ -1,12 +1,12 @@
 package box.bookstorebe.model.book.bookreality;
 
 import box.bookstorebe.common.Const;
-import box.bookstorebe.document.book.BookCommon;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.util.List;
 
@@ -15,11 +15,18 @@ import java.util.List;
 @NoArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class UpdateBookRealityModel {
+    @Field("price")
     private Double price;
+
+    @Field("status")
+    private String status;
+
+    @Field("type")
     private Const.BookRealityType type;
-    private Const.BookRealityStatus status;
-    private List<BookCommon.RelatedImage> relatedImages;
-    private List<BookCommon.Description> descriptions;
-    private List<BookCommon.RelatedPerson> relatedPeople;
+
+    @Field("book_id")
     private String bookId;
+
+    @Field("cover_image_id")
+    private String coverImageId;
 }

@@ -16,7 +16,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Document("book_realities")
-public class BookRealityDocument extends BookCommon {
+public class BookRealityDocument {
     @Id
     private String id;
 
@@ -27,8 +27,17 @@ public class BookRealityDocument extends BookCommon {
     private String status;
 
     @Field("type")
-    private String type; // "OLD", "NEW"
+    private String type;
 
     @Field("book_id")
     private String bookId;
+
+    @Field("cover_image_id")
+    private String coverImageId;
+
+    @Field("created_at")
+    private ZonedDateTime createdAt;
+
+    @Field("updated_at")
+    private ZonedDateTime updatedAt;
 }

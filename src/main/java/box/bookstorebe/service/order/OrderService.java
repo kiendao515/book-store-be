@@ -1,31 +1,25 @@
 package box.bookstorebe.service.order;
 
 import box.bookstorebe.common.Const;
-import box.bookstorebe.document.book.BookCommon;
 import box.bookstorebe.document.book.BookDocument;
 import box.bookstorebe.document.book.BookRealityDocument;
-import box.bookstorebe.document.book.CategoryDocument;
 import box.bookstorebe.document.order.OrderDocument;
 import box.bookstorebe.document.payment.PaymentDocument;
-import box.bookstorebe.dto.book.BookDto;
 import box.bookstorebe.dto.book.BookRealityDto;
 import box.bookstorebe.dto.order.OrderDto;
 import box.bookstorebe.exception.BizException;
-import box.bookstorebe.model.book.bookreality.CreateBookRealityModel;
 import box.bookstorebe.model.order.BookOrder;
 import box.bookstorebe.model.order.CreateOrderModel;
 import box.bookstorebe.model.order.UpdateOrderModel;
 import box.bookstorebe.repository.book.BookRealityRepository;
 import box.bookstorebe.repository.book.BookRepository;
 import box.bookstorebe.repository.order.OrderRepository;
-import box.bookstorebe.repository.payment.PaymentRepository;
 import box.bookstorebe.service.book.BookRealityService;
 import box.bookstorebe.service.book.BookService;
 import box.bookstorebe.service.common.MailService;
 import jakarta.mail.MessagingException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.annotation.Order;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -34,7 +28,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.awt.print.Book;
 import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -149,10 +142,7 @@ public class OrderService {
             for(BookRealityDocument book: order.getItems()){
                 BookRealityDto bookDto = new BookRealityDto();
                 bookDto.setId(book.getId());
-//                bookDto.setType(book.getType());
-//                bookDto.setStatus(book.getStatus());
                 bookDto.setPrice(book.getPrice());
-                List<String> bookImageIds = book.getRelatedImages().stream().map(BookCommon.RelatedImage::getImageId).toList();
                 bookDto.setCreatedAt(book.getCreatedAt());
                 bookDtos.add(bookDto);
             }
@@ -164,7 +154,7 @@ public class OrderService {
     public OrderDto findById(String id) throws BizException {
         OrderDocument orderDocument = orderRepository.findById(id).orElseThrow(()-> new BizException("orderId is invalid"));
         List<BookRealityDocument> list= bookRealityRepository.findAllById(orderDocument.getItems().
-                stream().map(bookRealityDocument -> bookRealityDocument.getId()).collect(Collectors.toList()));
+                stream().map(BookRealityDocument::getId).collect(Collectors.toList()));
         List<BookRealityDto> bookRealityDtoList = new ArrayList<>();
         for(BookRealityDocument bookRealityDocument: list){
             BookRealityDto bookDto = bookRealityService.findById(bookRealityDocument.getId());
@@ -192,7 +182,7 @@ public class OrderService {
     public OrderDto findByOrderId(String id) throws BizException{
         OrderDocument orderDocument = mongoTemplate.findOne(new Query(Criteria.where("order_id").is(id)), OrderDocument.class);
         List<BookRealityDocument> list= bookRealityRepository.findAllById(orderDocument.getItems().
-                stream().map(bookRealityDocument -> bookRealityDocument.getId()).collect(Collectors.toList()));
+                stream().map(BookRealityDocument::getId).collect(Collectors.toList()));
         List<BookRealityDto> bookRealityDtoList = new ArrayList<>();
         for(BookRealityDocument bookRealityDocument: list){
             BookRealityDto bookDto = bookRealityService.findById(bookRealityDocument.getId());

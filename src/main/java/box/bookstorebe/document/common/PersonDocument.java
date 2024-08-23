@@ -1,4 +1,4 @@
-package box.bookstorebe.document.book;
+package box.bookstorebe.document.common;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,8 +13,8 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Document("book_related_people")
-public class BookRelatedPersonDocument {
+@Document("people")
+public class PersonDocument {
     @Id
     private String id;
 

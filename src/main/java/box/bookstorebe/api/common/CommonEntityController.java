@@ -1,21 +1,16 @@
 package box.bookstorebe.api.common;
 
 import box.bookstorebe.common.Const;
-import box.bookstorebe.document.common.CommonEntity;
-import box.bookstorebe.dto.book.BookRelatedPersonDto;
 import box.bookstorebe.dto.common.BasePagingResponse;
 import box.bookstorebe.dto.common.BaseResponse;
 import box.bookstorebe.dto.common.CommonEntityDto;
 import box.bookstorebe.exception.BizException;
-import box.bookstorebe.model.book.book.CreateBookModel;
-import box.bookstorebe.model.book.bookrelatedperson.UpdateBookRelatedPersonModel;
 import box.bookstorebe.model.book.common.CommonEntityModel;
 import box.bookstorebe.model.book.common.UpdateCommonEntity;
 import box.bookstorebe.service.book.CommonEntityService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController

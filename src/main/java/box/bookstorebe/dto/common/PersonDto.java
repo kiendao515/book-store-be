@@ -1,6 +1,6 @@
-package box.bookstorebe.dto.book;
+package box.bookstorebe.dto.common;
 
-import box.bookstorebe.document.book.BookRelatedPersonDocument;
+import box.bookstorebe.document.common.PersonDocument;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.AllArgsConstructor;
@@ -14,11 +14,11 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class BookRelatedPersonDto {
+public class PersonDto {
     private String id;
     private String name;
     private String type;
-    private List<BookRelatedPersonDocument.Description> descriptions;
+    private List<PersonDocument.Description> descriptions;
     private ZonedDateTime createdAt;
     private ZonedDateTime updatedAt;
     private boolean nationality;

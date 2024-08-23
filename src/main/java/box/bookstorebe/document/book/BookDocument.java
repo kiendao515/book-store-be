@@ -15,19 +15,64 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Document("books")
-public class BookDocument extends BookCommon {
+public class BookDocument {
     @Id
     private String id;
 
     @Field("name")
     private String name;
 
-    @Field("collection_ids")
-    private List<String> collectionIds;
-
     @Field("category_ids")
     private List<String> categoryIds;
 
+    @Field("tag_ids")
+    private List<String> tagIds;
+
     @Field("store_id")
     private String storeId;
+
+    @Field("number_of_page")
+    private Long numberOfPage;
+
+    @Field("description")
+    private String description;
+
+    @Field("publish_year")
+    private Integer publishYear;
+
+    @Field("isbn")
+    private String isbn;
+
+    @Field("publishing_unit_id")
+    private String publishingUnitId;
+
+    @Field("publisher_id")
+    private String publisherId;
+
+    @Field("author_id")
+    private String authorId;
+
+    @Field("editor_id")
+    private String editorId;
+
+    @Field("translator_id")
+    private String translatorId;
+
+    @Field("cover_drawer_id")
+    private String coverDrawerId;
+
+    @Field("cover_image_id")
+    private String coverImageId;
+
+    @Field("detail_image_id")
+    private String detailImageId;
+
+    @Field("demo_image_ids")
+    private List<String> demoImageIds;
+
+    @Field("created_at")
+    private ZonedDateTime createdAt;
+
+    @Field("updated_at")
+    private ZonedDateTime updatedAt;
 }

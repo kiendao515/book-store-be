@@ -1,7 +1,5 @@
 package box.bookstorebe.model.book.book;
 
-import box.bookstorebe.document.book.BookCommon;
-import box.bookstorebe.document.book.BookDocument;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.AllArgsConstructor;
@@ -16,10 +14,20 @@ import java.util.List;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class UpdateBookModel {
     private String name;
-    private List<BookCommon.Description> descriptions;
-    private List<BookCommon.RelatedPerson> relatedPeople;
-    private List<String> collectionIds;
+    private Long numberOfPage;
+    private String description;
+    private Integer publishYear;
+    private String isbn;
+    private String publishingUnitId;
+    private String publisherId;
+    private String authorId;
+    private String editorId;
+    private String translatorId;
+    private String coverDrawerId;
+    private String coverImageId;
+    private String detailImageId;
+    private List<String> demoImageIds;
+    private List<String> tagIds;
     private List<String> categoryIds;
-    private List<BookCommon.RelatedImage> relatedImages;
     private String storeId;
 }

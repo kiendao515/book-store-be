@@ -9,4 +9,6 @@ public interface BookRealityRepository extends MongoRepository<BookRealityDocume
     void deleteByBookId(String bookId);
 
     List<BookRealityDocument> findAllByBookId(String bookId);
+
+    List<BookRealityDocument> findAllByBookIdIn(List<String> bookIds);
 }

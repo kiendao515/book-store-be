@@ -3,17 +3,18 @@ package box.bookstorebe.service.book;
 import box.bookstorebe.common.Const;
 import box.bookstorebe.document.book.*;
 import box.bookstorebe.document.bookstore.BookStoreDocument;
+import box.bookstorebe.document.common.CommonEntity;
 import box.bookstorebe.document.common.ImageDocument;
-import box.bookstorebe.dto.book.BookCommonDto;
+import box.bookstorebe.document.common.PersonDocument;
 import box.bookstorebe.dto.book.BookDto;
 import box.bookstorebe.dto.book.BookRealityDto;
 import box.bookstorebe.exception.BizException;
-import box.bookstorebe.mapper.book.BookRealityMapper;
 import box.bookstorebe.model.book.book.CreateBookModel;
 import box.bookstorebe.model.book.book.UpdateBookModel;
 import box.bookstorebe.repository.book.*;
 import box.bookstorebe.repository.bookstore.BookStoreRepository;
 import box.bookstorebe.repository.common.image.ImageRepository;
+import box.bookstorebe.repository.common.person.PersonRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -24,6 +25,7 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @AllArgsConstructor
@@ -32,134 +34,97 @@ import java.util.stream.Collectors;
 public class BookService {
     private final BookRepository bookRepository;
     private final CategoryRepository categoryRepository;
-    private final CollectionRepository collectionRepository;
-    private final BookRelatedPersonRepository bookRelatedPersonDocumentRepository;
     private final ImageRepository imageRepository;
     private final BookStoreRepository bookStoreRepository;
     private final BookRealityRepository bookRealityRepository;
+    private final PersonRepository personRepository;
+    private final CommonEntityRepository commonEntityRepository;
 
     public Page<BookDto> getBooks(String name, List<String> categoryIds, List<String> collectionIds, List<String> relatedPersonIds, String storeId, Integer page, Integer size) throws BizException {
         Page<BookDocument> bookDocuments = bookRepository.getBooks(name, categoryIds, collectionIds, relatedPersonIds, storeId, page, size);
 
         List<String> resultCategoryIds = new ArrayList<>();
-        List<String> resultCollectionIds = new ArrayList<>();
-        List<String> resultRelatedPersonIds = new ArrayList<>();
-        List<String> resultRelatedImageIds = new ArrayList<>();
+        List<String> resultCommonEntityIds = new ArrayList<>();
+        List<String> resultPersonIds = new ArrayList<>();
+        List<String> resultImageIds = new ArrayList<>();
+        List<String> resultBookStoreIds = new ArrayList<>();
+        List<String> bookIds = new ArrayList<>();
 
         for (BookDocument bookDocument : bookDocuments) {
             resultCategoryIds.addAll(bookDocument.getCategoryIds());
-            resultCollectionIds.addAll(bookDocument.getCollectionIds());
-            resultRelatedPersonIds.addAll(bookDocument.getRelatedPeople().stream().map(BookDocument.RelatedPerson::getRelatedPersonId).toList());
-            resultRelatedImageIds.addAll(bookDocument.getRelatedImages().stream().map(BookDocument.RelatedImage::getImageId).toList());
+            resultCommonEntityIds.addAll(bookDocument.getTagIds());
+            resultCommonEntityIds.add(bookDocument.getPublisherId());
+            resultCommonEntityIds.add(bookDocument.getPublishingUnitId());
+            resultPersonIds.add(bookDocument.getAuthorId());
+            resultPersonIds.add(bookDocument.getEditorId());
+            resultPersonIds.add(bookDocument.getTranslatorId());
+            resultPersonIds.add(bookDocument.getCoverDrawerId());
+            resultImageIds.add(bookDocument.getCoverImageId());
+            resultImageIds.add(bookDocument.getDetailImageId());
+            resultImageIds.addAll(bookDocument.getDemoImageIds());
+            resultBookStoreIds.add(bookDocument.getStoreId());
+            bookIds.add(bookDocument.getId());
         }
 
         List<CategoryDocument> categoryDocuments = categoryRepository.findAllById(resultCategoryIds);
-        Map<String, CategoryDocument> categoryMap = categoryDocuments.stream().collect(Collectors.toMap(CategoryDocument::getId, categoryDocument -> categoryDocument));
 
-        List<CollectionDocument> collectionDocuments = collectionRepository.findAllById(resultCollectionIds);
-        Map<String, CollectionDocument> collectionMap = collectionDocuments.stream().collect(Collectors.toMap(CollectionDocument::getId, collectionDocument -> collectionDocument));
+        List<PersonDocument> personDocuments = personRepository.findAllById(resultPersonIds);
+        Map<String, PersonDocument> personMap = personDocuments.stream().collect(Collectors.toMap(PersonDocument::getId, Function.identity()));
 
-        List<BookRelatedPersonDocument> relatedPersonDocuments = bookRelatedPersonDocumentRepository.findAllById(resultRelatedPersonIds);
-        Map<String, BookRelatedPersonDocument> relatedPersonMap = relatedPersonDocuments.stream().collect(Collectors.toMap(BookRelatedPersonDocument::getId, relatedPersonDocument -> relatedPersonDocument));
+        List<ImageDocument> imageDocuments = imageRepository.findAllById(resultImageIds);
+        Map<String, ImageDocument> imageDocumentMap = imageDocuments.stream().collect(Collectors.toMap(ImageDocument::getId, Function.identity()));
 
-        List<ImageDocument> relatedImageDocuments = imageRepository.findAllById(resultRelatedImageIds);
-        Map<String, ImageDocument> relatedImageMap = relatedImageDocuments.stream().collect(Collectors.toMap(ImageDocument::getId, relatedImageDocument -> relatedImageDocument));
+        List<CommonEntity> commonEntities = commonEntityRepository.findAllById(resultCommonEntityIds);
+        Map<String, CommonEntity> commonEntityMap = commonEntities.stream().collect(Collectors.toMap(CommonEntity::getId, Function.identity()));
+
+        List<BookStoreDocument> bookStoreDocuments = bookStoreRepository.findAllById(resultBookStoreIds);
+        Map<String, BookStoreDocument> bookStoreMap = bookStoreDocuments.stream().collect(Collectors.toMap(BookStoreDocument::getId, Function.identity()));
+
+        List<BookRealityDocument> bookRealityDocuments = bookRealityRepository.findAllByBookIdIn(bookIds);
+        Map<String, List<BookRealityDocument>> bookRealityMap = bookRealityDocuments.stream().collect(Collectors.groupingBy(BookRealityDocument::getBookId));
 
         List<BookDto> content = new ArrayList<>();
 
         for (BookDocument bookDocument : bookDocuments) {
-            BookDto bookDto = new BookDto();
-            bookDto.setId(bookDocument.getId());
-            bookDto.setName(bookDocument.getName());
-            List<BookDto.Description> descriptions = new ArrayList<>();
-            bookDocument.getDescriptions().forEach(description -> {
-                descriptions.add(new BookDto.Description(Const.BookDescriptionType.valueOf(description.getType()), description.getValue()));
-            });
-            bookDto.setDescriptions(descriptions);
-            List<BookDto.Category> categories = new ArrayList<>();
-            bookDocument.getCategoryIds().forEach(categoryId -> {
-                CategoryDocument categoryDocument = categoryMap.getOrDefault(categoryId, new CategoryDocument());
-                categories.add(new BookDto.Category(categoryId, categoryDocument.getName()));
-            });
-            bookDto.setCategories(categories);
+            List<BookRealityDocument> bookRealities = bookRealityMap.getOrDefault(bookDocument.getId(), null);
+            List<BookRealityDto> bookRealityDtos = new ArrayList<>();
+            for (BookRealityDocument bookRealityDocument : bookRealities) {
+                ImageDocument imageDocument = imageRepository.findById(bookRealityDocument.getCoverImageId()).orElse(null);
+                BookRealityDto bookRealityDto = BookRealityDto.builder()
+                        .id(bookRealityDocument.getId())
+                        .price(bookRealityDocument.getPrice())
+                        .status(Const.BookRealityStatus.valueOf(bookRealityDocument.getStatus()))
+                        .type(Const.BookRealityType.valueOf(bookRealityDocument.getType()))
+                        .coverImage(imageDocument)
+                        .createdAt(bookRealityDocument.getCreatedAt())
+                        .updatedAt(bookRealityDocument.getUpdatedAt())
+                        .build();
+                bookRealityDtos.add(bookRealityDto);
+            }
 
-            List<BookDto.Collection> collections = new ArrayList<>();
-            bookDocument.getCollectionIds().forEach(collectionId -> {
-                CollectionDocument collectionDocument = collectionMap.getOrDefault(collectionId, new CollectionDocument());
-                collections.add(new BookDto.Collection(collectionId, collectionDocument.getName()));
-            });
-            bookDto.setCollections(collections);
-
-            List<BookDto.RelatedPerson> relatedPeople = new ArrayList<>();
-            bookDocument.getRelatedPeople().forEach(relatedPerson -> {
-                BookDto.RelatedPerson relatedPersonDto = new BookDto.RelatedPerson();
-                BookRelatedPersonDocument bookRelatedPersonDocument = relatedPersonMap.getOrDefault(relatedPerson.getRelatedPersonId(), new BookRelatedPersonDocument());
-                relatedPersonDto.setId(bookRelatedPersonDocument.getId());
-                relatedPersonDto.setName(bookRelatedPersonDocument.getName());
-                relatedPersonDto.setType(Const.BookRelatedPersonType.valueOf(relatedPerson.getType()));
-                relatedPeople.add(relatedPersonDto);
-            });
-            bookDto.setRelatedPeople(relatedPeople);
-
-            List<BookDto.RelatedImage> relatedImages = new ArrayList<>();
-            bookDocument.getRelatedImages().forEach(relatedImage -> {
-                BookDto.RelatedImage relatedImageDto = new BookDto.RelatedImage();
-                ImageDocument imageDocument = relatedImageMap.getOrDefault(relatedImage.getImageId(), new ImageDocument());
-                relatedImageDto.setId(imageDocument.getId());
-                relatedImageDto.setType(Const.BookImageType.valueOf(relatedImage.getType()));
-                relatedImageDto.setLink(imageDocument.getLink());
-                relatedImages.add(relatedImageDto);
-            });
-            bookDto.setRelatedImages(relatedImages);
-
-            List<BookRealityDocument> bookRealityDocuments = bookRealityRepository.findAllByBookId(bookDocument.getId());
-            List<BookRealityDto> bookRealities = new ArrayList<>();
-            bookRealityDocuments.forEach(bookRealityDocument -> {
-                BookRealityDto bookRealityDto = new BookRealityDto();
-                bookRealityDto.setId(bookRealityDocument.getId());
-                bookRealityDto.setType(Const.BookRealityType.valueOf(bookRealityDocument.getType()));
-                bookRealityDto.setStatus(Const.BookRealityStatus.valueOf(bookRealityDocument.getStatus()));
-                bookRealityDto.setPrice(bookRealityDocument.getPrice());
-                List<BookCommonDto.Description> bookDescriptions = new ArrayList<>();
-                bookRealityDocument.getDescriptions().forEach(description -> {
-                    bookDescriptions.add(new BookCommonDto.Description(Const.BookDescriptionType.valueOf(description.getType()), description.getValue()));
-                });
-                bookRealityDto.setDescriptions(bookDescriptions);
-
-                List<BookCommonDto.RelatedImage> bookRelatedImages = new ArrayList<>();
-                bookRealityDocument.getRelatedImages().forEach(relatedImage -> {
-                    BookCommonDto.RelatedImage relatedImageDto = new BookCommonDto.RelatedImage();
-                    ImageDocument imageDocument = relatedImageMap.getOrDefault(relatedImage.getImageId(), new ImageDocument());
-                    relatedImageDto.setId(imageDocument.getId());
-                    relatedImageDto.setType(Const.BookImageType.valueOf(relatedImage.getType()));
-                    relatedImageDto.setLink(imageDocument.getLink());
-                    bookRelatedImages.add(relatedImageDto);
-                });
-                bookRealityDto.setRelatedImages(bookRelatedImages);
-
-                List<BookCommonDto.RelatedPerson> bookRelatedPeople = new ArrayList<>();
-                bookRealityDocument.getRelatedPeople().forEach(relatedPerson -> {
-                    BookCommonDto.RelatedPerson relatedPersonDto = new BookCommonDto.RelatedPerson();
-                    BookRelatedPersonDocument bookRelatedPersonDocument = relatedPersonMap.getOrDefault(relatedPerson.getRelatedPersonId(), new BookRelatedPersonDocument());
-                    relatedPersonDto.setId(bookRelatedPersonDocument.getId());
-                    relatedPersonDto.setName(bookRelatedPersonDocument.getName());
-                    relatedPersonDto.setType(Const.BookRelatedPersonType.valueOf(relatedPerson.getType()));
-                    bookRelatedPeople.add(relatedPersonDto);
-                });
-                bookRealityDto.setRelatedPeople(bookRelatedPeople);
-
-                bookRealities.add(bookRealityDto);
-            });
-            bookDto.setBookRealities(bookRealities);
-
-            BookStoreDocument bookStoreDocument = bookStoreRepository.findById(bookDocument.getStoreId()).orElseThrow(() -> new BizException("Invalid store id"));
-
-            BookDto.Store store = new BookDto.Store();
-            store.setId(bookStoreDocument.getId());
-            store.setName(bookStoreDocument.getName());
-            bookDto.setStore(store);
-            bookDto.setCreatedAt(bookDocument.getCreatedAt());
-            bookDto.setUpdatedAt(bookDocument.getUpdatedAt());
+            BookDto bookDto = BookDto.builder()
+                    .id(bookDocument.getId())
+                    .name(bookDocument.getName())
+                    .description(bookDocument.getDescription())
+                    .numberOfPage(bookDocument.getNumberOfPage())
+                    .publishYear(bookDocument.getPublishYear())
+                    .isbn(bookDocument.getIsbn())
+                    .publishingUnit(commonEntityMap.getOrDefault(bookDocument.getPublishingUnitId(), null))
+                    .publisher(commonEntityMap.getOrDefault(bookDocument.getPublisherId(), null))
+                    .author(personMap.getOrDefault(bookDocument.getAuthorId(), null))
+                    .editor(personMap.getOrDefault(bookDocument.getEditorId(), null))
+                    .translator(personMap.getOrDefault(bookDocument.getTranslatorId(), null))
+                    .coverDrawer(personMap.getOrDefault(bookDocument.getCoverDrawerId(), null))
+                    .coverImage(imageDocumentMap.getOrDefault(bookDocument.getCoverImageId(), null))
+                    .detailImage(imageDocumentMap.getOrDefault(bookDocument.getDetailImageId(), null))
+                    .demoImages(imageDocumentMap.values().stream().filter(imageDocument -> bookDocument.getDemoImageIds().contains(imageDocument.getId())).collect(Collectors.toList()))
+                    .tags(commonEntities.stream().filter(entity -> bookDocument.getTagIds().contains(entity.getId())).collect(Collectors.toList()))
+                    .categories(categoryDocuments.stream().filter(categoryDocument -> bookDocument.getCategoryIds().contains(categoryDocument.getId())).collect(Collectors.toList()))
+                    .bookRealities(bookRealityDtos)
+                    .bookStore(bookStoreMap.getOrDefault(bookDocument.getStoreId(), null))
+                    .createdAt(bookDocument.getCreatedAt())
+                    .updatedAt(bookDocument.getUpdatedAt())
+                    .build();
             content.add(bookDto);
         }
 
@@ -168,178 +133,123 @@ public class BookService {
 
     public BookDto findById(String id) throws BizException {
         BookDocument bookDocument = bookRepository.findById(id).orElseThrow(() -> new BizException("Invalid book id"));
-        List<String> categoryIds = bookDocument.getCategoryIds();
-        List<String> collectionIds = bookDocument.getCollectionIds();
-        List<String> relatedPersonIds = bookDocument.getRelatedPeople().stream().map(BookDocument.RelatedPerson::getRelatedPersonId).toList();
-        List<String> relatedImageIds = bookDocument.getRelatedImages().stream().map(BookDocument.RelatedImage::getImageId).toList();
+        BookStoreDocument bookStoreDocument = bookStoreRepository.findById(bookDocument.getStoreId()).orElseThrow(() -> new BizException("Invalid store id"));
+        List<String> personIds = List.of(bookDocument.getAuthorId(), bookDocument.getEditorId(), bookDocument.getTranslatorId(), bookDocument.getCoverDrawerId());
+        List<PersonDocument> personDocuments = personRepository.findAllById(personIds);
+        Map<String, PersonDocument> personMap = personDocuments.stream().collect(Collectors.toMap(PersonDocument::getId, Function.identity()));
 
-        List<CategoryDocument> categoryDocuments = categoryRepository.findAllById(categoryIds);
-        Map<String, CategoryDocument> categoryMap = categoryDocuments.stream().collect(Collectors.toMap(CategoryDocument::getId, categoryDocument -> categoryDocument));
+        List<String> imageIds = new ArrayList<>(List.of(bookDocument.getCoverImageId(), bookDocument.getDetailImageId()));
+        imageIds.addAll(bookDocument.getDemoImageIds());
+        List<ImageDocument> imageDocuments = imageRepository.findAllById(imageIds);
+        Map<String, ImageDocument> imageMap = imageDocuments.stream().collect(Collectors.toMap(ImageDocument::getId, Function.identity()));
 
-        List<CollectionDocument> collectionDocuments = collectionRepository.findAllById(collectionIds);
-        Map<String, CollectionDocument> collectionMap = collectionDocuments.stream().collect(Collectors.toMap(CollectionDocument::getId, collectionDocument -> collectionDocument));
+        List<String> commonEntityIds = new ArrayList<>(List.of(bookDocument.getPublisherId(), bookDocument.getPublishingUnitId()));
+        commonEntityIds.addAll(bookDocument.getTagIds());
+        List<CommonEntity> commonEntities = commonEntityRepository.findAllById(commonEntityIds);
+        Map<String, CommonEntity> commonEntityMap = commonEntities.stream().collect(Collectors.toMap(CommonEntity::getId, Function.identity()));
 
-        List<BookRelatedPersonDocument> bookRelatedPersonDocuments = bookRelatedPersonDocumentRepository.findAllById(relatedPersonIds);
-        Map<String, BookRelatedPersonDocument> relatedPersonMap = bookRelatedPersonDocuments.stream().collect(Collectors.toMap(BookRelatedPersonDocument::getId, relatedPersonDocument -> relatedPersonDocument));
-
-        List<ImageDocument> relatedImageDocuments = imageRepository.findAllById(relatedImageIds);
-        Map<String, ImageDocument> relatedImageMap = relatedImageDocuments.stream().collect(Collectors.toMap(ImageDocument::getId, relatedImageDocument -> relatedImageDocument));
-
-        BookStoreDocument bookStoreDocument = bookStoreRepository.findById(bookDocument.getStoreId()).orElseGet(BookStoreDocument::new);
-
-        BookDto bookDto = new BookDto();
-        bookDto.setId(bookDocument.getId());
-        bookDto.setName(bookDocument.getName());
-        List<BookDto.Description> descriptions = new ArrayList<>();
-        bookDocument.getDescriptions().forEach(description -> {
-            descriptions.add(new BookDto.Description(Const.BookDescriptionType.valueOf(description.getType()), description.getValue()));
-        });
-        bookDto.setDescriptions(descriptions);
-
-        List<BookDto.Category> categories = new ArrayList<>();
-        bookDocument.getCategoryIds().forEach(categoryId -> {
-            CategoryDocument categoryDocument = categoryMap.getOrDefault(categoryId, new CategoryDocument());
-            categories.add(new BookDto.Category(categoryId, categoryDocument.getName()));
-        });
-        bookDto.setCategories(categories);
-
-        List<BookDto.Collection> collections = new ArrayList<>();
-        bookDocument.getCollectionIds().forEach(collectionId -> {
-            CollectionDocument collectionDocument = collectionMap.getOrDefault(collectionId, new CollectionDocument());
-            collections.add(new BookDto.Collection(collectionId, collectionDocument.getName()));
-        });
-        bookDto.setCollections(collections);
-
-        List<BookDto.RelatedPerson> relatedPeople = new ArrayList<>();
-        bookDocument.getRelatedPeople().forEach(relatedPerson -> {
-            BookDto.RelatedPerson relatedPersonDto = new BookDto.RelatedPerson();
-            BookRelatedPersonDocument bookRelatedPersonDocument = relatedPersonMap.getOrDefault(relatedPerson.getRelatedPersonId(), new BookRelatedPersonDocument());
-            relatedPersonDto.setId(bookRelatedPersonDocument.getId());
-            relatedPersonDto.setName(bookRelatedPersonDocument.getName());
-            relatedPersonDto.setType(Const.BookRelatedPersonType.valueOf(relatedPerson.getType()));
-            relatedPeople.add(relatedPersonDto);
-        });
-        bookDto.setRelatedPeople(relatedPeople);
-
-        List<BookDto.RelatedImage> relatedImages = new ArrayList<>();
-        bookDocument.getRelatedImages().forEach(relatedImage -> {
-            BookDto.RelatedImage relatedImageDto = new BookDto.RelatedImage();
-            ImageDocument imageDocument = relatedImageMap.getOrDefault(relatedImage.getImageId(), new ImageDocument());
-            relatedImageDto.setId(imageDocument.getId());
-            relatedImageDto.setType(Const.BookImageType.valueOf(relatedImage.getType()));
-            relatedImageDto.setLink(imageDocument.getLink());
-            relatedImages.add(relatedImageDto);
-        });
-        bookDto.setRelatedImages(relatedImages);
-
+        List<CategoryDocument> categoryDocuments = categoryRepository.findAllById(bookDocument.getCategoryIds());
         List<BookRealityDocument> bookRealityDocuments = bookRealityRepository.findAllByBookId(bookDocument.getId());
-        List<BookRealityDto> bookRealities = new ArrayList<>();
-        bookRealityDocuments.forEach(bookRealityDocument -> {
-            BookRealityDto bookRealityDto = new BookRealityDto();
-            bookRealityDto.setId(bookRealityDocument.getId());
-            bookRealityDto.setType(Const.BookRealityType.valueOf(bookRealityDocument.getType()));
-            bookRealityDto.setStatus(Const.BookRealityStatus.valueOf(bookRealityDocument.getStatus()));
-            bookRealityDto.setPrice(bookRealityDocument.getPrice());
-            List<BookCommonDto.Description> bookDescriptions = new ArrayList<>();
-            bookRealityDocument.getDescriptions().forEach(description -> {
-                bookDescriptions.add(new BookCommonDto.Description(Const.BookDescriptionType.valueOf(description.getType()), description.getValue()));
-            });
-            bookRealityDto.setDescriptions(bookDescriptions);
 
-            List<BookCommonDto.RelatedImage> bookRelatedImages = new ArrayList<>();
-            bookRealityDocument.getRelatedImages().forEach(relatedImage -> {
-                BookCommonDto.RelatedImage relatedImageDto = new BookCommonDto.RelatedImage();
-                ImageDocument imageDocument = relatedImageMap.getOrDefault(relatedImage.getImageId(), new ImageDocument());
-                relatedImageDto.setId(imageDocument.getId());
-                relatedImageDto.setType(Const.BookImageType.valueOf(relatedImage.getType()));
-                relatedImageDto.setLink(imageDocument.getLink());
-                bookRelatedImages.add(relatedImageDto);
-            });
-            bookRealityDto.setRelatedImages(bookRelatedImages);
+        List<BookRealityDto> bookRealityDtos = new ArrayList<>();
+        for (BookRealityDocument bookRealityDocument : bookRealityDocuments) {
+            ImageDocument imageDocument = imageRepository.findById(bookRealityDocument.getCoverImageId()).orElse(null);
+            BookRealityDto bookRealityDto = BookRealityDto.builder()
+                    .id(bookRealityDocument.getId())
+                    .price(bookRealityDocument.getPrice())
+                    .status(Const.BookRealityStatus.valueOf(bookRealityDocument.getStatus()))
+                    .type(Const.BookRealityType.valueOf(bookRealityDocument.getType()))
+                    .coverImage(imageDocument)
+                    .createdAt(bookRealityDocument.getCreatedAt())
+                    .updatedAt(bookRealityDocument.getUpdatedAt())
+                    .build();
+            bookRealityDtos.add(bookRealityDto);
+        }
 
-            List<BookCommonDto.RelatedPerson> bookRelatedPeople = new ArrayList<>();
-            bookRealityDocument.getRelatedPeople().forEach(relatedPerson -> {
-                BookCommonDto.RelatedPerson relatedPersonDto = new BookCommonDto.RelatedPerson();
-                BookRelatedPersonDocument bookRelatedPersonDocument = relatedPersonMap.getOrDefault(relatedPerson.getRelatedPersonId(), new BookRelatedPersonDocument());
-                relatedPersonDto.setId(bookRelatedPersonDocument.getId());
-                relatedPersonDto.setName(bookRelatedPersonDocument.getName());
-                relatedPersonDto.setType(Const.BookRelatedPersonType.valueOf(relatedPerson.getType()));
-                bookRelatedPeople.add(relatedPersonDto);
-            });
-            bookRealityDto.setRelatedPeople(bookRelatedPeople);
+        return BookDto.builder()
+                .id(bookDocument.getId())
+                .name(bookDocument.getName())
+                .description(bookDocument.getDescription())
+                .numberOfPage(bookDocument.getNumberOfPage())
+                .publishYear(bookDocument.getPublishYear())
+                .isbn(bookDocument.getIsbn())
+                .publishingUnit(commonEntityMap.getOrDefault(bookDocument.getPublishingUnitId(), null))
+                .publisher(commonEntityMap.getOrDefault(bookDocument.getPublisherId(), null))
+                .author(personMap.getOrDefault(bookDocument.getAuthorId(), null))
+                .editor(personMap.getOrDefault(bookDocument.getEditorId(), null))
+                .translator(personMap.getOrDefault(bookDocument.getTranslatorId(), null))
+                .coverDrawer(personMap.getOrDefault(bookDocument.getCoverDrawerId(), null))
+                .coverImage(imageMap.getOrDefault(bookDocument.getCoverImageId(), null))
+                .detailImage(imageMap.getOrDefault(bookDocument.getDetailImageId(), null))
+                .demoImages(imageMap.values().stream().filter(imageDocument -> bookDocument.getDemoImageIds().contains(imageDocument.getId())).collect(Collectors.toList()))
+                .tags(commonEntities.stream().filter(entity -> bookDocument.getTagIds().contains(entity.getId())).collect(Collectors.toList()))
+                .categories(categoryDocuments)
+                .bookRealities(bookRealityDtos)
+                .bookStore(bookStoreDocument)
+                .createdAt(bookDocument.getCreatedAt())
+                .updatedAt(bookDocument.getUpdatedAt())
+                .build();
 
-            bookRealities.add(bookRealityDto);
-        });
-        bookDto.setBookRealities(bookRealities);
-
-        BookDto.Store store = new BookDto.Store();
-        store.setId(bookStoreDocument.getId());
-        store.setName(bookStoreDocument.getName());
-        bookDto.setStore(store);
-        bookDto.setCreatedAt(bookDocument.getCreatedAt());
-        bookDto.setUpdatedAt(bookDocument.getUpdatedAt());
-        return bookDto;
     }
 
     public void createNewBook(CreateBookModel bookModel) throws BizException {
         BookDocument bookDocument = new BookDocument();
         bookDocument.setName(bookModel.getName());
-        // Validate data
-        List<String> validCategoryIds = categoryRepository.findAllById(bookModel.getCategoryIds()).stream().map(CategoryDocument::getId).toList();
-        List<String> validCollectionIds = collectionRepository.findAllById(bookModel.getCollectionIds()).stream().map(CollectionDocument::getId).toList();
-        List<BookRelatedPersonDocument> bookRelatedPersonDocuments = bookRelatedPersonDocumentRepository.findAllById(bookModel.getRelatedPeople().stream().map(BookDocument.RelatedPerson::getRelatedPersonId).toList());
-        List<ImageDocument> imageDocuments = imageRepository.findAllById(bookModel.getRelatedImages().stream().map(BookDocument.RelatedImage::getImageId).toList());
-        List<BookDocument.RelatedPerson> relatedPeople = new ArrayList<>();
-        bookModel.getRelatedPeople().forEach(relatedPerson -> {
-            if (bookRelatedPersonDocuments.stream().anyMatch(bookRelatedPersonDocument -> bookRelatedPersonDocument.getId().equals(relatedPerson.getRelatedPersonId()))) {
-                relatedPeople.add(new BookDocument.RelatedPerson(relatedPerson.getType(), relatedPerson.getRelatedPersonId()));
-            }
-        });
-        List<BookDocument.RelatedImage> relatedImages = new ArrayList<>();
-        bookModel.getRelatedImages().forEach(relatedImage -> {
-            if (imageDocuments.stream().anyMatch(imageDocument -> imageDocument.getId().equals(relatedImage.getImageId()))) {
-                relatedImages.add(new BookDocument.RelatedImage(relatedImage.getType(), relatedImage.getImageId()));
-            }
-        });
-
-        BookStoreDocument bookStoreDocument = bookStoreRepository.findById(bookModel.getStoreId()).orElseThrow(() -> new BizException("Invalid store id"));
-
-        bookDocument.setDescriptions(bookModel.getDescriptions());
-        bookDocument.setCategoryIds(validCategoryIds);
-        bookDocument.setCollectionIds(validCollectionIds);
-        bookDocument.setRelatedPeople(relatedPeople);
-        bookDocument.setRelatedImages(relatedImages);
-        bookDocument.setStoreId(bookStoreDocument.getId());
+        bookDocument.setNumberOfPage(bookModel.getNumberOfPage());
+        bookDocument.setDescription(bookModel.getDescription());
+        bookDocument.setPublishYear(bookModel.getPublishYear());
+        bookDocument.setIsbn(bookModel.getIsbn());
+        bookDocument.setPublisherId(bookModel.getPublisherId());
+        bookDocument.setPublishingUnitId(bookModel.getPublishingUnitId());
+        bookDocument.setAuthorId(bookModel.getAuthorId());
+        bookDocument.setEditorId(bookModel.getEditorId());
+        bookDocument.setTranslatorId(bookModel.getTranslatorId());
+        bookDocument.setCoverDrawerId(bookModel.getCoverDrawerId());
+        bookDocument.setCoverImageId(bookModel.getCoverImageId());
+        bookDocument.setDetailImageId(bookModel.getDetailImageId());
+        bookDocument.setDemoImageIds(bookModel.getDemoImageIds());
+        bookDocument.setTagIds(bookModel.getTagIds());
+        bookDocument.setCategoryIds(bookModel.getCategoryIds());
+        bookDocument.setStoreId(bookModel.getStoreId());
         bookDocument.setCreatedAt(ZonedDateTime.now());
         bookDocument.setUpdatedAt(ZonedDateTime.now());
-        bookRepository.save(bookDocument);
+        BookDocument newBook = bookRepository.save(bookDocument);
+
+        List<BookRealityDocument> bookRealities = new ArrayList<>();
+        for (CreateBookModel.BookReality bookReality : bookModel.getBookRealities()) {
+            for (int i = 0; i < bookReality.getQuantity(); i++) {
+                BookRealityDocument bookRealityDocument = new BookRealityDocument();
+                bookRealityDocument.setBookId(newBook.getId());
+                bookRealityDocument.setPrice(bookReality.getPrice());
+                bookRealityDocument.setType(bookReality.getType().toString());
+                bookRealityDocument.setStatus(Const.BookRealityStatus.AVAILABLE.name());
+                bookRealityDocument.setCoverImageId(bookReality.getCoverImageId());
+                bookRealityDocument.setCreatedAt(ZonedDateTime.now());
+                bookRealityDocument.setUpdatedAt(ZonedDateTime.now());
+                bookRealities.add(bookRealityDocument);
+            }
+        }
+
+        bookRealityRepository.saveAll(bookRealities);
     }
 
     public void updateBook(String id, UpdateBookModel bookModel) throws BizException {
         BookDocument bookDocument = bookRepository.findById(id).orElseThrow(() -> new BizException("Invalid book id"));
-        List<String> validCategoryIds = categoryRepository.findAllById(bookModel.getCategoryIds()).stream().map(CategoryDocument::getId).toList();
-        List<String> validCollectionIds = collectionRepository.findAllById(bookModel.getCollectionIds()).stream().map(CollectionDocument::getId).toList();
-        List<BookRelatedPersonDocument> bookRelatedPersonDocuments = bookRelatedPersonDocumentRepository.findAllById(bookModel.getRelatedPeople().stream().map(BookDocument.RelatedPerson::getRelatedPersonId).toList());
-        List<ImageDocument> imageDocuments = imageRepository.findAllById(bookModel.getRelatedImages().stream().map(BookDocument.RelatedImage::getImageId).toList());
-        List<BookDocument.RelatedPerson> relatedPeople = new ArrayList<>();
-        bookRelatedPersonDocuments.forEach(relatedPerson -> {
-            relatedPeople.add(new BookDocument.RelatedPerson(relatedPerson.getId(), relatedPerson.getType()));
-        });
-        List<BookDocument.RelatedImage> relatedImages = new ArrayList<>();
-        bookModel.getRelatedImages().forEach(relatedImage -> {
-            if (imageDocuments.stream().anyMatch(imageDocument -> imageDocument.getId().equals(relatedImage.getImageId()))) {
-                relatedImages.add(new BookDocument.RelatedImage(relatedImage.getImageId(), relatedImage.getType()));
-            }
-        });
-
-        BookStoreDocument bookStoreDocument = bookStoreRepository.findById(bookModel.getStoreId()).orElseThrow(() -> new BizException("Invalid store id"));
         bookDocument.setName(bookModel.getName());
-        bookDocument.setDescriptions(bookModel.getDescriptions());
-        bookDocument.setCategoryIds(validCategoryIds);
-        bookDocument.setCollectionIds(validCollectionIds);
-        bookDocument.setRelatedPeople(relatedPeople);
-        bookDocument.setRelatedImages(relatedImages);
-        bookDocument.setStoreId(bookStoreDocument.getId());
+        bookDocument.setNumberOfPage(bookModel.getNumberOfPage());
+        bookDocument.setDescription(bookModel.getDescription());
+        bookDocument.setPublishYear(bookModel.getPublishYear());
+        bookDocument.setIsbn(bookModel.getIsbn());
+        bookDocument.setPublisherId(bookModel.getPublisherId());
+        bookDocument.setAuthorId(bookModel.getAuthorId());
+        bookDocument.setEditorId(bookModel.getEditorId());
+        bookDocument.setTranslatorId(bookModel.getTranslatorId());
+        bookDocument.setCoverImageId(bookModel.getCoverImageId());
+        bookDocument.setDetailImageId(bookModel.getDetailImageId());
+        bookDocument.setDemoImageIds(bookModel.getDemoImageIds());
+        bookDocument.setTagIds(bookModel.getTagIds());
+        bookDocument.setCategoryIds(bookModel.getCategoryIds());
+        bookDocument.setStoreId(bookModel.getStoreId());
         bookDocument.setUpdatedAt(ZonedDateTime.now());
         bookRepository.save(bookDocument);
     }
