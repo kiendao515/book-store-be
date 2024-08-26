@@ -1,6 +1,7 @@
 package box.bookstorebe.api.common;
 
 import box.bookstorebe.common.Const;
+import box.bookstorebe.document.common.PersonDocument;
 import box.bookstorebe.dto.book.AuthorDto;
 import box.bookstorebe.dto.book.BookDto;
 import box.bookstorebe.dto.common.PersonDto;
@@ -45,15 +46,16 @@ public class PersonController {
     ) throws BizException {
         return new BaseResponse<>(Const.ResultCode.SUCCESS, personService.getBookOfAuthor(authorId));
     }
+
     @GetMapping("{id}")
     public BaseResponse<PersonDto> getBookRelatedPersonDetail(@PathVariable String id) throws BizException {
         return new BaseResponse<>(Const.ResultCode.SUCCESS, personService.findById(id));
     }
 
     @PostMapping
-    public BaseResponse<String> createNewBookRelatedPerson(@RequestBody @Valid CreateBookRelatedPersonModel bookRelatedPersonModel) throws BizException {
-        personService.createNewBookRelatedPerson(bookRelatedPersonModel);
-        return new BaseResponse<>(Const.ResultCode.SUCCESS, "Create new book related person successfully");
+    public BaseResponse<PersonDocument> createNewBookRelatedPerson(@RequestBody @Valid CreateBookRelatedPersonModel bookRelatedPersonModel) throws BizException {
+        PersonDocument result = personService.createNewBookRelatedPerson(bookRelatedPersonModel);
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, result, "Create new book related person successfully");
     }
 
     @PutMapping("{id}")

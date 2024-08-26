@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@AllArgsConstructor
 @NoArgsConstructor
 public class BaseResponse<T> {
     private boolean success;
@@ -24,6 +23,13 @@ public class BaseResponse<T> {
     public BaseResponse(boolean success, String message) {
         super();
         this.success = success;
+        this.message = message;
+    }
+
+    public BaseResponse(boolean success, T data, String message) {
+        super();
+        this.success = success;
+        this.data = data;
         this.message = message;
     }
 }

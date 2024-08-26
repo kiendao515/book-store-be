@@ -73,7 +73,7 @@ public class PersonService {
         return PersonMapper.INSTANCE.entityToDto(personDocument);
     }
 
-    public void createNewBookRelatedPerson(CreateBookRelatedPersonModel relatedPersonModel) {
+    public PersonDocument createNewBookRelatedPerson(CreateBookRelatedPersonModel relatedPersonModel) {
         System.out.println(relatedPersonModel.isNationality());
         PersonDocument personDocument = new PersonDocument();
         personDocument.setName(relatedPersonModel.getName());
@@ -82,7 +82,7 @@ public class PersonService {
         personDocument.setCreatedAt(ZonedDateTime.now());
         personDocument.setUpdatedAt(ZonedDateTime.now());
         personDocument.setNationality(relatedPersonModel.isNationality());
-        personRepository.save(personDocument);
+        return personRepository.save(personDocument);
     }
 
     public void updateBookRelatedPerson(String id, UpdateBookRelatedPersonModel relatedPersonModel) throws BizException {

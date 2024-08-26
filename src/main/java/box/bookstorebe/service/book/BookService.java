@@ -86,7 +86,7 @@ public class BookService {
         List<BookDto> content = new ArrayList<>();
 
         for (BookDocument bookDocument : bookDocuments) {
-            List<BookRealityDocument> bookRealities = bookRealityMap.getOrDefault(bookDocument.getId(), null);
+            List<BookRealityDocument> bookRealities = bookRealityMap.getOrDefault(bookDocument.getId(), new ArrayList<>());
             List<BookRealityDto> bookRealityDtos = new ArrayList<>();
             for (BookRealityDocument bookRealityDocument : bookRealities) {
                 ImageDocument imageDocument = imageRepository.findById(bookRealityDocument.getCoverImageId()).orElse(null);
