@@ -7,12 +7,14 @@ import box.bookstorebe.dto.common.BaseResponse;
 import box.bookstorebe.exception.BizException;
 import box.bookstorebe.model.book.book.CreateBookModel;
 import box.bookstorebe.model.book.book.UpdateBookModel;
+import box.bookstorebe.model.book.book.UpdateMultipleBookRealityModel;
 import box.bookstorebe.service.book.BookService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.time.ZonedDateTime;
 
 @RestController
 @RequestMapping("/api/v1/books")
@@ -23,14 +25,15 @@ public class BookController {
     @GetMapping()
     public BasePagingResponse<BookDto> getBooks(
             @RequestParam(name = "name", required = false) String name,
-            @RequestParam(name = "category_ids", required = false) List<String> categoryIds,
-            @RequestParam(name = "collection_ids", required = false) List<String> collectionIds,
-            @RequestParam(name = "related_person_ids", required = false) List<String> relatedPersonIds,
+            @RequestParam(name = "category_id", required = false) String categoryId,
+            @RequestParam(name = "author_id", required = false) String authorId,
             @RequestParam(name = "store_id", required = false) String storeId,
+            @RequestParam(name = "start_at", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime startAt,
+            @RequestParam(name = "end_at", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime endAt,
             @RequestParam(name = "page", required = false) Integer page,
             @RequestParam(name = "size", required = false) Integer size
-    ) throws BizException {
-        return new BasePagingResponse<>(bookService.getBooks(name, categoryIds, collectionIds, relatedPersonIds, storeId, page, size));
+    ) {
+        return new BasePagingResponse<>(bookService.getBooks(name, categoryId, authorId, storeId, startAt, endAt, page, size));
     }
 
     @GetMapping("{id}")
@@ -48,6 +51,12 @@ public class BookController {
     public BaseResponse<String> updateBook(@PathVariable String id, @RequestBody @Valid UpdateBookModel bookModel) throws BizException {
         bookService.updateBook(id, bookModel);
         return new BaseResponse<>(Const.ResultCode.SUCCESS, "Update book successfully");
+    }
+
+    @PutMapping("{id}/reality-books")
+    public BaseResponse<String> updateMultipleRealityBook(@PathVariable String id, @RequestBody @Valid UpdateMultipleBookRealityModel multipleBookRealityModel) throws BizException {
+        bookService.updateMultipleBookReality(id, multipleBookRealityModel);
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, "Update book reality successfully");
     }
 
     @DeleteMapping("{id}")

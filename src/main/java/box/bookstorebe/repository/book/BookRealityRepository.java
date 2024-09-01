@@ -10,5 +10,7 @@ public interface BookRealityRepository extends MongoRepository<BookRealityDocume
 
     List<BookRealityDocument> findAllByBookId(String bookId);
 
+    List<BookRealityDocument> findAllByBookIdAndTypeAndStatus(String bookId, String type, String status);
+
     List<BookRealityDocument> findAllByBookIdIn(List<String> bookIds);
 }

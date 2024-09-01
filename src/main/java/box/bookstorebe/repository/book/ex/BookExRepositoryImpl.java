@@ -12,6 +12,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
@@ -23,7 +24,7 @@ public class BookExRepositoryImpl implements BookExRepository {
     private final MongoTemplate mongoTemplate;
 
     @Override
-    public Page<BookDocument> getBooks(String name, List<String> categoryIds, List<String> collectionIds, List<String> relatedPersonIds, String storeId, Integer page, Integer size) {
+    public Page<BookDocument> getBooks(String name, String categoryId, String authorId, String storeId, ZonedDateTime startAt, ZonedDateTime endAt, Integer page, Integer size) {
         PageRequest pageRequest;
 
         Criteria criteria = new Criteria();
@@ -31,22 +32,28 @@ public class BookExRepositoryImpl implements BookExRepository {
             criteria = criteria.and("name").regex(".*" + name + ".*");
         }
 
-        if (categoryIds != null) {
-            criteria = criteria.and("category_ids").in(categoryIds);
+        if (categoryId != null) {
+            criteria = criteria.and("category_ids").in(List.of(categoryId));
         }
 
-        if (collectionIds != null) {
-            criteria = criteria.and("collection_ids").in(collectionIds);
+        if (authorId != null) {
+            criteria = criteria.and("author_id").in(authorId);
         }
 
         if (storeId != null) {
             criteria = criteria.and("store_id").is(storeId);
         }
 
-        if (relatedPersonIds != null) {
-            criteria = criteria.and("related_person.related_person_id").in(relatedPersonIds);
-        }
+        if (startAt != null || endAt != null) {
+            criteria = criteria.and("created_at");
+            if (startAt != null) {
+                criteria = criteria.gte(startAt);
+            }
 
+            if (endAt != null) {
+                criteria = criteria.lte(endAt);
+            }
+        }
 
         long totalElement = mongoTemplate.count(new Query().addCriteria(criteria), BookDocument.class);
 
