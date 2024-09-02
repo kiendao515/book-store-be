@@ -1,5 +1,6 @@
 package box.bookstorebe.service.file;
 
+import box.bookstorebe.dto.file.FileDto;
 import box.bookstorebe.exception.BizException;
 import box.bookstorebe.service.common.AmazonProperty;
 import com.amazonaws.services.s3.AmazonS3;
@@ -18,6 +19,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.core.io.Resource;
 import org.apache.commons.io.FilenameUtils;
@@ -32,8 +34,8 @@ public class FileServiceImpl implements FileService{
     private final AmazonS3 s3Client;
 
     @Override
-    public String uploadFile(MultipartFile multipartFile) throws IOException {
-        File file = new File(multipartFile.getOriginalFilename());
+    public FileDto uploadFile(MultipartFile multipartFile) throws IOException {
+        File file = new File(Objects.requireNonNull(multipartFile.getOriginalFilename()));
         try (FileOutputStream fileOutputStream = new FileOutputStream(file)){
             fileOutputStream.write(multipartFile.getBytes());
         }
@@ -41,7 +43,13 @@ public class FileServiceImpl implements FileService{
         PutObjectRequest request = new PutObjectRequest(amazonProperties.getBucketName(), fileName, file);
         request.setCannedAcl(CannedAccessControlList.PublicRead);
         s3Client.putObject(request);
-        return fileName;
+
+        FileDto fileDto = new FileDto();
+        fileDto.setName(fileName);
+        fileDto.setOriginalName(multipartFile.getOriginalFilename());
+        fileDto.setSize(multipartFile.getSize());
+        fileDto.setType(FilenameUtils.getExtension(multipartFile.getOriginalFilename()));
+        return fileDto;
     }
 
     @Override
