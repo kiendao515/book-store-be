@@ -18,4 +18,6 @@ public class UpdateOrderModel {
     private String customerPhone;
     private String email;
     private String status;
+    private String note;
+    private String shippingCode;
 }

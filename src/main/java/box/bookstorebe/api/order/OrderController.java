@@ -93,7 +93,7 @@ public class OrderController {
         String totalPrice = request.getParameter("vnp_Amount");
         if(paymentStatus == 1){
             //payment success
-            paymentService.createPayment(Integer.valueOf(totalPrice),orderInfo,paymentTime,transactionId);
+            paymentService.createPayment(Integer.parseInt(totalPrice),orderInfo,paymentTime,transactionId);
         }
         return new RedirectView("http://localhost:5173/checkout?orderId="+orderInfo);
     }

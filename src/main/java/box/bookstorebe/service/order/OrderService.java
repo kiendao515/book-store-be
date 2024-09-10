@@ -101,8 +101,7 @@ public class OrderService {
         }
         OrderDocument savedOrder= orderRepository.save(orderDocument);
         if(order.isPaymentMethod()){
-            String url = paymentService.createOrder(total,savedOrder.getId().toString(),"http://localhost:8080");
-            return url;
+            return paymentService.createOrder(total, savedOrder.getId(),"http://localhost:8081");
         }else{
             mailService.sendEmailOrderDetail(orderDocument.getEmail(),orderDocument);
         }
@@ -113,14 +112,14 @@ public class OrderService {
         int total=0;
         OrderDocument orderDocument = orderRepository.findById(id).orElseThrow(()-> new BizException("orderId is invalid"));
         PaymentDocument paymentDocument = paymentService.getPaymentByOrderId(id);
-        if(paymentDocument == null && orderDocument.isPaymentType()==true){
+        if(paymentDocument == null && orderDocument.isPaymentType()){
             for (BookRealityDocument b:orderDocument.getItems()) {
                 total += b.getPrice();
             }
             if(total < 500000){
                 total += Const.SHIPPING_FEE;
             }
-            String url = paymentService.createOrder(total,id,"http://localhost:8080");
+            String url = paymentService.createOrder(total,id,"http://localhost:8081");
             return url;
         }
         return "create link payment success!";
@@ -138,6 +137,8 @@ public class OrderService {
             orderDto.setCreatedAt(order.getCreatedAt());
             orderDto.setStatus(order.getStatus());
             orderDto.setEmail(order.getEmail());
+            orderDto.setNote(order.getNote());
+            orderDto.setPaymentType(order.isPaymentType());
             List<BookRealityDto> bookDtos = new ArrayList<>();
             for(BookRealityDocument book: order.getItems()){
                 BookRealityDto bookDto = new BookRealityDto();
@@ -207,27 +208,30 @@ public class OrderService {
         orderDocument.setEmail(order.getEmail());
         orderDocument.setCustomerName(order.getCustomerName());
         orderDocument.setCustomerPhone(order.getCustomerPhone());
-        switch (order.getStatus()){
-            case Const.OrderStatus.CANCEL:
-                if(orderDocument.getStatus().equals(Const.OrderStatus.CREATED)){
-                    handleOrderStatus(orderDocument, Const.OrderStatus.CREATED, order.getStatus(), "can't cancel order now!");
-                    orderDocument.getItems().forEach(bookRealityDocument -> {
-                        bookRealityDocument.setStatus(Const.BookRealityStatus.AVAILABLE.toString());
-                        bookRealityRepository.save(bookRealityDocument);
-                    });
-                }
-                break;
-            case Const.OrderStatus.CONFIRM:
-                handleOrderStatus(orderDocument, Const.OrderStatus.CREATED, order.getStatus(), "can't confirm order now!");
-                break;
-            case Const.OrderStatus.SHIPPING:
-                handleOrderStatus(orderDocument, Const.OrderStatus.CONFIRM, order.getStatus(), "can't change order status to shipping now!");
-                break;
-            case Const.OrderStatus.DONE:
-                handleOrderStatus(orderDocument, Const.OrderStatus.SHIPPING, order.getStatus(), "can't change order status to done now!");
-                break;
-            default:
-                throw new BizException("status order is invalid");
+        orderDocument.setOrderId(order.getShippingCode());
+        if(!orderDocument.getStatus().equalsIgnoreCase(order.getStatus())){
+            switch (order.getStatus()){
+                case Const.OrderStatus.CANCEL:
+                    if(orderDocument.getStatus().equals(Const.OrderStatus.CREATED)){
+                        handleOrderStatus(orderDocument, Const.OrderStatus.CREATED, order.getStatus(), "can't cancel order now!");
+                        orderDocument.getItems().forEach(bookRealityDocument -> {
+                            bookRealityDocument.setStatus(Const.BookRealityStatus.AVAILABLE.toString());
+                            bookRealityRepository.save(bookRealityDocument);
+                        });
+                    }
+                    break;
+                case Const.OrderStatus.CONFIRM:
+                    handleOrderStatus(orderDocument, Const.OrderStatus.CREATED, order.getStatus(), "can't confirm order now!");
+                    break;
+                case Const.OrderStatus.SHIPPING:
+                    handleOrderStatus(orderDocument, Const.OrderStatus.CONFIRM, order.getStatus(), "can't change order status to shipping now!");
+                    break;
+                case Const.OrderStatus.DONE:
+                    handleOrderStatus(orderDocument, Const.OrderStatus.SHIPPING, order.getStatus(), "can't change order status to done now!");
+                    break;
+                default:
+                    throw new BizException("status order is invalid");
+            }
         }
         orderRepository.save(orderDocument);
     }
