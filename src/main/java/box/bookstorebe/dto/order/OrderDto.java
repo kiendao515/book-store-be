@@ -31,4 +31,5 @@ public class OrderDto {
     private boolean isPaid;
     private boolean paymentType;
     private String note;
+    private String shippingCode;
 }

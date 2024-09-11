@@ -80,7 +80,8 @@ public final class Const {
     public static class OrderStatus {
         public static final String CREATED = "CREATED";
         public static final String CANCEL = "CANCEL";
-        public static final String CONFIRM = "CONFIRM";
+        public static final String READY_TO_PACKAGE = "READY_TO_PACKAGE";
+        public static final String READY_TO_SHIP = "READY_TO_SHIP";
         public static final String SHIPPING = "SHIPPING";
         public static final String DONE = "DONE";
     }

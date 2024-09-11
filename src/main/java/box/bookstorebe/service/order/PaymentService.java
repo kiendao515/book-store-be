@@ -158,7 +158,7 @@ public class PaymentService {
         }
         PaymentDocument paymentDocument= PaymentDocument.builder().paymentTime(paymentTime).
                 totalPrice(price/100).order(orderDocument).transactionId(transactionId).build();
-        orderDocument.setStatus(Const.OrderStatus.CONFIRM);
+        orderDocument.setStatus(Const.OrderStatus.READY_TO_PACKAGE);
         orderRepository.save(orderDocument);
         paymentRepository.save(paymentDocument);
         mailService.sendEmailOrderDetail(orderDocument.getEmail(),orderDocument);

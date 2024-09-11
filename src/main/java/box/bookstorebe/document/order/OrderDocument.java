@@ -48,6 +48,8 @@ public class OrderDocument {
     private List<BookRealityDocument> items;
     @Field(name = "order_id")
     private String orderId;
+    @Field(name = "shipping_code")
+    private String shippingCode;
     @Field(name = "note")
     private String note;
 

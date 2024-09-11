@@ -47,8 +47,16 @@ public class OrderService {
     private final MongoTemplate mongoTemplate;
     private final MailService mailService;
 
-    public static long generateOrderId() {
-        return counter.incrementAndGet();
+    protected String getSaltString() {
+        String SALTCHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+        StringBuilder salt = new StringBuilder();
+        Random rnd = new Random();
+        while (salt.length() < 18) { // length of the random string.
+            int index = (int) (rnd.nextFloat() * SALTCHARS.length());
+            salt.append(SALTCHARS.charAt(index));
+        }
+        return salt.toString();
+
     }
     @Transactional
     public String createOrder(CreateOrderModel order) throws BizException, MessagingException {
@@ -93,7 +101,7 @@ public class OrderService {
         orderDocument.setEmail(order.getEmail());
         orderDocument.setItems(orderBooks);
         orderDocument.setPaymentType(order.isPaymentMethod());
-        orderDocument.setOrderId(UUID.randomUUID().toString());
+        orderDocument.setOrderId(getSaltString());
         orderDocument.setStatus(Const.OrderStatus.CREATED);
         orderDocument.setNote(order.getNote());
         if(total < 500000){
@@ -178,6 +186,7 @@ public class OrderService {
                 .isPaid(isPaid)
                 .paymentType(orderDocument.isPaymentType())
                 .note(orderDocument.getNote())
+                .shippingCode(orderDocument.getOrderId())
                 .build();
     }
     public OrderDto findByOrderId(String id) throws BizException{
@@ -208,7 +217,7 @@ public class OrderService {
         orderDocument.setEmail(order.getEmail());
         orderDocument.setCustomerName(order.getCustomerName());
         orderDocument.setCustomerPhone(order.getCustomerPhone());
-        orderDocument.setOrderId(order.getShippingCode());
+        orderDocument.setShippingCode(order.getShippingCode());
         if(!orderDocument.getStatus().equalsIgnoreCase(order.getStatus())){
             switch (order.getStatus()){
                 case Const.OrderStatus.CANCEL:
@@ -220,19 +229,22 @@ public class OrderService {
                         });
                     }
                     break;
-                case Const.OrderStatus.CONFIRM:
+                case Const.OrderStatus.READY_TO_PACKAGE:
                     handleOrderStatus(orderDocument, Const.OrderStatus.CREATED, order.getStatus(), "can't confirm order now!");
                     break;
+                case Const.OrderStatus.READY_TO_SHIP:
+                    handleOrderStatus(orderDocument,Const.OrderStatus.READY_TO_PACKAGE,order.getStatus(), "can't set status ready_to_ship");
                 case Const.OrderStatus.SHIPPING:
-                    handleOrderStatus(orderDocument, Const.OrderStatus.CONFIRM, order.getStatus(), "can't change order status to shipping now!");
+                    handleOrderStatus(orderDocument, Const.OrderStatus.READY_TO_SHIP, order.getStatus(), "can't change order status to shipping now!");
                     break;
                 case Const.OrderStatus.DONE:
                     handleOrderStatus(orderDocument, Const.OrderStatus.SHIPPING, order.getStatus(), "can't change order status to done now!");
                     break;
                 default:
-                    throw new BizException("status order is invalid");
+                    throw new BizException("Can't update order status!");
             }
         }
+        orderDocument.setUpdatedAt(ZonedDateTime.now());
         orderRepository.save(orderDocument);
     }
     private void handleOrderStatus(OrderDocument orderDocument, String currentStatus, String newStatus, String errorMessage) throws BizException {
