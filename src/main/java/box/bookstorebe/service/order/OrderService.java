@@ -133,8 +133,9 @@ public class OrderService {
         return "create link payment success!";
     }
 
-    public Page<OrderDto> getOrders(Integer page, Integer size) throws BizException {
-        Page<OrderDocument> orderDocuments =orderRepository.getOrders(page,size);
+    public Page<OrderDto> getOrders(String customerPhone,String id,String paymentType,String status,ZonedDateTime startAt,ZonedDateTime endAt ,
+                                    Integer page, Integer size) throws BizException {
+        Page<OrderDocument> orderDocuments =orderRepository.getOrders(customerPhone,id,paymentType,status,startAt,endAt,page,size);
         List<OrderDto> rs = new ArrayList<>();
         for (OrderDocument order:orderDocuments) {
             OrderDto orderDto = new OrderDto();

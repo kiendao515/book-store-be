@@ -20,10 +20,12 @@ import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.view.RedirectView;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @RestController
@@ -41,10 +43,16 @@ public class OrderController {
 
     @GetMapping()
     public BasePagingResponse<OrderDto> getOrders(
+            @RequestParam(name = "customer_phone", required = false) String customerPhone,
+            @RequestParam(name = "id", required = false) String id,
+            @RequestParam(name = "payment_type", required = false) String paymentType,
+            @RequestParam(name = "status", required = false) String status,
+            @RequestParam(name = "start_at", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime startAt,
+            @RequestParam(name = "end_at", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime endAt,
             @RequestParam(name = "page", required = false) Integer page,
             @RequestParam(name = "size", required = false) Integer size
     ) throws BizException {
-        return new BasePagingResponse<>(orderService.getOrders(page, size));
+        return new BasePagingResponse<>(orderService.getOrders(customerPhone,id,paymentType,status,startAt,endAt,page, size));
     }
 
     @GetMapping("{id}")
