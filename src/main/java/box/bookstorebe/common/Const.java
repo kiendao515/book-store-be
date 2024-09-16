@@ -102,4 +102,11 @@ public final class Const {
         }
     }
 
+    public static  class SystemConfig {
+        public static final String AUTHOR_NATIONALITY = "create_book.author.nationality";
+        public static final String CREATE_BOOK_CATEGORY = "create_book.book.category";
+        public static final String CREATE_BOOK_STORE = "create_book.book_store";
+
+    }
+
 }

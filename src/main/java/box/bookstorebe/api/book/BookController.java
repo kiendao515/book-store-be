@@ -2,16 +2,20 @@ package box.bookstorebe.api.book;
 
 import box.bookstorebe.common.Const;
 import box.bookstorebe.dto.book.BookDto;
+import box.bookstorebe.dto.book.BookFavoriteDto;
+import box.bookstorebe.dto.book.BookSettingDto;
 import box.bookstorebe.dto.common.BasePagingResponse;
 import box.bookstorebe.dto.common.BaseResponse;
 import box.bookstorebe.exception.BizException;
 import box.bookstorebe.model.book.book.CreateBookModel;
 import box.bookstorebe.model.book.book.UpdateBookModel;
 import box.bookstorebe.model.book.book.UpdateMultipleBookRealityModel;
+import box.bookstorebe.model.book.common.BookSettingModel;
 import box.bookstorebe.service.book.BookService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.ZonedDateTime;
@@ -21,6 +25,28 @@ import java.time.ZonedDateTime;
 @RequiredArgsConstructor
 public class BookController {
     private final BookService bookService;
+
+    @GetMapping("favorite")
+    public BaseResponse<BookFavoriteDto> getBookFavorite() throws BizException {
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, bookService.getBookFavorite());
+    }
+
+    @PutMapping("favorite/{id}")
+    public BaseResponse<String> updateBookFavorite(@PathVariable String id) throws BizException {
+        bookService.updateBookFavorite(id);
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, "Update book favorite successfully");
+    }
+
+    @GetMapping("setting")
+    public BaseResponse<BookSettingDto> getBookSetting() throws BizException {
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, bookService.getBookSetting());
+    }
+
+    @PostMapping("setting")
+    public BaseResponse<String> updateBookSetting(@RequestBody BookSettingModel bookSetting) throws BizException {
+        bookService.createBookSetting(bookSetting);
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, "Update book setting successfully");
+    }
 
     @GetMapping()
     public BasePagingResponse<BookDto> getBooks(

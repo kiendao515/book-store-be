@@ -1,21 +1,30 @@
 package box.bookstorebe.service.book;
 
 import box.bookstorebe.common.Const;
+import box.bookstorebe.configuration.security.RequestScope;
 import box.bookstorebe.document.book.*;
 import box.bookstorebe.document.bookstore.BookStoreDocument;
 import box.bookstorebe.document.common.CommonEntity;
 import box.bookstorebe.document.common.ImageDocument;
 import box.bookstorebe.document.common.PersonDocument;
+import box.bookstorebe.document.common.SystemConfigDocument;
+import box.bookstorebe.document.user.UserDocument;
 import box.bookstorebe.dto.book.BookDto;
+import box.bookstorebe.dto.book.BookFavoriteDto;
 import box.bookstorebe.dto.book.BookRealityDto;
+import box.bookstorebe.dto.book.BookSettingDto;
 import box.bookstorebe.exception.BizException;
 import box.bookstorebe.model.book.book.CreateBookModel;
 import box.bookstorebe.model.book.book.UpdateBookModel;
 import box.bookstorebe.model.book.book.UpdateMultipleBookRealityModel;
+import box.bookstorebe.model.book.common.BookSettingModel;
 import box.bookstorebe.repository.book.*;
 import box.bookstorebe.repository.bookstore.BookStoreRepository;
 import box.bookstorebe.repository.common.image.ImageRepository;
 import box.bookstorebe.repository.common.person.PersonRepository;
+import box.bookstorebe.repository.common.systemconfig.SystemConfigRepository;
+import box.bookstorebe.repository.user.UserRepository;
+import box.bookstorebe.service.BaseService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -32,7 +41,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 @Service
 @Slf4j
-public class BookService {
+public class BookService extends BaseService {
     private final BookRepository bookRepository;
     private final CategoryRepository categoryRepository;
     private final ImageRepository imageRepository;
@@ -40,6 +49,9 @@ public class BookService {
     private final BookRealityRepository bookRealityRepository;
     private final PersonRepository personRepository;
     private final CommonEntityRepository commonEntityRepository;
+    private final SystemConfigRepository systemConfigRepository;
+    private final UserRepository userRepository;
+    private final BookFavoriteRepository bookFavoriteRepository;
 
     public Page<BookDto> getBooks(
             String name,
@@ -245,21 +257,22 @@ public class BookService {
         BookDocument newBook = bookRepository.save(bookDocument);
 
         List<BookRealityDocument> bookRealities = new ArrayList<>();
-        for (CreateBookModel.BookReality bookReality : bookModel.getBookRealities()) {
-            for (int i = 0; i < bookReality.getQuantity(); i++) {
-                BookRealityDocument bookRealityDocument = new BookRealityDocument();
-                bookRealityDocument.setBookId(newBook.getId());
-                bookRealityDocument.setPrice(bookReality.getPrice());
-                bookRealityDocument.setType(bookReality.getType().toString());
-                bookRealityDocument.setStatus(Const.BookRealityStatus.AVAILABLE.name());
-                bookRealityDocument.setCoverImageId(bookReality.getCoverImageId());
-                bookRealityDocument.setCreatedAt(ZonedDateTime.now());
-                bookRealityDocument.setUpdatedAt(ZonedDateTime.now());
-                bookRealities.add(bookRealityDocument);
+        if (bookModel.getBookRealities() != null) {
+            for (CreateBookModel.BookReality bookReality : bookModel.getBookRealities()) {
+                for (int i = 0; i < bookReality.getQuantity(); i++) {
+                    BookRealityDocument bookRealityDocument = new BookRealityDocument();
+                    bookRealityDocument.setBookId(newBook.getId());
+                    bookRealityDocument.setPrice(bookReality.getPrice());
+                    bookRealityDocument.setType(bookReality.getType().toString());
+                    bookRealityDocument.setStatus(Const.BookRealityStatus.AVAILABLE.name());
+                    bookRealityDocument.setCoverImageId(bookReality.getCoverImageId());
+                    bookRealityDocument.setCreatedAt(ZonedDateTime.now());
+                    bookRealityDocument.setUpdatedAt(ZonedDateTime.now());
+                    bookRealities.add(bookRealityDocument);
+                }
             }
+            bookRealityRepository.saveAll(bookRealities);
         }
-
-        bookRealityRepository.saveAll(bookRealities);
     }
 
     public void updateBook(String id, UpdateBookModel bookModel) throws BizException {
@@ -318,5 +331,63 @@ public class BookService {
         bookRepository.findById(id).orElseThrow(() -> new BizException("Invalid book id"));
         bookRealityRepository.deleteByBookId(id);
         bookRepository.deleteById(id);
+    }
+
+    public BookSettingDto getBookSetting() {
+        BookSettingDto bookSettingDto = new BookSettingDto();
+        SystemConfigDocument authorNationality = systemConfigRepository.findByKey(Const.SystemConfig.AUTHOR_NATIONALITY);
+        bookSettingDto.setAuthorNationality(authorNationality != null ? Integer.parseInt(authorNationality.getValue()) : 1);
+        SystemConfigDocument bookCategory = systemConfigRepository.findByKey(Const.SystemConfig.CREATE_BOOK_CATEGORY);
+        bookSettingDto.setCategoryId(bookCategory != null ? bookCategory.getValue() : "");
+        SystemConfigDocument bookStore = systemConfigRepository.findByKey(Const.SystemConfig.CREATE_BOOK_STORE);
+        bookSettingDto.setBookStoreId(bookStore != null ? bookStore.getValue() : "");
+        return bookSettingDto;
+    }
+
+    public BookFavoriteDto getBookFavorite() throws BizException {
+        RequestScope currentUser = this.getCurrentUserInfo();
+        if (currentUser == null || currentUser.getUserId() == null) {
+            throw new BizException("Invalid token");
+        }
+        UserDocument user = userRepository.findById(currentUser.getUserId()).orElseThrow(() -> new BizException("Invalid user"));
+        List<BookFavoriteDocument> bookFavorites = bookFavoriteRepository.findAllByUserId(user.getId());
+        List<String> bookIds = bookFavorites.stream().map(BookFavoriteDocument::getBookId).collect(Collectors.toList());
+        BookFavoriteDto bookFavoriteDto = new BookFavoriteDto();
+        bookFavoriteDto.setBookIds(bookIds);
+        bookFavoriteDto.setUserId(user.getId());
+        return bookFavoriteDto;
+    }
+
+    public void updateBookFavorite(String bookId) throws BizException {
+        RequestScope currentUser = this.getCurrentUserInfo();
+        if (currentUser == null) {
+            throw new BizException("Invalid token");
+        }
+        UserDocument user = userRepository.findById(currentUser.getUserId()).orElseThrow(() -> new BizException("Invalid user"));
+        BookFavoriteDocument bookFavoriteDocument = bookFavoriteRepository.findByUserIdAndBookId(user.getId(), bookId);
+        if (bookFavoriteDocument == null) {
+            bookRepository.findById(bookId).orElseThrow(() -> new BizException("Invalid book id"));
+            BookFavoriteDocument newBookFavoriteDocument = new BookFavoriteDocument();
+            newBookFavoriteDocument.setBookId(bookId);
+            newBookFavoriteDocument.setUserId(user.getId());
+            bookFavoriteRepository.save(newBookFavoriteDocument);
+        } else {
+            bookFavoriteRepository.delete(bookFavoriteDocument);
+        }
+    }
+
+    public void createBookSetting(BookSettingModel model) {
+        SystemConfigDocument authorNationality = systemConfigRepository.findByKey(Const.SystemConfig.AUTHOR_NATIONALITY);
+        authorNationality.setValue(String.valueOf(model.getAuthorNationality()));
+        systemConfigRepository.save(authorNationality);
+
+        SystemConfigDocument bookCategory = systemConfigRepository.findByKey(Const.SystemConfig.CREATE_BOOK_CATEGORY);
+        bookCategory.setValue(model.getCategoryId());
+        systemConfigRepository.save(bookCategory);
+
+        SystemConfigDocument bookStore = systemConfigRepository.findByKey(Const.SystemConfig.CREATE_BOOK_STORE);
+        bookStore.setValue(model.getBookStoreId());
+        systemConfigRepository.save(bookStore);
+
     }
 }

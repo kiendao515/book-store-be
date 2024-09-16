@@ -10,7 +10,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/v1/system-config")
+@RequestMapping("/api/v1/system-config")
 @AllArgsConstructor
 public class SystemConfigController {
     private final SystemConfigService systemConfigService;
@@ -18,6 +18,7 @@ public class SystemConfigController {
     @Operation(summary = "Update system config")
     @PostMapping("")
     public BaseResponse<String> updateSystemConfig(@RequestBody @Valid SystemConfigModel systemConfigModel) {
+        systemConfigService.updateSystemConfig(systemConfigModel);
         return new BaseResponse<>(Const.ResultCode.SUCCESS, "Update config successfully");
     }
 

@@ -83,6 +83,7 @@ public class AuthService extends BaseService {
         userDto.setId(user.getId());
         userDto.setEmail(user.getEmail());
         userDto.setFullName(user.getFullName());
+        userDto.setRole(user.getRole());
 
         return new AuthResponseDto(jwtToken, userDto);
     }
