@@ -24,4 +24,5 @@ public class BookRealityDto {
     private ImageDocument coverImage;
     private ZonedDateTime createdAt;
     private ZonedDateTime updatedAt;
+    private Long numberOfPage;
 }

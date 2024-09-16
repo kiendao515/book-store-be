@@ -154,6 +154,7 @@ public class OrderService {
                 bookDto.setId(book.getId());
                 bookDto.setPrice(book.getPrice());
                 bookDto.setCreatedAt(book.getCreatedAt());
+                bookDto.setNumberOfPage(bookRepository.findById(book.getBookId()).get().getNumberOfPage());
                 bookDtos.add(bookDto);
             }
             orderDto.setBooks(bookDtos);
