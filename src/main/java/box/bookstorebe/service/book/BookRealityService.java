@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.ZonedDateTime;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @Service
@@ -30,6 +31,27 @@ public class BookRealityService {
     public BookRealityDto findById(String id) throws BizException {
         BookRealityDocument bookRealityDocument = bookRealityRepository.findById(id).orElseThrow(() -> new BizException("Invalid book reality id"));
         BookDto bookDto = bookService.findById(bookRealityDocument.getBookId());
+        ImageDocument imageDocument = imageRepository.findById(bookRealityDocument.getCoverImageId()).orElse(null);
+        BookRealityDto bookRealityDto = new BookRealityDto();
+        bookRealityDto.setId(id);
+        bookRealityDto.setPrice(bookRealityDocument.getPrice());
+        bookRealityDto.setStatus(Const.BookRealityStatus.valueOf(bookRealityDocument.getStatus()));
+        bookRealityDto.setType(Const.BookRealityType.valueOf(bookRealityDocument.getType()));
+        bookRealityDto.setCoverImage(imageDocument);
+        bookRealityDto.setBook(bookDto);
+        return bookRealityDto;
+    }
+    public BookRealityDto findEntityById(String id) throws BizException {
+        BookRealityDocument bookRealityDocument = bookRealityRepository.findById(id).orElseThrow(() -> new BizException("Invalid book reality id"));
+        BookDocument bookDocument = bookRepository.findById(bookRealityDocument.getBookId()).orElseThrow(() -> new BizException("Invalid book id"));
+        BookDto bookDto= BookDto.builder()
+                .id(bookDocument.getId())
+                .name(bookDocument.getName())
+                .description(bookDocument.getDescription())
+                .numberOfPage(bookDocument.getNumberOfPage())
+                .createdAt(bookDocument.getCreatedAt())
+                .updatedAt(bookDocument.getUpdatedAt())
+                .build();
         ImageDocument imageDocument = imageRepository.findById(bookRealityDocument.getCoverImageId()).orElse(null);
         BookRealityDto bookRealityDto = new BookRealityDto();
         bookRealityDto.setId(id);

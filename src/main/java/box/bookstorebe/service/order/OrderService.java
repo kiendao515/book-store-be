@@ -168,7 +168,7 @@ public class OrderService {
                 stream().map(BookRealityDocument::getId).collect(Collectors.toList()));
         List<BookRealityDto> bookRealityDtoList = new ArrayList<>();
         for(BookRealityDocument bookRealityDocument: list){
-            BookRealityDto bookDto = bookRealityService.findById(bookRealityDocument.getId());
+            BookRealityDto bookDto = bookRealityService.findEntityById(bookRealityDocument.getId());
             bookRealityDtoList.add(bookDto);
         }
         PaymentDocument paymentDocument = paymentService.getPaymentByOrderId(id);
@@ -191,26 +191,6 @@ public class OrderService {
                 .orderId(orderDocument.getOrderId())
                 .shippingCode(orderDocument.getShippingCode())
                 .shippingCompany(orderDocument.getShippingCompany())
-                .build();
-    }
-    public OrderDto findByOrderId(String id) throws BizException{
-        OrderDocument orderDocument = mongoTemplate.findOne(new Query(Criteria.where("order_id").is(id)), OrderDocument.class);
-        List<BookRealityDocument> list= bookRealityRepository.findAllById(orderDocument.getItems().
-                stream().map(BookRealityDocument::getId).collect(Collectors.toList()));
-        List<BookRealityDto> bookRealityDtoList = new ArrayList<>();
-        for(BookRealityDocument bookRealityDocument: list){
-            BookRealityDto bookDto = bookRealityService.findById(bookRealityDocument.getId());
-            bookRealityDtoList.add(bookDto);
-        }
-        return OrderDto.builder()
-                .id(orderDocument.getId())
-                .address(orderDocument.getAddress())
-                .email(orderDocument.getEmail())
-                .customerName(orderDocument.getCustomerName())
-                .customerPhone(orderDocument.getCustomerPhone())
-                .status(orderDocument.getStatus())
-                .createdAt(orderDocument.getCreatedAt())
-                .books(bookRealityDtoList)
                 .build();
     }
 

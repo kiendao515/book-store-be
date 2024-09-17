@@ -76,7 +76,7 @@ public class MailService {
     public String formatOrderDetail(OrderDocument order) throws BizException {
         StringBuilder builder = new StringBuilder();
         ZonedDateTime dateCreated = order.getCreatedAt();
-        PaymentDocument paymentDocument= mongoTemplate.findOne(new Query(Criteria.where("order._id").is(order.getOrderId())), PaymentDocument.class);
+        PaymentDocument paymentDocument= mongoTemplate.findOne(new Query(Criteria.where("order._id").is(order.getId())), PaymentDocument.class);
         builder.append("<html>")
                 .append("<head>")
                 .append("<style>")
