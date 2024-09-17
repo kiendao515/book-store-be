@@ -50,6 +50,8 @@ public class OrderDocument {
     private String orderId;
     @Field(name = "shipping_code")
     private String shippingCode;
+    @Field(name = "shipping_company")
+    private String shippingCompany;
     @Field(name = "note")
     private String note;
 

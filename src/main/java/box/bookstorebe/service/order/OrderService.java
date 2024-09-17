@@ -188,7 +188,9 @@ public class OrderService {
                 .isPaid(isPaid)
                 .paymentType(orderDocument.isPaymentType())
                 .note(orderDocument.getNote())
-                .shippingCode(orderDocument.getOrderId())
+                .orderId(orderDocument.getOrderId())
+                .shippingCode(orderDocument.getShippingCode())
+                .shippingCompany(orderDocument.getShippingCompany())
                 .build();
     }
     public OrderDto findByOrderId(String id) throws BizException{
@@ -220,6 +222,8 @@ public class OrderService {
         orderDocument.setCustomerName(order.getCustomerName());
         orderDocument.setCustomerPhone(order.getCustomerPhone());
         orderDocument.setShippingCode(order.getShippingCode());
+        orderDocument.setNote(order.getNote());
+        orderDocument.setShippingCompany(order.getShippingCompany());
         if(!orderDocument.getStatus().equalsIgnoreCase(order.getStatus())){
             switch (order.getStatus()){
                 case Const.OrderStatus.CANCEL:

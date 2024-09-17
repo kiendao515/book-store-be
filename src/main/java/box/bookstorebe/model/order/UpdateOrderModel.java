@@ -20,4 +20,5 @@ public class UpdateOrderModel {
     private String status;
     private String note;
     private String shippingCode;
+    private String shippingCompany;
 }
