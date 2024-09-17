@@ -16,6 +16,7 @@ public class CategoryDto {
     private String id;
     private String name;
     private String description;
+    private Integer numOfBooks;
     private ZonedDateTime createdAt;
     private ZonedDateTime updatedAt;
 }

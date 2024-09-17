@@ -10,12 +10,9 @@ import box.bookstorebe.repository.book.CategoryRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Service;
 
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @AllArgsConstructor
 @Service
@@ -24,13 +21,7 @@ public class CategoryService {
     private final CategoryRepository categoryRepository;
 
     public Page<CategoryDto> getCategories(String name, Integer page, Integer size) {
-        Page<CategoryDocument> categoryDocuments = categoryRepository.getCategories(name, page, size);
-
-        List<CategoryDto> content = new ArrayList<>();
-        for (CategoryDocument categoryDocument : categoryDocuments.getContent()) {
-            content.add(CategoryMapper.INSTANCE.entityToDto(categoryDocument));
-        }
-        return new PageImpl<>(content, categoryDocuments.getPageable(), categoryDocuments.getTotalElements());
+        return categoryRepository.getCategories(name, page, size);
     }
 
     public CategoryDto findById(String id) throws BizException {
