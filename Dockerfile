@@ -17,13 +17,14 @@ ENV ENDPOINT=https://video-storage-v1.s3.ap-southeast-1.amazonaws.com
 ENV EXPIRATION=86400000
 ENV JWT_SECRET_KEY=404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
 ENV MONGO_URI=mongodb+srv://hungtk281001:jFnQZbCKDabuYoAk@box-book-store.bxyk4be.mongodb.net/box-book-store
-ENV PORT=8080
+ENV PORT=8081
 ENV REGION=ap-southeast-1
 ENV SECRET_KEY=g4Q1+hgRA04GazNqoOkN/TpOTFfX8zvu6jwl2m6U
 ENV MAIL_HOST=smtp.gmail.com
 ENV MAIL_PORT=587
 ENV MAIL_USERNAME=hungtk281001@gmail.com
 ENV MAIL_PASSWORD='rvdk lljf buld zkkc'
+ENV CLIENT_URL='https://book-store-fe-tsl5.onrender.com'
 
-EXPOSE 8080
+EXPOSE 8081
 ENTRYPOINT ["java","-jar","book-store-be.jar"]

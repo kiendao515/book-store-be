@@ -297,6 +297,8 @@ public class BookService extends BaseService {
     }
 
     public void updateMultipleBookReality(String id, UpdateMultipleBookRealityModel bookRealityModel) throws BizException {
+        if(bookRealityModel.getQuantity() <0) throw new BizException("Số lượng quyển sách phải lớn hơn 0");
+        if(bookRealityModel.getPrice() < 0) throw new BizException("Giá trị quyển sách phải lớn hơn 0");
         BookDocument bookDocument = bookRepository.findById(id).orElseThrow(() -> new BizException("Invalid book id"));
         List<BookRealityDocument> bookRealities = bookRealityRepository.findAllByBookIdAndTypeAndStatus(id, bookRealityModel.getType().name(), Const.BookRealityStatus.AVAILABLE.name());
         for (BookRealityDocument bookReality : bookRealities) {
@@ -307,7 +309,7 @@ public class BookService extends BaseService {
         }
 
         if (bookRealities.size() > bookRealityModel.getQuantity()) {
-            List<BookRealityDocument> deletedBooks = bookRealities.subList((int) (bookRealities.size() - bookRealityModel.getQuantity()), bookRealities.size());
+            List<BookRealityDocument> deletedBooks = bookRealities.subList(Math.toIntExact(bookRealityModel.getQuantity()), bookRealities.size());
             bookRealityRepository.deleteAll(deletedBooks);
         }
 

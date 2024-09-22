@@ -15,6 +15,10 @@ spring:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true
       mail.smtp.ssl.protocols: TLSv1.2
+  servlet:
+    multipart:
+      max-request-size: 10MB
+      max-file-size: 5MB
 #  jpa:
 #    show-sql: true
 springdoc:
