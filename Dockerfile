@@ -25,6 +25,7 @@ ENV MAIL_PORT=587
 ENV MAIL_USERNAME=hungtk281001@gmail.com
 ENV MAIL_PASSWORD='rvdk lljf buld zkkc'
 ENV CLIENT_URL='https://book-store-fe-tsl5.onrender.com'
+ENV SERVER_URL='https://book-store-be-v1.onrender.com'
 
 EXPOSE 8081
 ENTRYPOINT ["java","-jar","book-store-be.jar"]
