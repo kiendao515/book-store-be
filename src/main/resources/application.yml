@@ -50,4 +50,4 @@ app:
   client:
     url: ${CLIENT_URL:http://localhost:5173}
   domain:
-    url: ${SERVER_URL:http://localhost:8080}
+    url: ${DOMAIN_URL:http://localhost:8080}
