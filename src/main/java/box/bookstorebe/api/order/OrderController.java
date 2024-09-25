@@ -41,8 +41,8 @@ public class OrderController {
     private String serverUrl;
 
     @PostMapping
-    public BaseResponse<String> createOrder(@RequestBody @Valid CreateOrderModel orderModel) throws BizException, MessagingException {
-        String paymentUrl = orderService.createOrder(orderModel,serverUrl);
+    public BaseResponse<String> createOrder(@RequestBody @Valid CreateOrderModel orderModel,HttpServletRequest request) throws BizException, MessagingException {
+        String paymentUrl = orderService.createOrder(request,orderModel,serverUrl);
         return new BaseResponse<>(Const.ResultCode.SUCCESS, paymentUrl);
     }
 
@@ -77,8 +77,8 @@ public class OrderController {
     }
 
     @GetMapping("/repayment/{id}")
-    public BaseResponse<String> retryPayment(@PathVariable String id) throws BizException, MessagingException {
-        String url = orderService.retryPayment(id,serverUrl);
+    public BaseResponse<String> retryPayment(@PathVariable String id,HttpServletRequest request) throws BizException, MessagingException {
+        String url = orderService.retryPayment(id,serverUrl,request);
         return new BaseResponse<>(Const.ResultCode.SUCCESS,url);
     }
 
@@ -93,7 +93,7 @@ public class OrderController {
                               @RequestParam("orderInfo") String orderInfo,
                               HttpServletRequest request){
         String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
-        String vnpayUrl = paymentService.createOrder(orderTotal, orderInfo, baseUrl);
+        String vnpayUrl = paymentService.createOrder(request,orderTotal, orderInfo, baseUrl);
         return "redirect:" + vnpayUrl;
     }
 

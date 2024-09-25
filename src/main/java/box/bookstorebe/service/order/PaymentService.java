@@ -38,11 +38,11 @@ public class PaymentService {
     private final ExecutorService executor = Executors.newFixedThreadPool(10);
     private final JavaMailSenderImpl mailSender;
     private final MongoTemplate mongoTemplate;
-    public String createOrder(int total, String orderInfor, String urlReturn){
+    public String createOrder(HttpServletRequest request,int total, String orderInfor, String urlReturn){
         String vnp_Version = "2.1.0";
         String vnp_Command = "pay";
         String vnp_TxnRef = PaymentConfig.getRandomNumber(8);
-        String vnp_IpAddr = "127.0.0.1";
+        String vnp_IpAddr = PaymentConfig.getIpAddress(request);
         String vnp_TmnCode = PaymentConfig.vnp_TmnCode;
         String orderType = "order-type";
 
