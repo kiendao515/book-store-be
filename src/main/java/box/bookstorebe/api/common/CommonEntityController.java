@@ -1,6 +1,7 @@
 package box.bookstorebe.api.common;
 
 import box.bookstorebe.common.Const;
+import box.bookstorebe.document.common.CommonEntity;
 import box.bookstorebe.dto.common.BasePagingResponse;
 import box.bookstorebe.dto.common.BaseResponse;
 import box.bookstorebe.dto.common.CommonEntityDto;
@@ -28,9 +29,9 @@ public class CommonEntityController {
         return new BasePagingResponse<>(commonEntityService.getEntity(type, page, size));
     }
     @PostMapping
-    public BaseResponse<String> createEntity(@RequestBody @Valid CommonEntityModel commonEntityModel) throws BizException {
-        commonEntityService.createEntity(commonEntityModel);
-        return new BaseResponse<>(Const.ResultCode.SUCCESS, "Create new common entity successfully");
+    public BaseResponse<CommonEntity> createEntity(@RequestBody @Valid CommonEntityModel commonEntityModel) throws BizException {
+        CommonEntity commonEntity =  commonEntityService.createEntity(commonEntityModel);
+        return new BaseResponse<>(Const.ResultCode.SUCCESS,commonEntity, "Create new common entity successfully");
     }
     @PutMapping("{id}")
     public BaseResponse<String> updateEntity(@PathVariable String id, @RequestBody @Valid UpdateCommonEntity entity) throws BizException {

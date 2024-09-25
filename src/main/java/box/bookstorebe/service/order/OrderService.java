@@ -1,5 +1,6 @@
 package box.bookstorebe.service.order;
 
+import box.bookstorebe.api.order.OrderController;
 import box.bookstorebe.common.Const;
 import box.bookstorebe.document.book.BookDocument;
 import box.bookstorebe.document.book.BookRealityDocument;
@@ -20,6 +21,7 @@ import box.bookstorebe.service.common.MailService;
 import jakarta.mail.MessagingException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -59,7 +61,7 @@ public class OrderService {
 
     }
     @Transactional
-    public String createOrder(CreateOrderModel order) throws BizException, MessagingException {
+    public String createOrder(CreateOrderModel order,String returnUrl) throws BizException, MessagingException {
         OrderDocument orderDocument = new OrderDocument();
         List<String> bookIds = order.getBooks().stream()
                 .map(BookOrder::getId)
@@ -109,14 +111,14 @@ public class OrderService {
         }
         OrderDocument savedOrder= orderRepository.save(orderDocument);
         if(order.isPaymentMethod()){
-            return paymentService.createOrder(total, savedOrder.getId(),"http://localhost:8081");
+            return paymentService.createOrder(total, savedOrder.getId(), returnUrl);
         }else{
             mailService.sendEmailOrderDetail(orderDocument.getEmail(),orderDocument);
         }
         return "order successfully!";
     }
 
-    public String retryPayment(String id) throws BizException {
+    public String retryPayment(String id,String returnUrl) throws BizException {
         int total=0;
         OrderDocument orderDocument = orderRepository.findById(id).orElseThrow(()-> new BizException("orderId is invalid"));
         PaymentDocument paymentDocument = paymentService.getPaymentByOrderId(id);
@@ -127,7 +129,7 @@ public class OrderService {
             if(total < 500000){
                 total += Const.SHIPPING_FEE;
             }
-            String url = paymentService.createOrder(total,id,"http://localhost:8081");
+            String url = paymentService.createOrder(total,id,returnUrl);
             return url;
         }
         return "create link payment success!";

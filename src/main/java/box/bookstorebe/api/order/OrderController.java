@@ -20,6 +20,7 @@ import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -34,10 +35,14 @@ import java.util.List;
 public class OrderController {
     private final OrderService orderService;
     private final PaymentService paymentService;
+    @Value("${app.client.url}")
+    private String checkoutUrl;
+    @Value("${app.domain.url}")
+    private String serverUrl;
 
     @PostMapping
     public BaseResponse<String> createOrder(@RequestBody @Valid CreateOrderModel orderModel) throws BizException, MessagingException {
-        String paymentUrl = orderService.createOrder(orderModel);
+        String paymentUrl = orderService.createOrder(orderModel,serverUrl);
         return new BaseResponse<>(Const.ResultCode.SUCCESS, paymentUrl);
     }
 
@@ -73,7 +78,7 @@ public class OrderController {
 
     @GetMapping("/repayment/{id}")
     public BaseResponse<String> retryPayment(@PathVariable String id) throws BizException, MessagingException {
-        String url = orderService.retryPayment(id);
+        String url = orderService.retryPayment(id,serverUrl);
         return new BaseResponse<>(Const.ResultCode.SUCCESS,url);
     }
 
@@ -100,10 +105,9 @@ public class OrderController {
         String transactionId = request.getParameter("vnp_TransactionNo");
         String totalPrice = request.getParameter("vnp_Amount");
         if(paymentStatus == 1){
-            //payment success
             paymentService.createPayment(Integer.parseInt(totalPrice),orderInfo,paymentTime,transactionId);
         }
-        return new RedirectView("http://localhost:5173/checkout?orderId="+orderInfo);
+        return new RedirectView(checkoutUrl+"/checkout?orderId="+orderInfo);
     }
 
 }

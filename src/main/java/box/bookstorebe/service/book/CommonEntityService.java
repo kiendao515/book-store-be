@@ -26,7 +26,7 @@ import java.util.List;
 public class CommonEntityService {
     private final CommonEntityRepository commonEntityRepository;
     private final ImageRepository imageRepository;
-    public void createEntity(CommonEntityModel commonEntityModel) throws BizException {
+    public CommonEntity createEntity(CommonEntityModel commonEntityModel) throws BizException {
         if (!Const.CommonEntityType.isValidType(commonEntityModel.getType())) {
             throw new BizException("Invalid type value: " + commonEntityModel.getType());
         }
@@ -38,6 +38,7 @@ public class CommonEntityService {
         commonEntity.setCreatedAt(ZonedDateTime.now());
         commonEntity.setUpdatedAt(ZonedDateTime.now());
         commonEntityRepository.save(commonEntity);
+        return commonEntity;
     }
     public Page<CommonEntityDto> getEntity(String type, Integer page, Integer size) {
         Page<CommonEntity> commonEntities = commonEntityRepository.getCommonEntity(type, page, size);
