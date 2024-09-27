@@ -107,7 +107,7 @@ public class OrderController {
         if(paymentStatus == 1){
             paymentService.createPayment(Integer.parseInt(totalPrice),orderInfo,paymentTime,transactionId);
         }
-        return new RedirectView(checkoutUrl+"/checkout?orderId="+orderInfo);
+        return new RedirectView(checkoutUrl+"/order-result?orderId="+orderInfo);
     }
 
 }
