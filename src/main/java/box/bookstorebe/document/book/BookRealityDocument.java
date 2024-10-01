@@ -1,14 +1,12 @@
 package box.bookstorebe.document.book;
 
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
-import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.*;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.ZonedDateTime;
-import java.util.List;
 
 @Getter
 @Setter
@@ -30,6 +28,7 @@ public class BookRealityDocument {
     private String type;
 
     @Field("book_id")
+    @Indexed
     private String bookId;
 
     @Field("cover_image_id")

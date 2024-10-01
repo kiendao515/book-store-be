@@ -6,6 +6,7 @@ spring:
   data:
     mongodb:
       uri: ${MONGO_URI:mongodb://localhost:27017}
+      auto-index-creation: true
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
