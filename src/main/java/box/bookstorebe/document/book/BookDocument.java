@@ -70,6 +70,9 @@ public class BookDocument {
     @Field("demo_image_ids")
     private List<String> demoImageIds;
 
+    @Field("demo_url")
+    private String demoUrl;
+
     @Field("created_at")
     private ZonedDateTime createdAt;
 

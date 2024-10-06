@@ -35,6 +35,7 @@ public class BookDto {
     private ImageDocument coverImage;
     private ImageDocument detailImage;
     private List<ImageDocument> demoImages;
+    private String demoUrl;
     private List<CommonEntity> tags;
     private List<CategoryDocument> categories;
     private List<BookRealityDto> bookRealities;

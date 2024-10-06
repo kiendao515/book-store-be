@@ -146,6 +146,7 @@ public class BookService extends BaseService {
                     .coverImage(imageDocumentMap.getOrDefault(bookDocument.getCoverImageId(), null))
                     .detailImage(imageDocumentMap.getOrDefault(bookDocument.getDetailImageId(), null))
                     .demoImages(imageDocumentMap.values().stream().filter(imageDocument -> bookDocument.getDemoImageIds().contains(imageDocument.getId())).collect(Collectors.toList()))
+                    .demoUrl(bookDocument.getDemoUrl())
                     .tags(commonEntities.stream().filter(entity -> bookDocument.getTagIds().contains(entity.getId())).collect(Collectors.toList()))
                     .categories(categoryDocuments.stream().filter(categoryDocument -> bookDocument.getCategoryIds().contains(categoryDocument.getId())).collect(Collectors.toList()))
                     .bookRealities(bookRealityDtos)
@@ -223,6 +224,7 @@ public class BookService extends BaseService {
                 .coverImage(imageMap.getOrDefault(bookDocument.getCoverImageId(), null))
                 .detailImage(imageMap.getOrDefault(bookDocument.getDetailImageId(), null))
                 .demoImages(imageMap.values().stream().filter(imageDocument -> bookDocument.getDemoImageIds().contains(imageDocument.getId())).collect(Collectors.toList()))
+                .demoUrl(bookDocument.getDemoUrl())
                 .tags(commonEntities.stream().filter(entity -> bookDocument.getTagIds().contains(entity.getId())).collect(Collectors.toList()))
                 .categories(categoryDocuments)
                 .bookRealities(bookRealityDtos)
@@ -249,6 +251,7 @@ public class BookService extends BaseService {
         bookDocument.setCoverImageId(bookModel.getCoverImageId());
         bookDocument.setDetailImageId(bookModel.getDetailImageId());
         bookDocument.setDemoImageIds(bookModel.getDemoImageIds());
+        bookDocument.setDemoUrl(bookModel.getDemoUrl());
         bookDocument.setTagIds(bookModel.getTagIds());
         bookDocument.setCategoryIds(bookModel.getCategoryIds());
         bookDocument.setStoreId(bookModel.getStoreId());
@@ -289,6 +292,7 @@ public class BookService extends BaseService {
         bookDocument.setCoverImageId(bookModel.getCoverImageId());
         bookDocument.setDetailImageId(bookModel.getDetailImageId());
         bookDocument.setDemoImageIds(bookModel.getDemoImageIds());
+        bookDocument.setDemoUrl(bookModel.getDemoUrl());
         bookDocument.setTagIds(bookModel.getTagIds());
         bookDocument.setCategoryIds(bookModel.getCategoryIds());
         bookDocument.setStoreId(bookModel.getStoreId());
