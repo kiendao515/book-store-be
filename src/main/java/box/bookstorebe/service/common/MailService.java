@@ -1,5 +1,6 @@
 package box.bookstorebe.service.common;
 
+import box.bookstorebe.common.Const;
 import box.bookstorebe.document.book.BookDocument;
 import box.bookstorebe.document.book.BookRealityDocument;
 import box.bookstorebe.document.order.OrderDocument;
@@ -27,6 +28,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -105,13 +107,13 @@ public class MailService {
                 .append("<table>")
                 .append("<tr><th>Tên sách</th><th>Tình trạng</th><th>Số lượng</th><th>Giá bán (đồng)</th></tr>");
 
-        double totalPay = 0;
+        BigDecimal totalPay = new BigDecimal(0);
         Map<String, Integer> bookCountMap = new HashMap<>();
         for (BookRealityDocument bookRealityDocument : order.getItems()) {
             Optional<BookDocument> bookDocument = bookRepository.findById(bookRealityDocument.getBookId());
             String key = bookRealityDocument.getBookId() + "-" + bookRealityDocument.getType() + "-" + bookRealityDocument.getPrice() + "-" + bookDocument.get().getName();
             bookCountMap.put(key, bookCountMap.getOrDefault(key, 0) + 1);
-            totalPay += bookRealityDocument.getPrice();
+            totalPay.add(new BigDecimal(bookRealityDocument.getPrice()));
         }
 
         for (Map.Entry<String, Integer> entry : bookCountMap.entrySet()) {
@@ -131,8 +133,9 @@ public class MailService {
 
         builder.append("</table>")
                 .append("<p>Phí giao hàng:")
-                .append(totalPay <500000 ? 25000 : 0).append("</p>")
-                .append("<p>Tổng tiền: ").append(totalPay <500000 ? totalPay +25000 : totalPay).append("</p>")
+                .append(totalPay.compareTo(Const.AMOUNT_CAN_FREESHIP) < 0 ? 25000 : 0).append("</p>")
+                .append("<p>Tổng tiền: ").append(totalPay.compareTo(Const.AMOUNT_CAN_FREESHIP) <0 ?
+                        totalPay.add(Const.SHIPPING_FEE) : totalPay).append("</p>")
                 .append("<h3>Phương thức thanh toán</h3>");
 
         if (order.isPaymentType()) {

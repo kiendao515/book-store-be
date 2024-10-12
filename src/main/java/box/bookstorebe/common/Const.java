@@ -1,5 +1,7 @@
 package box.bookstorebe.common;
 
+import java.math.BigDecimal;
+
 public final class Const {
     public static final String BASE_PACKAGE = "box.bookstorebe";
 
@@ -20,7 +22,8 @@ public final class Const {
             "/api/v1/book-search-requests/**",
             "/api/v1/people/**",
             "/api/v1/entity/common/**",
-            "/api/v1/file/**"
+            "/api/v1/file/**",
+            "/api/v1/notifications/**"
     };
 
 
@@ -92,7 +95,7 @@ public final class Const {
         public static final String NORMAL = "khá";
         public static final String TB = "tạm";
     }
-    public static final int SHIPPING_FEE = 25000;
+    public static final BigDecimal SHIPPING_FEE = new BigDecimal(25000);
     public static class CommonEntityType{
         public static final String TAG = "TAG";
         public static final String PUBLISHER = "PUBLISHER";
@@ -108,5 +111,6 @@ public final class Const {
         public static final String CREATE_BOOK_STORE = "create_book.book_store";
 
     }
+    public static final BigDecimal AMOUNT_CAN_FREESHIP = new BigDecimal(500000);
 
 }

@@ -21,6 +21,7 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Service;
 
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
@@ -38,7 +39,7 @@ public class PaymentService {
     private final ExecutorService executor = Executors.newFixedThreadPool(10);
     private final JavaMailSenderImpl mailSender;
     private final MongoTemplate mongoTemplate;
-    public String createOrder(HttpServletRequest request,int total, String orderInfor, String urlReturn){
+    public String createOrder(HttpServletRequest request, BigDecimal total, String orderInfor, String urlReturn){
         String vnp_Version = "2.1.0";
         String vnp_Command = "pay";
         String vnp_TxnRef = PaymentConfig.getRandomNumber(8);
@@ -50,7 +51,7 @@ public class PaymentService {
         vnp_Params.put("vnp_Version", vnp_Version);
         vnp_Params.put("vnp_Command", vnp_Command);
         vnp_Params.put("vnp_TmnCode", vnp_TmnCode);
-        vnp_Params.put("vnp_Amount", String.valueOf(total*100));
+        vnp_Params.put("vnp_Amount", String.valueOf(total.multiply(BigDecimal.valueOf(100))));
         vnp_Params.put("vnp_CurrCode", "VND");
 
         vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
@@ -141,16 +142,17 @@ public class PaymentService {
             return -1;
         }
     }
-    public void createPayment(int price,String orderId,String paymentTime,String transactionId) throws BizException, MessagingException {
+    public void createPayment(BigDecimal price,String orderId,String paymentTime,String transactionId) throws BizException, MessagingException {
         OrderDocument orderDocument= orderRepository.findById(orderId).orElseThrow(()->new BizException("invalid orderId"));
-        int totalPrice =0;
+        BigDecimal totalPrice =new BigDecimal(0);
         for (BookRealityDocument b :orderDocument.getItems()){
-            totalPrice += b.getPrice();
+            totalPrice.add(new BigDecimal(b.getPrice()));
         }
-        if(totalPrice < 500000){
-            totalPrice += Const.SHIPPING_FEE;
+        if(totalPrice.compareTo(Const.AMOUNT_CAN_FREESHIP) < 0){
+            totalPrice.add(Const.SHIPPING_FEE);
         }
-        if(totalPrice != price/100){
+        BigDecimal amount = price.divide(BigDecimal.valueOf(100));
+        if(totalPrice.compareTo(amount)!=0){
             throw new BizException("Số tiền không khớp!");
         }
         PaymentDocument checkExisted = mongoTemplate.findOne(new Query(Criteria.where("order._id").is(orderId)), PaymentDocument.class);
@@ -158,7 +160,7 @@ public class PaymentService {
             throw new BizException("Đơn hàng đã được thanh toán");
         }
         PaymentDocument paymentDocument= PaymentDocument.builder().paymentTime(paymentTime).
-                totalPrice(price/100).order(orderDocument).transactionId(transactionId).build();
+                totalPrice(amount).order(orderDocument).transactionId(transactionId).build();
         orderDocument.setStatus(Const.OrderStatus.READY_TO_PACKAGE);
         orderRepository.save(orderDocument);
         paymentRepository.save(paymentDocument);

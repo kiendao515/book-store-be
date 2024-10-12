@@ -26,6 +26,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.view.RedirectView;
 
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.List;
 
@@ -70,11 +71,6 @@ public class OrderController {
         return new BaseResponse<>(Const.ResultCode.SUCCESS, orderService.findById(id));
     }
 
-    @GetMapping("/test")
-    public BaseResponse<OrderDto> test() throws BizException, MessagingException {
-        paymentService.createPayment(1000,"66a762fe6f1dde243174f560","2101902828922","abbdbđ");
-        return new BaseResponse<>(Const.ResultCode.SUCCESS,"oke");
-    }
 
     @GetMapping("/repayment/{id}")
     public BaseResponse<String> retryPayment(@PathVariable String id,HttpServletRequest request) throws BizException, MessagingException {
@@ -93,7 +89,7 @@ public class OrderController {
                               @RequestParam("orderInfo") String orderInfo,
                               HttpServletRequest request){
         String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
-        String vnpayUrl = paymentService.createOrder(request,orderTotal, orderInfo, baseUrl);
+        String vnpayUrl = paymentService.createOrder(request,new BigDecimal(orderTotal), orderInfo, baseUrl);
         return "redirect:" + vnpayUrl;
     }
 
@@ -105,7 +101,7 @@ public class OrderController {
         String transactionId = request.getParameter("vnp_TransactionNo");
         String totalPrice = request.getParameter("vnp_Amount");
         if(paymentStatus == 1){
-            paymentService.createPayment(Integer.parseInt(totalPrice),orderInfo,paymentTime,transactionId);
+            paymentService.createPayment(new BigDecimal(totalPrice),orderInfo,paymentTime,transactionId);
         }
         return new RedirectView(checkoutUrl+"/order-result?orderId="+orderInfo);
     }

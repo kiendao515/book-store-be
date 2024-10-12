@@ -31,6 +31,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -67,7 +68,7 @@ public class OrderService {
         List<String> bookIds = order.getBooks().stream()
                 .map(BookOrder::getId)
                 .collect(Collectors.toList());
-        int total=0;
+        BigDecimal total = new BigDecimal(0);
 
         List<BookDocument> listBook = bookRepository.findAllById(bookIds);
         Set<String> set = new HashSet<>(bookIds);
@@ -93,7 +94,7 @@ public class OrderService {
                 bookRealityDocument.setStatus(Const.BookRealityStatus.UNAVAILABLE.toString());
                 bookRealityRepository.save(bookRealityDocument);
                 orderBooks.add(bookRealityDocument);
-                total+=bookRealityDocument.getPrice();
+                total.add(new BigDecimal(bookRealityDocument.getPrice()));
             }
 
         }
@@ -107,8 +108,9 @@ public class OrderService {
         orderDocument.setOrderId(getSaltString());
         orderDocument.setStatus(Const.OrderStatus.CREATED);
         orderDocument.setNote(order.getNote());
-        if(total < 500000){
-            total += Const.SHIPPING_FEE;
+
+        if(total.compareTo(Const.AMOUNT_CAN_FREESHIP) < 0){
+            total.add(Const.SHIPPING_FEE);
         }
         OrderDocument savedOrder= orderRepository.save(orderDocument);
         if(order.isPaymentMethod()){
@@ -120,15 +122,15 @@ public class OrderService {
     }
 
     public String retryPayment(String id,String returnUrl,HttpServletRequest request) throws BizException {
-        int total=0;
+        BigDecimal total=new BigDecimal(0);
         OrderDocument orderDocument = orderRepository.findById(id).orElseThrow(()-> new BizException("orderId is invalid"));
         PaymentDocument paymentDocument = paymentService.getPaymentByOrderId(id);
         if(paymentDocument == null && orderDocument.isPaymentType()){
             for (BookRealityDocument b:orderDocument.getItems()) {
-                total += b.getPrice();
+                total.add(new BigDecimal(b.getPrice()));
             }
-            if(total < 500000){
-                total += Const.SHIPPING_FEE;
+            if(total.compareTo(Const.AMOUNT_CAN_FREESHIP) < 0){
+                total.add(Const.SHIPPING_FEE);
             }
             String url = paymentService.createOrder(request,total,id,returnUrl);
             return url;
