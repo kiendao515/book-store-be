@@ -11,9 +11,6 @@ import java.time.ZonedDateTime;
 @AllArgsConstructor
 public class NotificationLog {
     private String source;
-    private String sender;
+    private String title;
     private String content;
-    private boolean status;
-    private ZonedDateTime createdAt;
-    private ZonedDateTime updatedAt;
 }

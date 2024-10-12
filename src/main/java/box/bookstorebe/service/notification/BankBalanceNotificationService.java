@@ -45,14 +45,14 @@ public class BankBalanceNotificationService {
         return amount.trim();
     }
     public void createNotificationLog(NotificationLog notificationLog){
-        if("".equals(notificationLog.getContent()) && "".equals(notificationLog.getSender()) &&
+        if("".equals(notificationLog.getContent()) && "".equals(notificationLog.getTitle()) &&
                 "".equals(notificationLog.getSource())) return;
         NotificationLogDocument notificationLogDocument = new NotificationLogDocument();
         notificationLogDocument.setCreatedAt(ZonedDateTime.now());
         notificationLogDocument.setStatus(false);
         notificationLogDocument.setContent(notificationLog.getContent());
         notificationLogDocument.setSource(notificationLog.getSource());
-        notificationLogDocument.setSender(notificationLog.getSender());
+        notificationLogDocument.setSender(notificationLog.getTitle());
         notificationLogRepository.save(notificationLogDocument);
         String transferContent = parseTransferContent(notificationLog.getContent());
         log.info("noi dung ck {}",transferContent);
