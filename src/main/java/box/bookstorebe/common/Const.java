@@ -57,7 +57,8 @@ public final class Const {
     public enum BookRealityType {
         OLD,
         MEDIUM,
-        NEW
+        NEW,
+        GOOD
     }
 
     public enum BookDescriptionType {
