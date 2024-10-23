@@ -1,13 +1,6 @@
 package box.bookstorebe.api.notification;
 
-import box.bookstorebe.common.Const;
-import box.bookstorebe.dto.common.BaseResponse;
 import box.bookstorebe.exception.BizException;
-import box.bookstorebe.model.order.CreateOrderModel;
-import box.bookstorebe.model.order.NotificationLog;
-import box.bookstorebe.service.notification.BankBalanceNotificationService;
-import jakarta.mail.MessagingException;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;

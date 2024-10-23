@@ -14,7 +14,7 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Document("books")
+@Document("book_information")
 public class BookDocument {
     @Id
     private String id;
@@ -22,14 +22,11 @@ public class BookDocument {
     @Field("name")
     private String name;
 
-    @Field("category_ids")
-    private List<String> categoryIds;
+    @Field("category_id")
+    private String categoryId;
 
-    @Field("tag_ids")
-    private List<String> tagIds;
-
-    @Field("store_id")
-    private String storeId;
+    @Field("tags")
+    private List<String> tags;
 
     @Field("number_of_page")
     private Long numberOfPage;
@@ -43,23 +40,11 @@ public class BookDocument {
     @Field("isbn")
     private String isbn;
 
-    @Field("publishing_unit_id")
-    private String publishingUnitId;
+    @Field("publisher")
+    private String publisher;
 
-    @Field("publisher_id")
-    private String publisherId;
-
-    @Field("author_id")
-    private String authorId;
-
-    @Field("editor_id")
-    private String editorId;
-
-    @Field("translator_id")
-    private String translatorId;
-
-    @Field("cover_drawer_id")
-    private String coverDrawerId;
+    @Field("author_name")
+    private String authorName;
 
     @Field("cover_image_id")
     private String coverImageId;

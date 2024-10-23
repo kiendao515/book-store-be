@@ -2,7 +2,7 @@ package box.bookstorebe.service.common;
 
 import box.bookstorebe.common.Const;
 import box.bookstorebe.document.book.BookDocument;
-import box.bookstorebe.document.book.BookRealityDocument;
+import box.bookstorebe.document.book.BookInventory;
 import box.bookstorebe.document.order.OrderDocument;
 import box.bookstorebe.document.payment.PaymentDocument;
 import box.bookstorebe.document.user.UserDocument;
@@ -109,12 +109,12 @@ public class MailService {
 
         BigDecimal totalPay = new BigDecimal(0);
         Map<String, Integer> bookCountMap = new HashMap<>();
-        for (BookRealityDocument bookRealityDocument : order.getItems()) {
-            Optional<BookDocument> bookDocument = bookRepository.findById(bookRealityDocument.getBookId());
-            String key = bookRealityDocument.getBookId() + "-" + bookRealityDocument.getType() + "-" + bookRealityDocument.getPrice() + "-" + bookDocument.get().getName();
-            bookCountMap.put(key, bookCountMap.getOrDefault(key, 0) + 1);
-            totalPay.add(new BigDecimal(bookRealityDocument.getPrice()));
-        }
+//        for (BookInventory bookRealityDocument : order.getItems()) {
+//            Optional<BookDocument> bookDocument = bookRepository.findById(bookRealityDocument.getBookId());
+//            String key = bookRealityDocument.getBookId() + "-" + bookRealityDocument.getType() + "-" + bookRealityDocument.getPrice() + "-" + bookDocument.get().getName();
+//            bookCountMap.put(key, bookCountMap.getOrDefault(key, 0) + 1);
+//            totalPay.add(new BigDecimal(bookRealityDocument.getPrice()));
+//        }
 
         for (Map.Entry<String, Integer> entry : bookCountMap.entrySet()) {
             String[] parts = entry.getKey().split("-");

@@ -6,6 +6,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 
 @Getter
@@ -13,23 +14,32 @@ import java.time.ZonedDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Document("book_realities")
-public class BookRealityDocument {
+@Document("book_inventory")
+public class BookInventory {
     @Id
     private String id;
 
-    @Field("price")
-    private Double price;
-
-    @Field("status")
-    private String status;
-
-    @Field("type")
-    private String type;
-
-    @Field("book_id")
+    @Field("book_information_id")
     @Indexed
     private String bookId;
+
+    @Field("price")
+    private BigDecimal price;
+
+    @Field("location")
+    private String location; // vị trí sách ở Hộp
+
+    @Field("quantity")
+    private Integer quantity;
+
+    @Field("type")
+    private BookType type; // NEW, LIKE NEW, OLD
+
+    @Field("store_id")
+    private String storeId;
+
+    @Field("is_own_store")
+    private boolean isOwnStore; // xac định xem sách đuoc lưu trữ ở hộp
 
     @Field("cover_image_id")
     private String coverImageId;

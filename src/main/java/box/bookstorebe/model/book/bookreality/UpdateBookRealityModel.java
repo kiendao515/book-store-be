@@ -1,6 +1,7 @@
 package box.bookstorebe.model.book.bookreality;
 
 import box.bookstorebe.common.Const;
+import box.bookstorebe.document.book.BookType;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.AllArgsConstructor;
@@ -8,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -16,17 +18,17 @@ import java.util.List;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class UpdateBookRealityModel {
     @Field("price")
-    private Double price;
-
-    @Field("status")
-    private String status;
+    private BigDecimal price;
 
     @Field("type")
-    private Const.BookRealityType type;
+    private BookType type;
 
     @Field("book_id")
     private String bookId;
 
     @Field("cover_image_id")
     private String coverImageId;
+
+    @Field("quantity")
+    private Integer quantity;
 }

@@ -15,7 +15,6 @@ import box.bookstorebe.service.book.BookService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.ZonedDateTime;
@@ -23,7 +22,7 @@ import java.time.ZonedDateTime;
 @RestController
 @RequestMapping("/api/v1/books")
 @RequiredArgsConstructor
-public class BookController {
+public class BookInformationController {
     private final BookService bookService;
 
     @GetMapping("favorite")

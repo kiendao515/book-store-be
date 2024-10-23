@@ -30,8 +30,8 @@ public class CreateBookModel {
     private String detailImageId;
     private List<String> demoImageIds;
     private String demoUrl;
-    private List<String> tagIds;
-    private List<String> categoryIds;
+    private List<String> tags;
+    private String categoryId;
     private String storeId;
     private List<BookReality> bookRealities;
 

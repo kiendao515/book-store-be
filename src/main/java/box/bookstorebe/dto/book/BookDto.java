@@ -1,6 +1,5 @@
 package box.bookstorebe.dto.book;
 
-import box.bookstorebe.document.book.BookRealityDocument;
 import box.bookstorebe.document.book.CategoryDocument;
 import box.bookstorebe.document.bookstore.BookStoreDocument;
 import box.bookstorebe.document.common.CommonEntity;
@@ -26,20 +25,15 @@ public class BookDto {
     private String description;
     private Integer publishYear;
     private String isbn;
-    private CommonEntity publishingUnit;
-    private CommonEntity publisher;
-    private PersonDocument author;
-    private PersonDocument editor;
-    private PersonDocument translator;
-    private PersonDocument coverDrawer;
+    private String authorName;
+    private String publisher;
     private ImageDocument coverImage;
     private ImageDocument detailImage;
     private List<ImageDocument> demoImages;
     private String demoUrl;
-    private List<CommonEntity> tags;
-    private List<CategoryDocument> categories;
-    private List<BookRealityDto> bookRealities;
-    private BookStoreDocument bookStore;
+    private List<String> tags;
+    private CategoryDocument category;
+//    private BookStoreDocument bookStore;
     private ZonedDateTime createdAt;
     private ZonedDateTime updatedAt;
 }

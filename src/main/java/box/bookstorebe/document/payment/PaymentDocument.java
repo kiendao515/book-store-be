@@ -10,6 +10,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.math.BigDecimal;
+import java.time.ZonedDateTime;
 
 @Data
 @AllArgsConstructor
@@ -21,12 +22,12 @@ public class PaymentDocument {
     private String id;
     @Field(name = "order")
     private OrderDocument order;
-    @Field(name = "payment_time")
-    private String paymentTime;
-
-    @Field(name = "total_price")
+    @Field(name = "amount")
     private BigDecimal totalPrice;
-
     @Field(name = "transactionId")
     private String transactionId;
+    @Field(name = "createdAt")
+    private ZonedDateTime createdAt;
+    @Field(name = "updatedAt")
+    private ZonedDateTime updatedAt;
 }

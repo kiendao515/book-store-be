@@ -1,7 +1,4 @@
 package box.bookstorebe.document.order;
-
-import box.bookstorebe.document.book.BookRealityDocument;
-import box.bookstorebe.document.user.Role;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,6 +7,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.List;
 
@@ -20,6 +18,9 @@ import java.util.List;
 public class OrderDocument {
     @Id
     private String id;
+
+    @Field(name= "user_id")
+    private String userId;
 
     @Field(name = "address")
     private String address;
@@ -41,13 +42,16 @@ public class OrderDocument {
 
     @Field(name = "status")
     private String status;// created -> cancel -> confirm -> shipping -> done
+
     @Field(name = "payment_type")
     private boolean paymentType; // 0 for cod, 1 for pay by wallet
 
-    @Field(name = "items")
-    private List<BookRealityDocument> items;
-    @Field(name = "order_id")
-    private String orderId;
+    @Field(name = "shipping_fee")
+    private BigDecimal shippingFee;
+
+    @Field(name = "order_code")
+    @Indexed
+    private String orderCode;
     @Field(name = "shipping_code")
     private String shippingCode;
     @Field(name = "shipping_company")
