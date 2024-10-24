@@ -1,6 +1,7 @@
 package box.bookstorebe.api.book;
 
 import box.bookstorebe.common.Const;
+import box.bookstorebe.document.book.BookDocument;
 import box.bookstorebe.dto.book.BookDto;
 import box.bookstorebe.dto.book.BookFavoriteDto;
 import box.bookstorebe.dto.book.BookSettingDto;
@@ -51,14 +52,13 @@ public class BookInformationController {
     public BasePagingResponse<BookDto> getBooks(
             @RequestParam(name = "name", required = false) String name,
             @RequestParam(name = "category_id", required = false) String categoryId,
-            @RequestParam(name = "author_id", required = false) String authorId,
             @RequestParam(name = "store_id", required = false) String storeId,
             @RequestParam(name = "start_at", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime startAt,
             @RequestParam(name = "end_at", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime endAt,
             @RequestParam(name = "page", required = false) Integer page,
             @RequestParam(name = "size", required = false) Integer size
     ) {
-        return new BasePagingResponse<>(bookService.getBooks(name, categoryId, authorId, storeId, startAt, endAt, page, size));
+        return new BasePagingResponse<>(bookService.getBooks(name, categoryId, storeId, startAt, endAt, page, size));
     }
 
     @GetMapping("{id}")

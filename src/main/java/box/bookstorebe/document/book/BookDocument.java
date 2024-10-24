@@ -66,4 +66,7 @@ public class BookDocument {
 
     @Field("updated_at")
     private ZonedDateTime updatedAt;
+
+    @Field("deleted_at")
+    private ZonedDateTime deletedAt;
 }

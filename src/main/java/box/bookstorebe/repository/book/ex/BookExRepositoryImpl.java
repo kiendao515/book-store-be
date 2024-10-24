@@ -24,7 +24,7 @@ public class BookExRepositoryImpl implements BookExRepository {
     private final MongoTemplate mongoTemplate;
 
     @Override
-    public Page<BookDocument> getBooks(String name, String categoryId, String authorId, String storeId, ZonedDateTime startAt, ZonedDateTime endAt, Integer page, Integer size) {
+    public Page<BookDocument> getBooks(String name, String categoryId, String storeId, ZonedDateTime startAt, ZonedDateTime endAt, Integer page, Integer size) {
         PageRequest pageRequest;
 
         Criteria criteria = new Criteria();
@@ -33,11 +33,7 @@ public class BookExRepositoryImpl implements BookExRepository {
         }
 
         if (categoryId != null) {
-            criteria = criteria.and("category_ids").in(List.of(categoryId));
-        }
-
-        if (authorId != null) {
-            criteria = criteria.and("author_id").in(authorId);
+            criteria = criteria.and("category_id").in(List.of(categoryId));
         }
 
         if (storeId != null) {
@@ -77,7 +73,7 @@ public class BookExRepositoryImpl implements BookExRepository {
                 limitOperation
         );
 
-        AggregationResults<BookDocument> result = mongoTemplate.aggregate(aggregation, "books", BookDocument.class);
+        AggregationResults<BookDocument> result = mongoTemplate.aggregate(aggregation, "book_information", BookDocument.class);
         return new PageImpl<>(result.getMappedResults(), pageRequest, totalElement);
     }
 }

@@ -16,6 +16,6 @@ import java.util.List;
 public class UpdateBookStoreModel {
     private String name;
     private String imageId;
-    private List<BookStoreDocument.Address> address;
-    private List<BookStoreDocument.OtherInformation> otherInformation;
+    private String address;
+    private String phoneNumber;
 }

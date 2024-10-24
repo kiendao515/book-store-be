@@ -19,8 +19,8 @@ public class BookStoreDto {
     private String id;
     private String name;
     private Image image;
-    private List<BookStoreDocument.Address> address;
-    private List<BookStoreDocument.OtherInformation> otherInformation;
+    private String address;
+    private String phoneNumber;
     private ZonedDateTime createdAt;
     private ZonedDateTime updatedAt;
 

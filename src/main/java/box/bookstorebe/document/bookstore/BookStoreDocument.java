@@ -21,14 +21,17 @@ public class BookStoreDocument {
     @Field("name")
     private String name;
 
-    @Field("address")
-    private List<Address> address;
-
-    @Field("other_information")
-    private List<OtherInformation> otherInformation;
-
     @Field("image_id")
     private String imageId;
+
+    @Field("address")
+    private String address;
+
+//    @Field("description")
+//    private String description;
+
+    @Field("phone_number")
+    private String phoneNumber;
 
     @Field("created_at")
     private ZonedDateTime createdAt;
@@ -36,20 +39,5 @@ public class BookStoreDocument {
     @Field("updated_at")
     private ZonedDateTime updatedAt;
 
-    @Data
-    @AllArgsConstructor
-    @NoArgsConstructor
-    public static class Address {
-        private String type; // Street, Province, v.v
-        private String value;
-    }
-
-    @Data
-    @AllArgsConstructor
-    @NoArgsConstructor
-    public static class OtherInformation {
-        private String type;
-        private String value;
-    }
 
 }

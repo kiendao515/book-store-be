@@ -19,8 +19,8 @@ public class UpdateBookModel {
     private Integer publishYear;
     private String isbn;
     private String publishingUnitId;
-    private String publisherId;
-    private String authorId;
+    private String publisher;
+    private String author;
     private String editorId;
     private String translatorId;
     private String coverDrawerId;

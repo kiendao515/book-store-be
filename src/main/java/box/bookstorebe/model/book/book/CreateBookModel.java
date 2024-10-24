@@ -20,12 +20,8 @@ public class CreateBookModel {
     private String description;
     private Integer publishYear;
     private String isbn;
-    private String publishingUnitId;
-    private String publisherId;
-    private String authorId;
-    private String editorId;
-    private String translatorId;
-    private String coverDrawerId;
+    private String publisher;
+    private String author;
     private String coverImageId;
     private String detailImageId;
     private List<String> demoImageIds;
@@ -33,16 +29,4 @@ public class CreateBookModel {
     private List<String> tags;
     private String categoryId;
     private String storeId;
-    private List<BookReality> bookRealities;
-
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-    public static class BookReality {
-        private Const.BookRealityType type;
-        private Long quantity;
-        private Double price;
-        private String coverImageId;
-    }
 }

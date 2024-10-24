@@ -23,11 +23,14 @@ public class BookInventory {
     @Indexed
     private String bookId;
 
+    @Field("related_book_id")
+    private String relatedBookId;
+
     @Field("price")
     private BigDecimal price;
 
     @Field("location")
-    private String location; // vị trí sách ở Hộp
+    private String location; // vị trí sách ở Hộp  // neu la null thi la luu o cho khac
 
     @Field("quantity")
     private Integer quantity;
@@ -38,9 +41,6 @@ public class BookInventory {
     @Field("store_id")
     private String storeId;
 
-    @Field("is_own_store")
-    private boolean isOwnStore; // xac định xem sách đuoc lưu trữ ở hộp
-
     @Field("cover_image_id")
     private String coverImageId;
 
@@ -49,4 +49,7 @@ public class BookInventory {
 
     @Field("updated_at")
     private ZonedDateTime updatedAt;
+
+    @Field("deleted_at")
+    private ZonedDateTime deletedAt;
 }

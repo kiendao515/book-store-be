@@ -59,7 +59,8 @@ public class BookStoreService {
         bookStoreDocument.setImageId(imageDocument.getId());
         bookStoreDocument.setName(bookStoreModel.getName());
         bookStoreDocument.setAddress(bookStoreModel.getAddress());
-        bookStoreDocument.setOtherInformation(bookStoreModel.getOtherInformation());
+        bookStoreDocument.setPhoneNumber(bookStoreModel.getPhoneNumber());
+//        bookStoreDocument.setDescription(bookStoreModel.getDescription());
         bookStoreDocument.setCreatedAt(ZonedDateTime.now());
         bookStoreDocument.setUpdatedAt(ZonedDateTime.now());
         bookStoreRepository.save(bookStoreDocument);
@@ -71,7 +72,7 @@ public class BookStoreService {
         bookStoreDocument.setImageId(imageDocument.getId());
         bookStoreDocument.setName(updateBookStoreModel.getName());
         bookStoreDocument.setAddress(updateBookStoreModel.getAddress());
-        bookStoreDocument.setOtherInformation(updateBookStoreModel.getOtherInformation());
+        bookStoreDocument.setPhoneNumber(bookStoreDocument.getPhoneNumber());
         bookStoreDocument.setUpdatedAt(ZonedDateTime.now());
         bookStoreRepository.save(bookStoreDocument);
     }

@@ -33,7 +33,6 @@ public class BookDto {
     private String demoUrl;
     private List<String> tags;
     private CategoryDocument category;
-//    private BookStoreDocument bookStore;
     private ZonedDateTime createdAt;
     private ZonedDateTime updatedAt;
 }
