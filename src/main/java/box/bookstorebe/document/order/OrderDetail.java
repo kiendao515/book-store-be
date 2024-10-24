@@ -18,8 +18,8 @@ public class OrderDetail {
     @Field(name= "order_id")
     private String orderId;
 
-    @Field(name = "product_id")
-    private String productId;
+    @Field(name = "book_inventory_id")
+    private String bookInventoryId;
 
     @Field(name = "type")
     private Enum type;

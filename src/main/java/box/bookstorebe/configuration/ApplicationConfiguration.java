@@ -1,6 +1,6 @@
 package box.bookstorebe.configuration;
 
-import box.bookstorebe.repository.user.UserRepository;
+import box.bookstorebe.repository.user.AccountRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -18,7 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @RequiredArgsConstructor
 @Slf4j
 public class ApplicationConfiguration {
-    private final UserRepository userRepository;
+    private final AccountRepository userRepository;
 
     @Bean
     public UserDetailsService userDetailsService() {
@@ -30,7 +30,7 @@ public class ApplicationConfiguration {
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setUserDetailsService(userDetailsService());
-        authProvider.setPasswordEncoder(passwordEncoder());
+        authProvider.setPasswordEncoder(bCryptPasswordEncoder());
         return authProvider;
     }
 
@@ -41,6 +41,11 @@ public class ApplicationConfiguration {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public BCryptPasswordEncoder bCryptPasswordEncoder() {
         return new BCryptPasswordEncoder();
     }
 

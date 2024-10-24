@@ -1,4 +1,4 @@
-package box.bookstorebe.document.user;
+package box.bookstorebe.document.account;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,22 +11,25 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Document("users")
-public class UserDocument implements UserDetails {
+@Document("accounts")
+public class AccountDocument implements UserDetails {
+    public AccountDocument(String token, String userId) {
+        this.token = token;
+        this.expiryDate = calculateExpiryDate(EXPIRATION);
+    }
+    private static final int EXPIRATION = 60 * 24;
     @Id
     private String id;
 
     @Field(name = "password")
     private String password;
-
-    @Field(name = "full_name")
-    private String fullName;
 
     @Field(name = "email")
     @Indexed(unique = true)
@@ -36,6 +39,19 @@ public class UserDocument implements UserDetails {
     private Integer enabled = 0;
 
     private Role role;
+
+    @Field(name = "salt")
+    private String salt;
+
+    @Field(name = "token")
+    private String token;
+
+    @Field(name = "expiry_date")
+    private ZonedDateTime expiryDate;
+
+    private ZonedDateTime calculateExpiryDate(int expiryTimeInMinutes) {
+        return ZonedDateTime.now().plusMinutes(expiryTimeInMinutes);
+    }
 
 
     @Override

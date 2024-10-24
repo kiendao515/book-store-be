@@ -1,4 +1,4 @@
-package box.bookstorebe.document.user;
+package box.bookstorebe.document.account;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -9,15 +9,10 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import java.time.ZonedDateTime;
 
 @Data
-@Document("verification_tokens")
-public class VerificationToken {
-    public VerificationToken(String token, String userId) {
-        this.token = token;
-        this.userId = userId;
-        this.expiryDate = calculateExpiryDate(EXPIRATION);
-    }
-
+@Document("password_reset_tokens")
+public class PasswordResetToken {
     private static final int EXPIRATION = 60 * 24;
+
     @Id
     private String id;
 
@@ -35,4 +30,9 @@ public class VerificationToken {
         return ZonedDateTime.now().plusMinutes(expiryTimeInMinutes);
     }
 
+    public PasswordResetToken(String token, String userId) {
+        this.token = token;
+        this.userId = userId;
+        this.expiryDate = calculateExpiryDate(EXPIRATION);
+    }
 }

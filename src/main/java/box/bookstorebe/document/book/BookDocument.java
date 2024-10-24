@@ -46,6 +46,9 @@ public class BookDocument {
     @Field("author_name")
     private String authorName;
 
+    @Field("collection_id")
+    private String collectionId;
+
     @Field("cover_image_id")
     private String coverImageId;
 

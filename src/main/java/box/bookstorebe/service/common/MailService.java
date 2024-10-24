@@ -1,11 +1,12 @@
 package box.bookstorebe.service.common;
 
 import box.bookstorebe.common.Const;
+import box.bookstorebe.document.account.AccountDocument;
 import box.bookstorebe.document.book.BookDocument;
 import box.bookstorebe.document.book.BookInventory;
 import box.bookstorebe.document.order.OrderDocument;
 import box.bookstorebe.document.payment.PaymentDocument;
-import box.bookstorebe.document.user.UserDocument;
+import box.bookstorebe.dto.account.AccountDto;
 import box.bookstorebe.dto.order.OrderDto;
 import box.bookstorebe.eventlistener.event.OnRegistrationCompleteEvent;
 import box.bookstorebe.exception.BizException;
@@ -46,7 +47,7 @@ public class MailService {
     private final BookRepository bookRepository;
     private final JavaMailSender javaMailSender;
 
-    public SimpleMailMessage constructResetTokenEmail(String baseUrl, String token, UserDocument user, String message) {
+    public SimpleMailMessage constructResetTokenEmail(String baseUrl, String token, AccountDocument user, String message) {
         final String url = baseUrl + "/reset-password?token=" + token;
         final SimpleMailMessage email = new SimpleMailMessage();
         email.setTo(user.getEmail());
@@ -55,7 +56,7 @@ public class MailService {
         return email;
     }
 
-    public SimpleMailMessage constructEmailMessage(OnRegistrationCompleteEvent event, UserDocument user, String token) {
+    public SimpleMailMessage constructEmailMessage(OnRegistrationCompleteEvent event, AccountDocument user, String token) {
         String recipientAddress = user.getEmail();
         String subject = "Complete Registration";
         String confirmationUrl = event.getAppUrl() + "/confirm-registration?token=" + token;
@@ -100,7 +101,7 @@ public class MailService {
                 .append("<p>Email: ").append(order.getEmail()).append("</p>")
                 .append("<p>Địa chỉ: ").append(order.getAddress()).append("</p>")
                 .append("<h3>Thông tin đơn sách</h3>")
-                .append("<p>Mã đơn hàng: ").append(order.getOrderId()).append("</p>")
+                .append("<p>Mã đơn hàng: ").append(order.getOrderCode()).append("</p>")
                 .append("<p>Ngày đặt đơn: ").append(dateCreated.getDayOfMonth()).append("/")
                 .append(dateCreated.getMonthValue()).append("/")
                 .append(dateCreated.getYear()).append("</p>")

@@ -1,4 +1,4 @@
-package box.bookstorebe.document.user;
+package box.bookstorebe.document.account;
 
 public enum Role {
     USER,

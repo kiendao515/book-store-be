@@ -1,7 +1,6 @@
 package box.bookstorebe.service.order;
 import box.bookstorebe.common.Const;
 import box.bookstorebe.configuration.payment.PaymentConfig;
-import box.bookstorebe.document.book.BookRealityDocument;
 import box.bookstorebe.document.order.OrderDocument;
 import box.bookstorebe.document.payment.PaymentDocument;
 import box.bookstorebe.exception.BizException;
@@ -145,25 +144,25 @@ public class PaymentService {
     public void createPayment(BigDecimal price,String orderId,String paymentTime,String transactionId) throws BizException, MessagingException {
         OrderDocument orderDocument= orderRepository.findById(orderId).orElseThrow(()->new BizException("invalid orderId"));
         BigDecimal totalPrice =new BigDecimal(0);
-        for (BookRealityDocument b :orderDocument.getItems()){
-            totalPrice.add(new BigDecimal(b.getPrice()));
-        }
-        if(totalPrice.compareTo(Const.AMOUNT_CAN_FREESHIP) < 0){
-            totalPrice.add(Const.SHIPPING_FEE);
-        }
-        BigDecimal amount = price.divide(BigDecimal.valueOf(100));
-        if(totalPrice.compareTo(amount)!=0){
-            throw new BizException("Số tiền không khớp!");
-        }
-        PaymentDocument checkExisted = mongoTemplate.findOne(new Query(Criteria.where("order._id").is(orderId)), PaymentDocument.class);
-        if(checkExisted !=null){
-            throw new BizException("Đơn hàng đã được thanh toán");
-        }
-        PaymentDocument paymentDocument= PaymentDocument.builder().paymentTime(paymentTime).
-                totalPrice(amount).order(orderDocument).transactionId(transactionId).build();
+//        for (BookRealityDocument b :orderDocument.getItems()){
+//            totalPrice.add(new BigDecimal(b.getPrice()));
+//        }
+//        if(totalPrice.compareTo(Const.AMOUNT_CAN_FREESHIP) < 0){
+//            totalPrice.add(Const.SHIPPING_FEE);
+//        }
+//        BigDecimal amount = price.divide(BigDecimal.valueOf(100));
+//        if(totalPrice.compareTo(amount)!=0){
+//            throw new BizException("Số tiền không khớp!");
+//        }
+//        PaymentDocument checkExisted = mongoTemplate.findOne(new Query(Criteria.where("order._id").is(orderId)), PaymentDocument.class);
+//        if(checkExisted !=null){
+//            throw new BizException("Đơn hàng đã được thanh toán");
+//        }
+//        PaymentDocument paymentDocument= PaymentDocument.builder().paymentTime(paymentTime).
+//                totalPrice(amount).order(orderDocument).transactionId(transactionId).build();
         orderDocument.setStatus(Const.OrderStatus.READY_TO_PACKAGE);
         orderRepository.save(orderDocument);
-        paymentRepository.save(paymentDocument);
+//        paymentRepository.save(paymentDocument);
         mailService.sendEmailOrderDetail(orderDocument.getEmail(),orderDocument);
     }
     public PaymentDocument getPaymentByOrderId(String orderId) throws BizException{

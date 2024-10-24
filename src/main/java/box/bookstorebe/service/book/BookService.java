@@ -2,13 +2,13 @@ package box.bookstorebe.service.book;
 
 import box.bookstorebe.common.Const;
 import box.bookstorebe.configuration.security.RequestScope;
+import box.bookstorebe.document.account.AccountDocument;
 import box.bookstorebe.document.book.*;
 import box.bookstorebe.document.bookstore.BookStoreDocument;
 import box.bookstorebe.document.common.CommonEntity;
 import box.bookstorebe.document.common.ImageDocument;
 import box.bookstorebe.document.common.PersonDocument;
 import box.bookstorebe.document.common.SystemConfigDocument;
-import box.bookstorebe.document.user.UserDocument;
 import box.bookstorebe.dto.book.BookDto;
 import box.bookstorebe.dto.book.BookFavoriteDto;
 import box.bookstorebe.dto.book.BookSettingDto;
@@ -22,7 +22,7 @@ import box.bookstorebe.repository.bookstore.BookStoreRepository;
 import box.bookstorebe.repository.common.image.ImageRepository;
 import box.bookstorebe.repository.common.person.PersonRepository;
 import box.bookstorebe.repository.common.systemconfig.SystemConfigRepository;
-import box.bookstorebe.repository.user.UserRepository;
+import box.bookstorebe.repository.user.AccountRepository;
 import box.bookstorebe.service.BaseService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,7 +50,7 @@ public class BookService extends BaseService {
     private final PersonRepository personRepository;
     private final CommonEntityRepository commonEntityRepository;
     private final SystemConfigRepository systemConfigRepository;
-    private final UserRepository userRepository;
+    private final AccountRepository accountRepository;
     private final BookFavoriteRepository bookFavoriteRepository;
 
     public Page<BookDto> getBooks(
@@ -281,7 +281,7 @@ public class BookService extends BaseService {
         if (currentUser == null || currentUser.getUserId() == null) {
             throw new BizException("Invalid token");
         }
-        UserDocument user = userRepository.findById(currentUser.getUserId()).orElseThrow(() -> new BizException("Invalid user"));
+        AccountDocument user = accountRepository.findById(currentUser.getUserId()).orElseThrow(() -> new BizException("Invalid user"));
         List<BookFavoriteDocument> bookFavorites = bookFavoriteRepository.findAllByUserId(user.getId());
         List<String> bookIds = bookFavorites.stream().map(BookFavoriteDocument::getBookId).collect(Collectors.toList());
         BookFavoriteDto bookFavoriteDto = new BookFavoriteDto();
@@ -295,7 +295,7 @@ public class BookService extends BaseService {
         if (currentUser == null) {
             throw new BizException("Invalid token");
         }
-        UserDocument user = userRepository.findById(currentUser.getUserId()).orElseThrow(() -> new BizException("Invalid user"));
+        AccountDocument user = accountRepository.findById(currentUser.getUserId()).orElseThrow(() -> new BizException("Invalid user"));
         BookFavoriteDocument bookFavoriteDocument = bookFavoriteRepository.findByUserIdAndBookId(user.getId(), bookId);
         if (bookFavoriteDocument == null) {
             bookRepository.findById(bookId).orElseThrow(() -> new BizException("Invalid book id"));

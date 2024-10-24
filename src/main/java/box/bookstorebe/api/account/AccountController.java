@@ -1,51 +1,51 @@
-package box.bookstorebe.api.user;
+package box.bookstorebe.api.account;
 
 import box.bookstorebe.common.Const;
+import box.bookstorebe.dto.account.AccountDto;
 import box.bookstorebe.dto.common.BasePagingResponse;
 import box.bookstorebe.dto.common.BaseResponse;
-import box.bookstorebe.dto.user.UserDto;
 import box.bookstorebe.exception.BizException;
 import box.bookstorebe.model.user.UserModel;
-import box.bookstorebe.service.user.UserService;
+import box.bookstorebe.service.account.AccountService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/users")
+@RequestMapping("/api/v1/accounts")
 @RequiredArgsConstructor
-public class UserController {
-    private final UserService userService;
+public class AccountController {
+    private final AccountService userService;
 
     @GetMapping()
-    public BasePagingResponse<UserDto> getAllUsers(
+    public BasePagingResponse<AccountDto> getAllUsers(
             @RequestParam(name = "email", required = false) String email,
             @RequestParam("page") int page,
             @RequestParam("size") int size
     ) {
-        return new BasePagingResponse<>(userService.getUsers(email, page, size));
+        return new BasePagingResponse<>(userService.getAccounts(email, page, size));
     }
 
     @GetMapping("{id}")
-    public BaseResponse<UserDto> getUserDetail(@PathVariable String id) throws BizException {
-        return new BaseResponse<>(Const.ResultCode.SUCCESS, userService.getUserDetail(id));
+    public BaseResponse<AccountDto> getUserDetail(@PathVariable String id) throws BizException {
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, userService.getAccountDetail(id));
     }
 
     @PostMapping()
     public BaseResponse<String> createNewUser(@RequestBody @Valid UserModel userModel) throws BizException {
-        userService.createUser(userModel);
+        userService.createAccount(userModel);
         return new BaseResponse<>(Const.ResultCode.SUCCESS, "Create new user successfully");
     }
 
     @PutMapping("{id}")
     public BaseResponse<String> updateUser(@PathVariable String id, @RequestBody @Valid UserModel userModel) throws BizException {
-        userService.updateUser(id, userModel);
+        userService.updateAccount(id, userModel);
         return new BaseResponse<>(Const.ResultCode.SUCCESS, "Update user successfully");
     }
 
     @DeleteMapping("{id}")
     public BaseResponse<String> deleteUser(@PathVariable String id) throws BizException {
-        userService.deleteUser(id);
+        userService.deleteAccount(id);
         return new BaseResponse<>(Const.ResultCode.SUCCESS, "Delete user successfully");
     }
 }

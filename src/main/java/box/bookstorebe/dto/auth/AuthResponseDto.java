@@ -1,6 +1,6 @@
 package box.bookstorebe.dto.auth;
 
-import box.bookstorebe.dto.user.UserDto;
+import box.bookstorebe.dto.account.AccountDto;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.AllArgsConstructor;
@@ -15,5 +15,5 @@ import lombok.NoArgsConstructor;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class AuthResponseDto {
     private String token;
-    private UserDto user;
+    private AccountDto user;
 }

@@ -71,39 +71,39 @@ public class OrderService {
         List<BookDocument> listBook = bookRepository.findAllById(bookIds);
         Set<String> set = new HashSet<>(bookIds);
         List<String> distinctList = new ArrayList<>(set);
-        List<BookRealityDocument> orderBooks = new ArrayList<>();
-        if (listBook.size() < distinctList.size()) {
-            throw new BizException("bookId is invalid!");
-        }
-        for (int i = 0; i <order.getBooks().size(); i++) {
-            List<BookRealityDocument> bookRealityDocuments= bookRealityRepository.findAllByBookId(order.getBooks().get(i).getId());
-            int finalI = i;
-            if(bookRealityDocuments.stream().filter(bookRealityDocument ->
-                    ( bookRealityDocument.getType().equals(order.getBooks().get(finalI).getType()) &&
-                            bookRealityDocument.getStatus().equals(Const.BookRealityStatus.AVAILABLE.toString()))).count()
-                    < order.getBooks().get(finalI).getQuantity()){
-                throw new BizException("số lượng sách "+order.getBooks().get(finalI).getName()+
-                        "có tình trạng " +order.getBooks().get(finalI).getType() +" không đủ!");
-            }
-            List<BookRealityDocument> availableBooks = bookRealityDocuments.stream().filter(bookRealityDocument ->
-                    bookRealityDocument.getType().equals(order.getBooks().get(finalI).getType()) &&
-                            bookRealityDocument.getStatus().equals(Const.BookRealityStatus.AVAILABLE.toString())).limit(order.getBooks().get(finalI).getQuantity()).toList();
-            for(BookRealityDocument bookRealityDocument:availableBooks){
-                bookRealityDocument.setStatus(Const.BookRealityStatus.UNAVAILABLE.toString());
-                bookRealityRepository.save(bookRealityDocument);
-                orderBooks.add(bookRealityDocument);
-                total.add(new BigDecimal(bookRealityDocument.getPrice()));
-            }
-
-        }
-        orderDocument.setCreatedAt(ZonedDateTime.now());
-        orderDocument.setAddress(order.getAddress());
-        orderDocument.setCustomerName(order.getCustomerName());
-        orderDocument.setCustomerPhone(order.getCustomerPhone());
-        orderDocument.setEmail(order.getEmail());
-        orderDocument.setItems(orderBooks);
-        orderDocument.setPaymentType(order.isPaymentMethod());
-        orderDocument.setOrderId(getSaltString());
+//        List<BookRealityDocument> orderBooks = new ArrayList<>();
+//        if (listBook.size() < distinctList.size()) {
+//            throw new BizException("bookId is invalid!");
+//        }
+//        for (int i = 0; i <order.getBooks().size(); i++) {
+//            List<BookRealityDocument> bookRealityDocuments= bookRealityRepository.findAllByBookId(order.getBooks().get(i).getId());
+//            int finalI = i;
+//            if(bookRealityDocuments.stream().filter(bookRealityDocument ->
+//                    ( bookRealityDocument.getType().equals(order.getBooks().get(finalI).getType()) &&
+//                            bookRealityDocument.getStatus().equals(Const.BookRealityStatus.AVAILABLE.toString()))).count()
+//                    < order.getBooks().get(finalI).getQuantity()){
+//                throw new BizException("số lượng sách "+order.getBooks().get(finalI).getName()+
+//                        "có tình trạng " +order.getBooks().get(finalI).getType() +" không đủ!");
+//            }
+//            List<BookRealityDocument> availableBooks = bookRealityDocuments.stream().filter(bookRealityDocument ->
+//                    bookRealityDocument.getType().equals(order.getBooks().get(finalI).getType()) &&
+//                            bookRealityDocument.getStatus().equals(Const.BookRealityStatus.AVAILABLE.toString())).limit(order.getBooks().get(finalI).getQuantity()).toList();
+//            for(BookRealityDocument bookRealityDocument:availableBooks){
+//                bookRealityDocument.setStatus(Const.BookRealityStatus.UNAVAILABLE.toString());
+//                bookRealityRepository.save(bookRealityDocument);
+//                orderBooks.add(bookRealityDocument);
+//                total.add(new BigDecimal(bookRealityDocument.getPrice()));
+//            }
+//
+//        }
+//        orderDocument.setCreatedAt(ZonedDateTime.now());
+//        orderDocument.setAddress(order.getAddress());
+//        orderDocument.setCustomerName(order.getCustomerName());
+//        orderDocument.setCustomerPhone(order.getCustomerPhone());
+//        orderDocument.setEmail(order.getEmail());
+//        orderDocument.setItems(orderBooks);
+//        orderDocument.setPaymentType(order.isPaymentMethod());
+//        orderDocument.setOrderId(getSaltString());
         orderDocument.setStatus(Const.OrderStatus.CREATED);
         orderDocument.setNote(order.getNote());
 
@@ -123,16 +123,16 @@ public class OrderService {
         BigDecimal total=new BigDecimal(0);
         OrderDocument orderDocument = orderRepository.findById(id).orElseThrow(()-> new BizException("orderId is invalid"));
         PaymentDocument paymentDocument = paymentService.getPaymentByOrderId(id);
-        if(paymentDocument == null && orderDocument.isPaymentType()){
-            for (BookRealityDocument b:orderDocument.getItems()) {
-                total.add(new BigDecimal(b.getPrice()));
-            }
-            if(total.compareTo(Const.AMOUNT_CAN_FREESHIP) < 0){
-                total.add(Const.SHIPPING_FEE);
-            }
-            String url = paymentService.createOrder(request,total,id,returnUrl);
-            return url;
-        }
+//        if(paymentDocument == null && orderDocument.isPaymentType()){
+//            for (BookRealityDocument b:orderDocument.getItems()) {
+//                total.add(new BigDecimal(b.getPrice()));
+//            }
+//            if(total.compareTo(Const.AMOUNT_CAN_FREESHIP) < 0){
+//                total.add(Const.SHIPPING_FEE);
+//            }
+//            String url = paymentService.createOrder(request,total,id,returnUrl);
+//            return url;
+//        }
         return "create link payment success!";
     }
 
@@ -151,30 +151,30 @@ public class OrderService {
             orderDto.setEmail(order.getEmail());
             orderDto.setNote(order.getNote());
             orderDto.setPaymentType(order.isPaymentType());
-            List<BookRealityDto> bookDtos = new ArrayList<>();
-            for(BookRealityDocument book: order.getItems()){
-                BookRealityDto bookDto = new BookRealityDto();
-                bookDto.setId(book.getId());
-                bookDto.setPrice(book.getPrice());
-                bookDto.setCreatedAt(book.getCreatedAt());
-                BookDocument bookDocument = bookRepository.findById(book.getBookId()).orElse(null);
-                bookDto.setNumberOfPage(bookDocument!= null ? bookDocument.getNumberOfPage() : 0);
-                bookDtos.add(bookDto);
-            }
-            orderDto.setBooks(bookDtos);
+//            List<BookRealityDto> bookDtos = new ArrayList<>();
+//            for(BookRealityDocument book: order.getItems()){
+//                BookRealityDto bookDto = new BookRealityDto();
+//                bookDto.setId(book.getId());
+//                bookDto.setPrice(book.getPrice());
+//                bookDto.setCreatedAt(book.getCreatedAt());
+//                BookDocument bookDocument = bookRepository.findById(book.getBookId()).orElse(null);
+//                bookDto.setNumberOfPage(bookDocument!= null ? bookDocument.getNumberOfPage() : 0);
+//                bookDtos.add(bookDto);
+//            }
+//            orderDto.setBooks(bookDtos);
             rs.add(orderDto);
         }
         return new PageImpl<>(rs, orderDocuments.getPageable(), orderDocuments.getTotalElements());
     }
     public OrderDto findById(String id) throws BizException {
         OrderDocument orderDocument = orderRepository.findById(id).orElseThrow(()-> new BizException("orderId is invalid"));
-        List<BookRealityDocument> list= bookRealityRepository.findAllById(orderDocument.getItems().
-                stream().map(BookRealityDocument::getId).collect(Collectors.toList()));
-        List<BookRealityDto> bookRealityDtoList = new ArrayList<>();
-        for(BookRealityDocument bookRealityDocument: list){
-            BookRealityDto bookDto = bookRealityService.findEntityById(bookRealityDocument.getId());
-            bookRealityDtoList.add(bookDto);
-        }
+//        List<BookRealityDocument> list= bookRealityRepository.findAllById(orderDocument.getItems().
+//                stream().map(BookRealityDocument::getId).collect(Collectors.toList()));
+//        List<BookRealityDto> bookRealityDtoList = new ArrayList<>();
+//        for(BookRealityDocument bookRealityDocument: list){
+//            BookRealityDto bookDto = bookRealityService.findEntityById(bookRealityDocument.getId());
+//            bookRealityDtoList.add(bookDto);
+//        }
         PaymentDocument paymentDocument = paymentService.getPaymentByOrderId(id);
         boolean isPaid=false;
         if(paymentDocument != null){
@@ -188,11 +188,11 @@ public class OrderService {
                 .customerPhone(orderDocument.getCustomerPhone())
                 .status(orderDocument.getStatus())
                 .createdAt(orderDocument.getCreatedAt())
-                .books(bookRealityDtoList)
+//                .books(bookRealityDtoList)
                 .isPaid(isPaid)
                 .paymentType(orderDocument.isPaymentType())
                 .note(orderDocument.getNote())
-                .orderId(orderDocument.getOrderId())
+//                .orderId(orderDocument.getOrderId())
                 .shippingCode(orderDocument.getShippingCode())
                 .shippingCompany(orderDocument.getShippingCompany())
                 .build();
@@ -213,10 +213,10 @@ public class OrderService {
                 case Const.OrderStatus.CANCEL:
                     if(orderDocument.getStatus().equals(Const.OrderStatus.CREATED)){
                         handleOrderStatus(orderDocument, Const.OrderStatus.CREATED, order.getStatus(), "can't cancel order now!");
-                        orderDocument.getItems().forEach(bookRealityDocument -> {
-                            bookRealityDocument.setStatus(Const.BookRealityStatus.AVAILABLE.toString());
-                            bookRealityRepository.save(bookRealityDocument);
-                        });
+//                        orderDocument.getItems().forEach(bookRealityDocument -> {
+//                            bookRealityDocument.setStatus(Const.BookRealityStatus.AVAILABLE.toString());
+//                            bookRealityRepository.save(bookRealityDocument);
+//                        });
                     }
                     break;
                 case Const.OrderStatus.READY_TO_PACKAGE:

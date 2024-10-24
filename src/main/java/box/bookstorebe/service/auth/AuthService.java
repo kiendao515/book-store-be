@@ -1,24 +1,22 @@
 package box.bookstorebe.service.auth;
 
 import box.bookstorebe.configuration.security.RequestScope;
-import box.bookstorebe.document.user.PasswordResetToken;
-import box.bookstorebe.document.user.UserDocument;
-import box.bookstorebe.document.user.VerificationToken;
+import box.bookstorebe.document.account.AccountDocument;
+import box.bookstorebe.document.account.PasswordResetToken;
+import box.bookstorebe.dto.account.AccountDto;
 import box.bookstorebe.dto.auth.AuthResponseDto;
 import box.bookstorebe.dto.auth.UserProfileDto;
-import box.bookstorebe.dto.user.UserDto;
 import box.bookstorebe.eventlistener.event.OnRegistrationCompleteEvent;
 import box.bookstorebe.exception.BizException;
 import box.bookstorebe.model.auth.ChangePasswordRequestModel;
 import box.bookstorebe.model.auth.LoginRequestModel;
 import box.bookstorebe.model.auth.RegisterRequestModel;
 import box.bookstorebe.model.user.UserModel;
+import box.bookstorebe.repository.user.AccountRepository;
 import box.bookstorebe.repository.user.PasswordResetTokenRepository;
-import box.bookstorebe.repository.user.UserRepository;
-import box.bookstorebe.repository.user.VerificationTokenRepository;
 import box.bookstorebe.service.BaseService;
+import box.bookstorebe.service.account.AccountService;
 import box.bookstorebe.service.common.MailService;
-import box.bookstorebe.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,6 +26,7 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -40,16 +39,15 @@ import java.util.concurrent.Executors;
 @Slf4j
 @RequiredArgsConstructor
 public class AuthService extends BaseService {
-    private final UserRepository userRepository;
+    private final AccountRepository accountRepository;
     private final JwtService jwtService;
-    private final UserService userService;
+    private final AccountService accountService;
     private final MailService mailService;
     private final AuthenticationManager authenticationManager;
-    private final VerificationTokenRepository verificationTokenRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final JavaMailSenderImpl mailSender;
-    private final PasswordEncoder passwordEncoder;
+    private final BCryptPasswordEncoder passwordEncoder;
     private final ExecutorService executor = Executors.newFixedThreadPool(10);
     @Value("${app.client.url}")
     private String clientUrl;
@@ -58,15 +56,14 @@ public class AuthService extends BaseService {
         UserModel userModel = new UserModel();
         userModel.setEmail(request.getEmail());
         userModel.setPassword(request.getPassword());
-        userModel.setFullName(request.getFullName());
 
-        UserDocument user = userService.createUser(userModel);
+        AccountDocument user = accountService.createAccount(userModel);
         applicationEventPublisher.publishEvent(new OnRegistrationCompleteEvent(this, user, clientUrl));
         return "Register successfully. Please check your email to confirm your account.";
     }
 
     public AuthResponseDto login(LoginRequestModel request) throws BizException {
-        UserDocument user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new BizException("thông tin tài khoản hoặc mật khẩu không chính xác"));
+        AccountDocument user = accountRepository.findByEmail(request.getEmail()).orElseThrow(() -> new BizException("thông tin tài khoản hoặc mật khẩu không chính xác"));
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
@@ -79,29 +76,24 @@ public class AuthService extends BaseService {
             throw new BizException("tài khoản chưa được xác thực. Vui lòng kiểm tra email để xác thực tài khoản");
         }
         String jwtToken = jwtService.generateToken(user);
-        UserDto userDto = new UserDto();
+        AccountDto userDto = new AccountDto();
         userDto.setId(user.getId());
         userDto.setEmail(user.getEmail());
-        userDto.setFullName(user.getFullName());
         userDto.setRole(user.getRole());
 
         return new AuthResponseDto(jwtToken, userDto);
     }
 
     public String confirmRegistration(String token) throws BizException {
-        VerificationToken verificationToken = verificationTokenRepository.findByToken(token);
-        if (verificationToken == null) throw new BizException("Invalid token");
-
-
-        UserDocument user = userRepository.findById(verificationToken.getUserId()).orElseThrow(() -> new BizException("Invalid user"));
-        if (verificationToken.getExpiryDate().isBefore(ZonedDateTime.now())) throw new BizException("Token expired");
-        user.setEnabled(1);
-        userRepository.save(user);
+        AccountDocument accountDocument= accountRepository.findByToken(token).orElseThrow(()-> new BizException("invalid token"));
+        if (accountDocument.getExpiryDate().isBefore(ZonedDateTime.now())) throw new BizException("Token expired");
+        accountDocument.setEnabled(1);
+        accountRepository.save(accountDocument);
         return "xác thực tài khoản thành công";
     }
 
     public String sendResetPassword(String email) throws BizException {
-        UserDocument user = userRepository.findByEmail(email).orElseThrow(() -> new BizException("Invalid email"));
+        AccountDocument user = accountRepository.findByEmail(email).orElseThrow(() -> new BizException("Invalid email"));
         String token = UUID.randomUUID().toString();
         this.createPasswordResetTokenForUser(user, token);
         try {
@@ -123,9 +115,10 @@ public class AuthService extends BaseService {
         PasswordResetToken passwordResetToken = passwordResetTokenRepository.findByToken(token);
         if (passwordResetToken == null) throw new BizException("Invalid token");
         if (passwordResetToken.getExpiryDate().isBefore(ZonedDateTime.now())) throw new BizException("Token expired");
-        UserDocument user = userRepository.findById(passwordResetToken.getUserId()).orElseThrow(() -> new BizException("Invalid user"));
+        AccountDocument user = accountRepository.findById(passwordResetToken.getUserId()).orElseThrow(() -> new BizException("Invalid user"));
+
         user.setPassword(passwordEncoder.encode(password));
-        userRepository.save(user);
+        accountRepository.save(user);
         return "Change password successfully";
     }
 
@@ -135,21 +128,21 @@ public class AuthService extends BaseService {
             throw new BizException("Invalid token");
         }
 
-        UserDocument user = userRepository.findById(currentUser.getUserId()).orElseThrow(() -> new BizException("Invalid user"));
+        AccountDocument user = accountRepository.findById(currentUser.getUserId()).orElseThrow(() -> new BizException("Invalid user"));
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(user.getEmail(), model.getOldPassword())
         );
         user.setPassword(passwordEncoder.encode(model.getNewPassword()));
-        userRepository.save(user);
+        accountRepository.save(user);
         return "Change password successfully";
     }
 
-    public void createVerificationTokenForUser(UserDocument user, String token) {
-        VerificationToken verificationToken = new VerificationToken(token, user.getId());
-        verificationTokenRepository.save(verificationToken);
+    public void createVerificationTokenForUser(AccountDocument user, String token) {
+        user.setToken(token);
+        accountRepository.save(user);
     }
 
-    public void createPasswordResetTokenForUser(UserDocument user, String token) {
+    public void createPasswordResetTokenForUser(AccountDocument user, String token) {
         PasswordResetToken passwordResetToken = new PasswordResetToken(token, user.getId());
         passwordResetTokenRepository.save(passwordResetToken);
     }
@@ -159,11 +152,10 @@ public class AuthService extends BaseService {
         if (currentUser == null) {
             throw new BizException("Invalid token");
         }
-        UserDocument user = userRepository.findById(currentUser.getUserId()).orElseThrow(() -> new BizException("Invalid user"));
+        AccountDocument user = accountRepository.findById(currentUser.getUserId()).orElseThrow(() -> new BizException("Invalid user"));
         UserProfileDto userProfileDto = new UserProfileDto();
         userProfileDto.setId(user.getId());
         userProfileDto.setEmail(user.getEmail());
-        userProfileDto.setFullName(user.getFullName());
         userProfileDto.setRole(user.getRole().name());
         return userProfileDto;
     }

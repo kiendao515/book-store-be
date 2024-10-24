@@ -6,6 +6,6 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 
 public interface OrderRepository extends MongoRepository<OrderDocument, String>, OrderExRepository {
-    OrderDocument findByOrderId(String orderId);
+    OrderDocument findByOrderCode(String orderId);
 
 }

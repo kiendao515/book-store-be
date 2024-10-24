@@ -1,6 +1,5 @@
 package box.bookstorebe.service.auth;
-
-import box.bookstorebe.document.user.UserDocument;
+import box.bookstorebe.document.account.AccountDocument;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -36,7 +35,7 @@ public class JwtService {
         return claimsResolver.apply(claims);
     }
 
-    public String generateToken(UserDocument user) {
+    public String generateToken(AccountDocument user) {
         Map<String, Object> extraClaims = new HashMap<>();
         extraClaims.put("user_id", user.getId());
         extraClaims.put("email", user.getEmail());
@@ -46,7 +45,7 @@ public class JwtService {
 
     public String generateToken(
             Map<String, Object> extraClaims,
-            UserDocument userDetails
+            AccountDocument userDetails
     ) {
         return Jwts
                 .builder()

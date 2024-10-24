@@ -1,7 +1,7 @@
 package box.bookstorebe.repository.user.ex;
 
-import box.bookstorebe.document.user.UserDocument;
-import box.bookstorebe.dto.user.UserDto;
+import box.bookstorebe.document.account.AccountDocument;
+import box.bookstorebe.dto.account.AccountDto;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -18,11 +18,11 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.newA
 
 @Repository
 @AllArgsConstructor
-public class UserExRepositoryImpl implements UserExRepository {
+public class AccountExRepositoryImpl implements AccountExRepository {
     private final MongoTemplate mongoTemplate;
 
     @Override
-    public Page<UserDto> getUsers(String email, int page, int size) {
+    public Page<AccountDto> getUsers(String email, int page, int size) {
         PageRequest pageRequest = PageRequest.of(page, size);
 
         Criteria criteria = new Criteria();
@@ -30,7 +30,7 @@ public class UserExRepositoryImpl implements UserExRepository {
             criteria = criteria.and("email").is(email);
         }
 
-        long totalElement = mongoTemplate.count(new Query().addCriteria(criteria), UserDocument.class);
+        long totalElement = mongoTemplate.count(new Query().addCriteria(criteria), AccountDocument.class);
 
         AggregationOperation matchOperations = match(criteria);
 
@@ -54,7 +54,7 @@ public class UserExRepositoryImpl implements UserExRepository {
                 projectionOperation
         );
 
-        AggregationResults<UserDto> result = mongoTemplate.aggregate(aggregation, "users", UserDto.class);
+        AggregationResults<AccountDto> result = mongoTemplate.aggregate(aggregation, "accounts", AccountDto.class);
         return new PageImpl<>(result.getMappedResults(), pageRequest, totalElement);
     }
 }

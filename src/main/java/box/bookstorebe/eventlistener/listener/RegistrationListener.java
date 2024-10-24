@@ -1,6 +1,5 @@
 package box.bookstorebe.eventlistener.listener;
-
-import box.bookstorebe.document.user.UserDocument;
+import box.bookstorebe.document.account.AccountDocument;
 import box.bookstorebe.eventlistener.event.OnRegistrationCompleteEvent;
 import box.bookstorebe.service.auth.AuthService;
 import box.bookstorebe.service.common.MailService;
@@ -32,7 +31,7 @@ public class RegistrationListener implements ApplicationListener<OnRegistrationC
     @Async
     public void onApplicationEvent(OnRegistrationCompleteEvent event) {
         try {
-            UserDocument user = event.getUser();
+            AccountDocument user = event.getUser();
             String token = UUID.randomUUID().toString();
             this.authService.createVerificationTokenForUser(user, token);
             SimpleMailMessage email = mailService.constructEmailMessage(event, user, token);
