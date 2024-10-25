@@ -12,6 +12,6 @@ import lombok.NoArgsConstructor;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class UpdateCollectionModel {
     private String name;
-    private String imageId;
+    private String image;
     private String description;
 }

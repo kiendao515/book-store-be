@@ -36,13 +36,7 @@ public class CollectionService {
             collectionDto.setDescription(collectionDocument.getDescription());
             collectionDto.setCreatedAt(collectionDocument.getCreatedAt());
             collectionDto.setUpdatedAt(collectionDocument.getUpdatedAt());
-
-            ImageDocument imageDocument = imageRepository.findById(collectionDocument.getImageId() != null ? collectionDocument.getImageId() : "").orElseGet(() -> null);
-            if (imageDocument != null) {
-                CollectionDto.Image image = CollectionDto.Image.builder().id(imageDocument.getId()).link(imageDocument.getLink()).build();
-                collectionDto.setImage(image);
-            }
-
+            collectionDto.setImage(collectionDocument.getImageUrl());
             content.add(collectionDto);
         }
         return new PageImpl<>(content, collectionDocuments.getPageable(), collectionDocuments.getTotalElements());
@@ -50,24 +44,19 @@ public class CollectionService {
 
     public CollectionDto findById(String id) throws BizException {
         CollectionDocument collectionDocument = collectionRepository.findById(id).orElseThrow(() -> new BizException("Invalid collection id"));
-        ImageDocument imageDocument = imageRepository.findById(collectionDocument.getImageId() != null ? collectionDocument.getImageId() : "").orElseGet(() -> null);
         CollectionDto result = new CollectionDto();
         result.setId(collectionDocument.getId());
         result.setName(collectionDocument.getName());
         result.setDescription(collectionDocument.getDescription());
         result.setCreatedAt(collectionDocument.getCreatedAt());
         result.setUpdatedAt(collectionDocument.getUpdatedAt());
-        if (imageDocument != null) {
-            CollectionDto.Image image = CollectionDto.Image.builder().id(imageDocument.getId()).link(imageDocument.getLink()).build();
-            result.setImage(image);
-        }
+        result.setImage(collectionDocument.getImageUrl());
         return result;
     }
 
     public void createNewCollection(CreateCollectionModel collectionModel) throws BizException {
         CollectionDocument collectionDocument = new CollectionDocument();
-        ImageDocument imageDocument = imageRepository.findById(collectionModel.getImageId() != null ? collectionModel.getImageId() : "").orElseThrow(() -> new BizException("Invalid image id"));
-        collectionDocument.setImageId(imageDocument.getId());
+        collectionDocument.setImageUrl(collectionModel.getImage());
         collectionDocument.setName(collectionModel.getName());
         collectionDocument.setDescription(collectionModel.getDescription());
         collectionDocument.setCreatedAt(ZonedDateTime.now());
@@ -77,8 +66,7 @@ public class CollectionService {
 
     public void updateCollection(String id, UpdateCollectionModel collectionModel) throws BizException {
         CollectionDocument collectionDocument = collectionRepository.findById(id).orElseThrow(() -> new BizException("Invalid collection id"));
-        ImageDocument imageDocument = imageRepository.findById(collectionModel.getImageId() != null ? collectionModel.getImageId() : "").orElseThrow(() -> new BizException("Invalid image id"));
-        collectionDocument.setImageId(imageDocument.getId());
+        collectionDocument.setImageUrl(collectionModel.getImage());
         collectionDocument.setName(collectionModel.getName());
         collectionDocument.setDescription(collectionModel.getDescription());
         collectionDocument.setUpdatedAt(ZonedDateTime.now());

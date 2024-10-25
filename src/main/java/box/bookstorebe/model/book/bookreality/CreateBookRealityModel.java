@@ -21,4 +21,5 @@ public class CreateBookRealityModel {
     private String coverImageId;
     private String bookId;
     private Integer quantity;
+    private String storeId;
 }

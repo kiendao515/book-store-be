@@ -1,7 +1,6 @@
 package box.bookstorebe.repository.booksearchrequest.ex;
 
 import box.bookstorebe.document.booksearchrequest.BookSearchRequestDocument;
-import box.bookstorebe.document.bookstore.BookStoreDocument;
 import org.springframework.data.domain.Page;
 
 public interface BookSearchRequestExRepository {

@@ -62,8 +62,8 @@ public class GlobalExceptionHandler {
         logger.error("handleAllException occurred : {}", sb);
 
         BaseResponse<Object> response = new BaseResponse<>();
-        response.setSuccess(Const.ResultCode.ERROR);
-        response.setMessage(e.getMessage());
+        response.setResult(Const.ResultCode.ERROR);
+        response.setReason(e.getMessage());
         return buildResponseEntity(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
@@ -76,8 +76,8 @@ public class GlobalExceptionHandler {
                 Collectors.mapping(FieldError::getDefaultMessage, Collectors.toSet())));
 
         BaseResponse<Object> response = new BaseResponse<>();
-        response.setSuccess(Const.ResultCode.ERROR);
-        response.setMessage("Validation error");
+        response.setResult(Const.ResultCode.ERROR);
+        response.setReason("Validation error");
         response.setData(errorsMap.isEmpty() ? ex : errorsMap);
         return buildResponseEntity(response, HttpStatus.BAD_REQUEST);
     }
@@ -92,8 +92,8 @@ public class GlobalExceptionHandler {
             message.append(constraintViolation.getMessage()).append(';');
         }
         BaseResponse<Object> response = new BaseResponse<>();
-        response.setSuccess(Const.ResultCode.ERROR);
-        response.setMessage("Validation error");
+        response.setResult(Const.ResultCode.ERROR);
+        response.setReason("Validation error");
         response.setData(message.toString());
         return buildResponseEntity(response, HttpStatus.BAD_REQUEST);
     }
@@ -103,8 +103,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BizException.class)
     protected ResponseEntity<Object> handleMethodArgumentNotValid(BizException ex) {
         BaseResponse<Object> response = new BaseResponse<>();
-        response.setSuccess(Const.ResultCode.ERROR);
-        response.setMessage(ex.getMessage());
+        response.setResult(Const.ResultCode.ERROR);
+        response.setReason(ex.getMessage());
         return buildResponseEntity(response, HttpStatus.OK);
     }
 
@@ -112,8 +112,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MissingServletRequestParameterException.class)
     protected ResponseEntity<Object> handleMissingServletRequestParameterException(MissingServletRequestParameterException ex) {
         BaseResponse<Object> response = new BaseResponse<>();
-        response.setSuccess(Const.ResultCode.ERROR);
-        response.setMessage("Thiếu " + ex.getParameterName());
+        response.setResult(Const.ResultCode.ERROR);
+        response.setReason("Thiếu " + ex.getParameterName());
         return buildResponseEntity(response, HttpStatus.BAD_REQUEST);
     }
 
@@ -124,12 +124,12 @@ public class GlobalExceptionHandler {
         BaseResponse<Object> response = new BaseResponse<>();
         Throwable cause = ex.getRootCause();
         if (cause instanceof InvalidFormatException) {
-            response.setSuccess(Const.ResultCode.ERROR);
-            response.setMessage(((InvalidFormatException) cause).getOriginalMessage());
+            response.setResult(Const.ResultCode.ERROR);
+            response.setReason(((InvalidFormatException) cause).getOriginalMessage());
             return buildResponseEntity(response, HttpStatus.BAD_REQUEST);
         }
-        response.setSuccess(Const.ResultCode.ERROR);
-        response.setMessage(ex.getMessage());
+        response.setResult(Const.ResultCode.ERROR);
+        response.setReason(ex.getMessage());
         return buildResponseEntity(response, HttpStatus.BAD_REQUEST);
     }
 
@@ -137,8 +137,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
     protected ResponseEntity<Object> handleAccessDeniedException(org.springframework.security.access.AccessDeniedException ex) {
         BaseResponse<Object> response = new BaseResponse<>();
-        response.setSuccess(Const.ResultCode.ERROR);
-        response.setMessage(ex.getMessage());
+        response.setResult(Const.ResultCode.ERROR);
+        response.setReason(ex.getMessage());
         return buildResponseEntity(response, HttpStatus.FORBIDDEN);
     }
 

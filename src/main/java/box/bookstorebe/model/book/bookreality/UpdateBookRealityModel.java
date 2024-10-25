@@ -26,8 +26,8 @@ public class UpdateBookRealityModel {
     @Field("book_id")
     private String bookId;
 
-    @Field("cover_image_id")
-    private String coverImageId;
+    @Field("cover_image")
+    private String coverImage;
 
     @Field("quantity")
     private Integer quantity;

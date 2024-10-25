@@ -1,12 +1,13 @@
-package box.bookstorebe.document.account;
+package box.bookstorebe.document.bookstore;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
+
+import java.time.ZonedDateTime;
 
 @Data
 @AllArgsConstructor
@@ -19,8 +20,8 @@ public class StoreDocument {
     @Field(name = "account_id")
     private String accountId;
 
-    @Field(name = "store_name")
-    private String storeName;
+    @Field(name = "name")
+    private String name;
 
     @Field(name = "description")
     private String description;
@@ -33,4 +34,13 @@ public class StoreDocument {
 
     @Field(name = "thumbnail")
     private String thumbnail;
+
+    @Field(name = "created_at")
+    private ZonedDateTime createdAt;
+
+    @Field(name = "updated_at")
+    private ZonedDateTime updatedAt;
+
+    @Field(name = "deleted_at")
+    private ZonedDateTime deletedAt;
 }

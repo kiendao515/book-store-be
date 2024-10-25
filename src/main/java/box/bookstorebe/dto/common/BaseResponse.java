@@ -10,26 +10,26 @@ import lombok.NoArgsConstructor;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @NoArgsConstructor
 public class BaseResponse<T> {
-    private boolean success;
+    private boolean result;
     private T data;
-    private String message;
+    private String reason;
 
     public BaseResponse(boolean success, T data) {
         super();
-        this.success = success;
+        this.result = success;
         this.data = data;
     }
 
     public BaseResponse(boolean success, String message) {
         super();
-        this.success = success;
-        this.message = message;
+        this.result = success;
+        this.reason = message;
     }
 
     public BaseResponse(boolean success, T data, String message) {
         super();
-        this.success = success;
+        this.result = success;
         this.data = data;
-        this.message = message;
+        this.reason = message;
     }
 }

@@ -22,9 +22,9 @@ public class CreateBookModel {
     private String isbn;
     private String publisher;
     private String author;
-    private String coverImageId;
-    private String detailImageId;
-    private List<String> demoImageIds;
+    private String coverImage;
+    private String backImage;
+    private List<String> demoImage;
     private String demoUrl;
     private List<String> tags;
     private String categoryId;

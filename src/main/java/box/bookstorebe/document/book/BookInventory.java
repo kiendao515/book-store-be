@@ -41,8 +41,8 @@ public class BookInventory {
     @Field("store_id")
     private String storeId;
 
-    @Field("cover_image_id")
-    private String coverImageId;
+    @Field("cover_image")
+    private String coverImage;
 
     @Field("created_at")
     private ZonedDateTime createdAt;

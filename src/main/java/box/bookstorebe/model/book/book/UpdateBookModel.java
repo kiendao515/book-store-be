@@ -24,11 +24,11 @@ public class UpdateBookModel {
     private String editorId;
     private String translatorId;
     private String coverDrawerId;
-    private String coverImageId;
-    private String detailImageId;
-    private List<String> demoImageIds;
+    private String coverImage;
+    private String backImage;
+    private List<String> demoImage;
     private String demoUrl;
     private List<String> tagIds;
-    private List<String> categoryIds;
+    private String categoryId;
     private String storeId;
 }

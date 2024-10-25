@@ -8,6 +8,9 @@ public final class Const {
     public enum EventType {
         BOOK_CREATE
     }
+    public enum AccountType{
+        ADMIN, USER, STORE
+    }
 
     public static final String[] AUTH_WHITELIST = {
             "/api/v1/auth/**",

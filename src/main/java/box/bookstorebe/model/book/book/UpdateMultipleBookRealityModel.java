@@ -18,5 +18,5 @@ public class UpdateMultipleBookRealityModel {
     private BookType type;
     private int quantity;
     private BigDecimal price;
-    private String coverImageId;
+    private String coverImage;
 }

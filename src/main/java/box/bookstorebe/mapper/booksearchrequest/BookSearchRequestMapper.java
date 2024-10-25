@@ -1,9 +1,7 @@
 package box.bookstorebe.mapper.booksearchrequest;
 
 import box.bookstorebe.document.booksearchrequest.BookSearchRequestDocument;
-import box.bookstorebe.document.bookstore.BookStoreDocument;
 import box.bookstorebe.dto.booksearchrequest.BookSearchRequestDto;
-import box.bookstorebe.dto.bookstore.BookStoreDto;
 import box.bookstorebe.mapper.BaseMapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;

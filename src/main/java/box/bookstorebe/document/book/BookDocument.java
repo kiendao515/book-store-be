@@ -49,14 +49,14 @@ public class BookDocument {
     @Field("collection_id")
     private String collectionId;
 
-    @Field("cover_image_id")
-    private String coverImageId;
+    @Field("cover_image")
+    private String coverImage;
 
-    @Field("detail_image_id")
-    private String detailImageId;
+    @Field("detail_image")
+    private String backImage;
 
-    @Field("demo_image_ids")
-    private List<String> demoImageIds;
+    @Field("demo_image")
+    private List<String> demoImage;
 
     @Field("demo_url")
     private String demoUrl;

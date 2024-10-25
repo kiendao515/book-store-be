@@ -20,8 +20,8 @@ public class CollectionDocument {
     @Field(name = "name")
     private String name;
 
-    @Field(name = "image_id")
-    private String imageId;
+    @Field(name = "image_url")
+    private String imageUrl;
 
     @Field(name = "description")
     private String description;

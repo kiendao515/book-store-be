@@ -1,6 +1,6 @@
 package box.bookstorebe.repository.bookstore.ex;
 
-import box.bookstorebe.document.bookstore.BookStoreDocument;
+import box.bookstorebe.document.bookstore.StoreDocument;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -21,10 +21,11 @@ public class BookStoreExRepositoryImpl implements BookStoreExRepository {
     private final MongoTemplate mongoTemplate;
 
     @Override
-    public Page<BookStoreDocument> getBookStores(String name, Integer page, Integer size) {
+    public Page<StoreDocument> getBookStores(String name, Integer page, Integer size) {
         PageRequest pageRequest;
 
         Criteria criteria = new Criteria();
+        criteria = criteria.and("deleted_at").is(null);
         if (name != null) {
             criteria = criteria.and("name").regex(".*" + name + ".*");
         }
@@ -35,7 +36,7 @@ public class BookStoreExRepositoryImpl implements BookStoreExRepository {
             pageRequest = PageRequest.of(page, size);
         }
 
-        long totalElement = mongoTemplate.count(new Query().addCriteria(criteria), BookStoreDocument.class);
+        long totalElement = mongoTemplate.count(new Query().addCriteria(criteria), StoreDocument.class);
 
         AggregationOperation matchOperations = match(criteria);
 
@@ -51,7 +52,7 @@ public class BookStoreExRepositoryImpl implements BookStoreExRepository {
                 limitOperation
         );
 
-        AggregationResults<BookStoreDocument> result = mongoTemplate.aggregate(aggregation, "book_stores", BookStoreDocument.class);
+        AggregationResults<StoreDocument> result = mongoTemplate.aggregate(aggregation, "stores", StoreDocument.class);
         return new PageImpl<>(result.getMappedResults(), pageRequest, totalElement);
     }
 }
