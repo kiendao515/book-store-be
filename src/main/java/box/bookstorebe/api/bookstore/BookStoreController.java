@@ -6,6 +6,7 @@ import box.bookstorebe.dto.common.BasePagingResponse;
 import box.bookstorebe.dto.common.BaseResponse;
 import box.bookstorebe.exception.BizException;
 import box.bookstorebe.model.bookstore.CreateBookStoreModel;
+import box.bookstorebe.model.bookstore.CreateBookstoreAndAccount;
 import box.bookstorebe.model.bookstore.UpdateBookStoreModel;
 import box.bookstorebe.service.bookstore.BookStoreService;
 import jakarta.validation.Valid;
@@ -37,6 +38,13 @@ public class BookStoreController {
         bookStoreService.createNewBookStore(bookStoreModel);
         return new BaseResponse<>(Const.ResultCode.SUCCESS, "Create new book store successfully");
     }
+
+    @PostMapping("/account")
+    public BaseResponse<String> createNewBookStoreAndAccount(@RequestBody @Valid CreateBookstoreAndAccount bookStoreModel) throws BizException {
+        bookStoreService.createNewBookStoreAndAccount(bookStoreModel);
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, "Create new book store and account successfully");
+    }
+
 
     @PutMapping("{id}")
     public BaseResponse<String> updateBookStore(@PathVariable String id, @RequestBody @Valid UpdateBookStoreModel bookStoreModel) throws BizException {

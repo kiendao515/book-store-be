@@ -3,6 +3,7 @@ package box.bookstorebe.service.auth;
 import box.bookstorebe.configuration.security.RequestScope;
 import box.bookstorebe.document.account.AccountDocument;
 import box.bookstorebe.document.account.PasswordResetToken;
+import box.bookstorebe.document.account.Role;
 import box.bookstorebe.dto.account.AccountDto;
 import box.bookstorebe.dto.auth.AuthResponseDto;
 import box.bookstorebe.dto.auth.UserProfileDto;
@@ -47,7 +48,7 @@ public class AuthService extends BaseService {
     private final ApplicationEventPublisher applicationEventPublisher;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final JavaMailSenderImpl mailSender;
-    private final BCryptPasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
     private final ExecutorService executor = Executors.newFixedThreadPool(10);
     @Value("${app.client.url}")
     private String clientUrl;
@@ -57,7 +58,7 @@ public class AuthService extends BaseService {
         userModel.setEmail(request.getEmail());
         userModel.setPassword(request.getPassword());
 
-        AccountDocument user = accountService.createAccount(userModel);
+        AccountDocument user = accountService.createAccount(userModel, Role.USER);
         applicationEventPublisher.publishEvent(new OnRegistrationCompleteEvent(this, user, clientUrl));
         return "Register successfully. Please check your email to confirm your account.";
     }

@@ -12,8 +12,6 @@ public class AccountDto {
     private String id;
     @Field("email")
     private String email;
-    @Field("full_name")
-    private String fullName;
     @Field("role")
     private Role role;
 }

@@ -47,7 +47,8 @@ public class CategoryService {
     }
 
     public void deleteCategory(String id) throws BizException {
-        categoryRepository.findById(id).orElseThrow(() -> new BizException("Invalid category id"));
-        categoryRepository.deleteById(id);
+        CategoryDocument c= categoryRepository.findById(id).orElseThrow(() -> new BizException("Invalid category id"));
+        c.setDeletedAt(ZonedDateTime.now());
+        categoryRepository.save(c);
     }
 }

@@ -29,6 +29,7 @@ public class CategoryExRepositoryImpl implements CategoryExRepository {
     public Page<CategoryDto> getCategories(String name, Integer page, Integer size) {
         PageRequest pageRequest;
         Criteria criteria = new Criteria();
+        criteria = criteria.and("deleted_at").isNull();
         if (name != null) {
             criteria = criteria.and("name").is(name);
         }

@@ -26,7 +26,9 @@ public final class Const {
             "/api/v1/people/**",
             "/api/v1/entity/common/**",
             "/api/v1/file/**",
-            "/api/v1/notifications/**"
+            "/api/v1/notifications/**",
+            "/api/v1/accounts/**",
+            "/api/v1/customers/**"
     };
 
 
@@ -116,5 +118,7 @@ public final class Const {
 
     }
     public static final BigDecimal AMOUNT_CAN_FREESHIP = new BigDecimal(500000);
+    public static final String ADMIN_EMAIL = "hieusachhop@gmail.com";
+    public static final String ADMIN_PASS = "123456";
 
 }

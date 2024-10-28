@@ -1,14 +1,19 @@
 package box.bookstorebe.service.bookstore;
 
+import box.bookstorebe.document.account.AccountDocument;
+import box.bookstorebe.document.account.Role;
 import box.bookstorebe.document.bookstore.StoreDocument;
 import box.bookstorebe.document.common.ImageDocument;
 import box.bookstorebe.dto.bookstore.BookStoreDto;
 import box.bookstorebe.exception.BizException;
 import box.bookstorebe.mapper.bookstore.BookStoreMapper;
 import box.bookstorebe.model.bookstore.CreateBookStoreModel;
+import box.bookstorebe.model.bookstore.CreateBookstoreAndAccount;
 import box.bookstorebe.model.bookstore.UpdateBookStoreModel;
+import box.bookstorebe.model.user.UserModel;
 import box.bookstorebe.repository.bookstore.BookStoreRepository;
 import box.bookstorebe.repository.common.image.ImageRepository;
+import box.bookstorebe.service.account.AccountService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -25,6 +30,7 @@ import java.util.List;
 public class BookStoreService {
     private final BookStoreRepository bookStoreRepository;
     private final ImageRepository imageRepository;
+    private final AccountService accountService;
 
     public Page<BookStoreDto> getBookStores(String name, Integer page, Integer size) {
         Page<StoreDocument> bookStoreDocuments = bookStoreRepository.getBookStores(name, page, size);
@@ -51,6 +57,19 @@ public class BookStoreService {
         bookStoreDocument.setDescription(bookStoreModel.getDescription());
         bookStoreDocument.setCreatedAt(ZonedDateTime.now());
         bookStoreDocument.setUpdatedAt(ZonedDateTime.now());
+        bookStoreRepository.save(bookStoreDocument);
+    }
+    public void createNewBookStoreAndAccount(CreateBookstoreAndAccount bookStoreModel) throws BizException {
+        StoreDocument bookStoreDocument = new StoreDocument();
+        bookStoreDocument.setThumbnail(bookStoreModel.getThumbnail());
+        bookStoreDocument.setName(bookStoreModel.getName());
+        bookStoreDocument.setAddress(bookStoreModel.getAddress());
+        bookStoreDocument.setPhoneNumber(bookStoreModel.getPhoneNumber());
+        bookStoreDocument.setDescription(bookStoreModel.getDescription());
+        bookStoreDocument.setCreatedAt(ZonedDateTime.now());
+        bookStoreDocument.setUpdatedAt(ZonedDateTime.now());
+        AccountDocument acc= accountService.createAccount(new UserModel(bookStoreModel.getEmail(), bookStoreModel.getPassword()), Role.STORE);
+        bookStoreDocument.setAccountId(acc.getId());
         bookStoreRepository.save(bookStoreDocument);
     }
 

@@ -29,4 +29,7 @@ public class CategoryDocument {
 
     @Field(name = "updated_at")
     private ZonedDateTime updatedAt;
+
+    @Field(name = "deleted_at")
+    private ZonedDateTime deletedAt;
 }

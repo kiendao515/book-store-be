@@ -1,6 +1,7 @@
 package box.bookstorebe.api.account;
 
 import box.bookstorebe.common.Const;
+import box.bookstorebe.document.account.Role;
 import box.bookstorebe.dto.account.AccountDto;
 import box.bookstorebe.dto.common.BasePagingResponse;
 import box.bookstorebe.dto.common.BaseResponse;
@@ -20,8 +21,8 @@ public class AccountController {
     @GetMapping()
     public BasePagingResponse<AccountDto> getAllUsers(
             @RequestParam(name = "email", required = false) String email,
-            @RequestParam("page") int page,
-            @RequestParam("size") int size
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "size", required = false) Integer size
     ) {
         return new BasePagingResponse<>(userService.getAccounts(email, page, size));
     }
@@ -33,7 +34,7 @@ public class AccountController {
 
     @PostMapping()
     public BaseResponse<String> createNewUser(@RequestBody @Valid UserModel userModel) throws BizException {
-        userService.createAccount(userModel);
+        userService.createAccount(userModel, Role.USER);
         return new BaseResponse<>(Const.ResultCode.SUCCESS, "Create new user successfully");
     }
 

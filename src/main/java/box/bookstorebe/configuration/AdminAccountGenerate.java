@@ -11,6 +11,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.security.SecureRandom;
 import java.util.Base64;
@@ -19,16 +20,19 @@ import java.util.Base64;
 @AllArgsConstructor
 public class AdminAccountGenerate {
     private final AccountRepository accountRepository;
-    private final BCryptPasswordEncoder passwordEncoder;
-    private final AccountService accountService;
+    private final PasswordEncoder passwordEncoder;
+    @Bean
     public CommandLineRunner initAdminAccount() {
-        String salt = accountService.generateSalt();
+        String salt = AccountService.generateSalt();
+        String password= salt+Const.ADMIN_PASS;
         return args -> {
-            if (accountRepository.findByEmail("admin").isEmpty()) {
+            if (accountRepository.findByEmail(Const.ADMIN_EMAIL).isEmpty()) {
                 AccountDocument admin = new AccountDocument();
-                admin.setEmail("admin");
-                admin.setPassword(passwordEncoder.encode("admin123")); // Đổi mật khẩu phù hợp
+                admin.setEmail(Const.ADMIN_EMAIL);
+                admin.setSalt(salt);
+                admin.setPassword(passwordEncoder.encode(password));
                 admin.setRole(Role.ADMIN);
+                admin.setEnabled(1);
                 accountRepository.save(admin);
                 System.out.println("Tài khoản admin đã được tạo.");
             } else {

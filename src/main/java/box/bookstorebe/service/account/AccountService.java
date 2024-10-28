@@ -22,7 +22,7 @@ import java.util.Base64;
 @AllArgsConstructor
 public class AccountService {
     private final AccountRepository accountRepository;
-    private final BCryptPasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
     public static String generateSalt() {
         SecureRandom random = new SecureRandom();
         byte[] saltBytes = new byte[16];
@@ -30,7 +30,7 @@ public class AccountService {
         return Base64.getEncoder().encodeToString(saltBytes);
     }
 
-    public Page<AccountDto> getAccounts(String email, int page, int size) {
+    public Page<AccountDto> getAccounts(String email, Integer page, Integer size) {
         return accountRepository.getUsers(email, page, size);
     }
 
@@ -39,7 +39,7 @@ public class AccountService {
         return AccountMapper.INSTANCE.entityToDto(user);
     }
 
-    public AccountDocument createAccount(UserModel userModel) throws BizException {
+    public AccountDocument createAccount(UserModel userModel,Role role) throws BizException {
         AccountDocument user = accountRepository.findByEmail(userModel.getEmail()).orElseGet(() -> null);
         if (user != null) {
             throw new BizException("Email already exists");
@@ -50,7 +50,7 @@ public class AccountService {
         String salt = generateSalt();
         String combinedPasswordSalt= salt+ userModel.getPassword();
         newUser.setPassword(passwordEncoder.encode(combinedPasswordSalt));
-        newUser.setRole(Role.USER);
+        newUser.setRole(role);
         return accountRepository.save(newUser);
     }
 

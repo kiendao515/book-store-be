@@ -1,8 +1,9 @@
-package box.bookstorebe.repository.user.ex;
+package box.bookstorebe.repository.customer.ex;
 
 import box.bookstorebe.document.account.AccountDocument;
-import box.bookstorebe.document.book.CategoryDocument;
+import box.bookstorebe.document.account.CustomerDocument;
 import box.bookstorebe.dto.account.AccountDto;
+import box.bookstorebe.dto.customer.CustomerInfoDto;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -19,15 +20,21 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.newA
 
 @Repository
 @AllArgsConstructor
-public class AccountExRepositoryImpl implements AccountExRepository {
+public class CustomerExRepositoryImpl implements CustomerExRepository{
     private final MongoTemplate mongoTemplate;
-
     @Override
-    public Page<AccountDto> getUsers(String email, Integer page, Integer size) {
+    public Page<CustomerDocument> getCustomers(String name, String phone, String address,Integer page, Integer size) {
         PageRequest pageRequest;
         Criteria criteria = new Criteria();
-        if (email != null) {
-            criteria = criteria.and("email").is(email);
+        criteria = criteria.and("deleted_at").isNull();
+        if (name != null) {
+            criteria = criteria.and("name").is(name);
+        }
+        if(phone != null) {
+            criteria = criteria.and("phone_number").regex(".*" + phone + ".*");
+        }
+        if(address != null) {
+            criteria = criteria.and("address").regex(".*" + address + ".*");
         }
 
         long totalElement = mongoTemplate.count(new Query().addCriteria(criteria), AccountDocument.class);
@@ -47,10 +54,10 @@ public class AccountExRepositoryImpl implements AccountExRepository {
 
         ProjectionOperation projectionOperation = Aggregation.project()
                 .and("_id").as("id")
-                .and("first_name").as("first_name")
-                .and("last_name").as("last_name")
-                .and("email").as("email")
-                .and("role").as("role");
+                .and("account_id").as("account_id")
+                .and("name").as("name")
+                .and("phone_number").as("phone_number")
+                .and("address").as("address");
 
         Aggregation aggregation = newAggregation(
                 matchOperations,
@@ -60,7 +67,7 @@ public class AccountExRepositoryImpl implements AccountExRepository {
                 projectionOperation
         );
 
-        AggregationResults<AccountDto> result = mongoTemplate.aggregate(aggregation, "accounts", AccountDto.class);
+        AggregationResults<CustomerDocument> result = mongoTemplate.aggregate(aggregation, "customers", CustomerDocument.class);
         return new PageImpl<>(result.getMappedResults(), pageRequest, totalElement);
     }
 }

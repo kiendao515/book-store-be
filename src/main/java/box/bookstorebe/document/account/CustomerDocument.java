@@ -8,6 +8,9 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.time.ZonedDateTime;
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -26,5 +29,14 @@ public class CustomerDocument {
     private String phoneNumber;
 
     @Field(name = "address")
-    private String address;
+    private List<String> address;
+
+    @Field(name = "deleted_at")
+    private ZonedDateTime deletedAd;
+
+    @Field(name = "created_at")
+    private ZonedDateTime createdAt;
+
+    @Field(name = "updated_at")
+    private ZonedDateTime updatedAt;
 }
