@@ -36,7 +36,7 @@ public class CartService extends BaseService {
         if (currentUser == null) {
             throw new BizException("Invalid token");
         }
-        AccountDocument user = accountRepository.findById(currentUser.getUserId()).orElseThrow(() -> new BizException("Invalid user"));
+        AccountDocument user = accountRepository.findById(currentUser.getAccountId()).orElseThrow(() -> new BizException("Invalid user"));
         CartDocument cartDocument = new CartDocument();
         cartDocument.setQuantity(cartModel.getQuantity());
         cartDocument.setBookInventoryId(cartModel.getBookInventoryId());

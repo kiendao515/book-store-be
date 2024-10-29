@@ -1,5 +1,6 @@
 package box.bookstorebe.configuration.security;
 
+import box.bookstorebe.document.account.Role;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.AllArgsConstructor;
@@ -16,5 +17,8 @@ import org.springframework.stereotype.Component;
 @Scope(value = "request", proxyMode = ScopedProxyMode.DEFAULT)
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class RequestScope {
-    private String userId;
+    private String accountId;
+    private Role role;
+    private String email;
+
 }

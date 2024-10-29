@@ -129,7 +129,7 @@ public class AuthService extends BaseService {
             throw new BizException("Invalid token");
         }
 
-        AccountDocument user = accountRepository.findById(currentUser.getUserId()).orElseThrow(() -> new BizException("Invalid user"));
+        AccountDocument user = accountRepository.findById(currentUser.getAccountId()).orElseThrow(() -> new BizException("Invalid user"));
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(user.getEmail(), model.getOldPassword())
         );
@@ -153,7 +153,7 @@ public class AuthService extends BaseService {
         if (currentUser == null) {
             throw new BizException("Invalid token");
         }
-        AccountDocument user = accountRepository.findById(currentUser.getUserId()).orElseThrow(() -> new BizException("Invalid user"));
+        AccountDocument user = accountRepository.findById(currentUser.getAccountId()).orElseThrow(() -> new BizException("Invalid user"));
         UserProfileDto userProfileDto = new UserProfileDto();
         userProfileDto.setId(user.getId());
         userProfileDto.setEmail(user.getEmail());

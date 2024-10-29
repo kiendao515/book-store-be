@@ -11,6 +11,7 @@ import box.bookstorebe.model.bookstore.UpdateBookStoreModel;
 import box.bookstorebe.service.bookstore.BookStoreService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -40,6 +41,7 @@ public class BookStoreController {
     }
 
     @PostMapping("/account")
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     public BaseResponse<String> createNewBookStoreAndAccount(@RequestBody @Valid CreateBookstoreAndAccount bookStoreModel) throws BizException {
         bookStoreService.createNewBookStoreAndAccount(bookStoreModel);
         return new BaseResponse<>(Const.ResultCode.SUCCESS, "Create new book store and account successfully");

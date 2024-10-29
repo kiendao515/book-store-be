@@ -73,7 +73,7 @@ public class BookSearchRequestService extends BaseService {
     public void createBookSearchRequest(CreateBookSearchRequestModel bookSearchRequestModel) throws BizException {
         BookSearchRequestDocument bookSearchRequestDocument = new BookSearchRequestDocument();
         if (getCurrentUserInfo() != null) {
-            bookSearchRequestDocument.setUserId(getCurrentUserInfo().getUserId());
+            bookSearchRequestDocument.setUserId(getCurrentUserInfo().getAccountId());
         }
         bookSearchRequestDocument.setFullName(bookSearchRequestModel.getFullName());
         bookSearchRequestDocument.setEmail(bookSearchRequestModel.getEmail());

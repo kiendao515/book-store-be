@@ -1,5 +1,6 @@
 package box.bookstorebe.service.auth;
 import box.bookstorebe.document.account.AccountDocument;
+import box.bookstorebe.filter.TokenDecode;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -34,10 +35,22 @@ public class JwtService {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
+    public String extractRole(String token) {
+        return extractClaim(token, claims -> claims.get("role", String.class));
+    }
+
+    public TokenDecode extractToken(String token) {
+        TokenDecode tokenDecode = new TokenDecode();
+        tokenDecode.setAccountId(extractClaim(token, claims -> claims.get("account_id", String.class)));
+        tokenDecode.setEmail(extractClaim(token, claims -> claims.get("email", String.class)));
+        tokenDecode.setRole(extractClaim(token, claims -> claims.get("role", String.class)));
+        return tokenDecode;
+    }
+
 
     public String generateToken(AccountDocument user) {
         Map<String, Object> extraClaims = new HashMap<>();
-        extraClaims.put("user_id", user.getId());
+        extraClaims.put("account_id", user.getId());
         extraClaims.put("email", user.getEmail());
         extraClaims.put("role", user.getRole());
         return generateToken(extraClaims, user);

@@ -221,10 +221,10 @@ public class BookService extends BaseService {
 
     public BookFavoriteDto getBookFavorite() throws BizException {
         RequestScope currentUser = this.getCurrentUserInfo();
-        if (currentUser == null || currentUser.getUserId() == null) {
+        if (currentUser == null || currentUser.getAccountId() == null) {
             throw new BizException("Invalid token");
         }
-        AccountDocument user = accountRepository.findById(currentUser.getUserId()).orElseThrow(() -> new BizException("Invalid user"));
+        AccountDocument user = accountRepository.findById(currentUser.getAccountId()).orElseThrow(() -> new BizException("Invalid user"));
         List<BookFavoriteDocument> bookFavorites = bookFavoriteRepository.findAllByUserId(user.getId());
         List<String> bookIds = bookFavorites.stream().map(BookFavoriteDocument::getBookId).collect(Collectors.toList());
         BookFavoriteDto bookFavoriteDto = new BookFavoriteDto();
@@ -238,7 +238,7 @@ public class BookService extends BaseService {
         if (currentUser == null) {
             throw new BizException("Invalid token");
         }
-        AccountDocument user = accountRepository.findById(currentUser.getUserId()).orElseThrow(() -> new BizException("Invalid user"));
+        AccountDocument user = accountRepository.findById(currentUser.getAccountId()).orElseThrow(() -> new BizException("Invalid user"));
         BookFavoriteDocument bookFavoriteDocument = bookFavoriteRepository.findByUserIdAndBookId(user.getId(), bookId);
         if (bookFavoriteDocument == null) {
             bookRepository.findById(bookId).orElseThrow(() -> new BizException("Invalid book id"));

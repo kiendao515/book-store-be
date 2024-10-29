@@ -12,6 +12,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
 
@@ -42,30 +44,27 @@ public class CustomerExRepositoryImpl implements CustomerExRepository{
         }
 
 
-        AggregationOperation matchCustomer = match(criteria);
-        AggregationOperation lookupAccount = Aggregation.lookup("accounts", "account_id", "_id", "account_info");
-        AggregationOperation matchRole = match(Criteria.where("account_info.role").is(role));
-        SortOperation sortOperation = Aggregation.sort(Sort.by(Sort.Order.desc("_id")));
-        SkipOperation skipOperation = Aggregation.skip(pageRequest.getOffset());
-        LimitOperation limitOperation = Aggregation.limit(pageRequest.getPageSize());
-        ProjectionOperation projectionOperation = Aggregation.project()
-                .and("_id").as("id")
-                .and("account_id").as("account_id")
-                .and("name").as("name")
-                .and("phone_number").as("phone_number")
-                .and("address").as("address");
+        LookupOperation lookupOperation = LookupOperation.newLookup()
+                .from("accounts")
+                .localField("account_id")
+                .foreignField("_id")
+                .as("account");
 
-        Aggregation aggregation = newAggregation(
-                matchCustomer,
-                lookupAccount,
-                matchRole,
-                sortOperation,
-                skipOperation,
-                limitOperation,
-                projectionOperation
+
+        // Aggregation pipeline
+        Aggregation aggregation = Aggregation.newAggregation(
+                Aggregation.match(criteria),
+                lookupOperation,
+                Aggregation.unwind("account"),
+                Aggregation.skip((long) pageRequest.getOffset()),
+                Aggregation.limit(pageRequest.getPageSize())
         );
 
-        AggregationResults<CustomerDocument> result = mongoTemplate.aggregate(aggregation, "customers", CustomerDocument.class);
-        return new PageImpl<>(result.getMappedResults(), pageRequest, totalElement);
+        // Execute aggregation
+        AggregationResults<CustomerDocument> results = mongoTemplate.aggregate(aggregation, "customers", CustomerDocument.class);
+        List<CustomerDocument> customerList = results.getMappedResults();
+
+        // Return as a Page object
+        return new PageImpl<>(customerList, pageRequest, customerList.size());
     }
 }
