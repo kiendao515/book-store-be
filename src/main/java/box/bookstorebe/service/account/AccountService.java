@@ -23,6 +23,7 @@ import java.util.Base64;
 public class AccountService {
     private final AccountRepository accountRepository;
     private final PasswordEncoder passwordEncoder;
+
     public static String generateSalt() {
         SecureRandom random = new SecureRandom();
         byte[] saltBytes = new byte[16];
@@ -39,7 +40,7 @@ public class AccountService {
         return AccountMapper.INSTANCE.entityToDto(user);
     }
 
-    public AccountDocument createAccount(UserModel userModel,Role role) throws BizException {
+    public AccountDocument createAccount(UserModel userModel, Role role, Integer isEnable) throws BizException {
         AccountDocument user = accountRepository.findByEmail(userModel.getEmail()).orElseGet(() -> null);
         if (user != null) {
             throw new BizException("Email already exists");
@@ -48,22 +49,27 @@ public class AccountService {
         AccountDocument newUser = new AccountDocument();
         newUser.setEmail(userModel.getEmail());
         String salt = generateSalt();
-        String combinedPasswordSalt= salt+ userModel.getPassword();
+        String combinedPasswordSalt = salt + userModel.getPassword();
         newUser.setPassword(passwordEncoder.encode(combinedPasswordSalt));
+        newUser.setSalt(salt);
         newUser.setRole(role);
+        newUser.setEnabled(isEnable);
         return accountRepository.save(newUser);
     }
 
     public void updateAccount(String id, UserModel userModel) throws BizException {
         AccountDocument updatedUser = accountRepository.findById(id).orElseThrow(() -> new BizException("Invalid id"));
 
-        AccountDocument user = accountRepository.findByEmail(userModel.getEmail()).orElseGet(() -> null);
+        AccountDocument user = accountRepository.findByEmail(userModel.getEmail()).orElseThrow(() -> new BizException("email ko tồn tại"));
         if (user != null && !user.getId().equals(id)) {
             throw new BizException("Email already exists");
         }
 
         updatedUser.setEmail(userModel.getEmail());
-        String combinedPasswordSalt= user.getSalt() + userModel.getPassword();
+        if(user!=null && user.getSalt() == null){
+            throw new BizException("user account missing salt");
+        }
+        String combinedPasswordSalt = user.getSalt() + userModel.getPassword();
         updatedUser.setPassword(passwordEncoder.encode(combinedPasswordSalt));
         updatedUser.setRole(Role.USER);
         accountRepository.save(updatedUser);

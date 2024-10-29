@@ -27,12 +27,13 @@ public class CustomerService {
     private final AccountRepository accountRepository;
     private final CustomerRepository customerRepository;
     private final AccountService accountService;
-    public Page<CustomerInfoDto> getCustomerInfo(String name, String phone,String address, Integer page, Integer size) throws BizException {
-        Page<CustomerDocument> customerDocuments = customerRepository.getCustomers(name, phone,address, page,size);
+
+    public Page<CustomerInfoDto> getCustomerInfo(String role, String name, String phone, String address, Integer page, Integer size) throws BizException {
+        Page<CustomerDocument> customerDocuments = customerRepository.getCustomers(role, name, phone, address, page, size);
         return customerDocuments.map(customerDocument -> {
-            AccountDocument acc= null;
+            AccountDocument acc = null;
             try {
-                acc = accountRepository.findById(customerDocument.getAccountId()).orElseThrow(()->new BizException("invalid acc id"));
+                acc = accountRepository.findById(customerDocument.getAccountId()).orElseThrow(() -> new BizException("invalid acc id"));
             } catch (BizException e) {
                 throw new RuntimeException(e);
             }
@@ -43,13 +44,14 @@ public class CustomerService {
             customerInfoDto.setAccountId(acc.getId());
             customerInfoDto.setPhoneNumber(customerDocument.getPhoneNumber());
             customerInfoDto.setAddress(customerDocument.getAddress());
+            customerInfoDto.setIsEnabled(acc.getEnabled());
             return customerInfoDto;
         });
     }
 
     public CustomerInfoDto getCustomerInfoDetail(String id) throws BizException {
-        CustomerDocument customerDocument = customerRepository.findById(id).orElseThrow(()->new BizException("invalid customer id"));
-        AccountDocument accountDocument = accountRepository.findById(customerDocument.getAccountId()).orElseThrow(()->new BizException("invalid account id"));
+        CustomerDocument customerDocument = customerRepository.findById(id).orElseThrow(() -> new BizException("invalid customer id"));
+        AccountDocument accountDocument = accountRepository.findById(customerDocument.getAccountId()).orElseThrow(() -> new BizException("invalid account id"));
         CustomerInfoDto customerInfoDto = new CustomerInfoDto();
         customerInfoDto.setId(customerDocument.getId());
         customerInfoDto.setName(customerDocument.getName());
@@ -62,10 +64,10 @@ public class CustomerService {
 
     public void createCustomerInfoAndAccount(CustomerModel customerModel) throws BizException {
         CustomerDocument customerDocument = new CustomerDocument();
-        customerDocument.setAddress(customerDocument.getAddress());
-        customerDocument.setPhoneNumber(customerDocument.getPhoneNumber());
-        customerDocument.setName(customerDocument.getName());
-        AccountDocument accountDocument= accountService.createAccount(new UserModel(customerModel.getEmail(),customerModel.getPassword()),Role.USER);
+        customerDocument.setAddress(customerModel.getAddress());
+        customerDocument.setPhoneNumber(customerModel.getPhone());
+        customerDocument.setName(customerModel.getName());
+        AccountDocument accountDocument = accountService.createAccount(new UserModel(customerModel.getEmail(), customerModel.getPassword()), Role.USER, 1);
         customerDocument.setAccountId(accountDocument.getId());
         customerRepository.save(customerDocument);
     }

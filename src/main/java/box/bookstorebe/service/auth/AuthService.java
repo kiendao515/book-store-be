@@ -58,7 +58,7 @@ public class AuthService extends BaseService {
         userModel.setEmail(request.getEmail());
         userModel.setPassword(request.getPassword());
 
-        AccountDocument user = accountService.createAccount(userModel, Role.USER);
+        AccountDocument user = accountService.createAccount(userModel, Role.USER,0);
         applicationEventPublisher.publishEvent(new OnRegistrationCompleteEvent(this, user, clientUrl));
         return "Register successfully. Please check your email to confirm your account.";
     }

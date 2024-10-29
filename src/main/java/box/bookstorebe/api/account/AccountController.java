@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AccountController {
     private final AccountService userService;
+    // route này cho admin crud account khách hàng
 
     @GetMapping()
     public BasePagingResponse<AccountDto> getAllUsers(
@@ -34,7 +35,7 @@ public class AccountController {
 
     @PostMapping()
     public BaseResponse<String> createNewUser(@RequestBody @Valid UserModel userModel) throws BizException {
-        userService.createAccount(userModel, Role.USER);
+        userService.createAccount(userModel, Role.USER,1);
         return new BaseResponse<>(Const.ResultCode.SUCCESS, "Create new user successfully");
     }
 

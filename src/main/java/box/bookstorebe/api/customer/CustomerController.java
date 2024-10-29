@@ -19,15 +19,17 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class CustomerController {
     private final CustomerService customerService;
+
     @GetMapping()
     public BasePagingResponse<CustomerInfoDto> getCustomerInfos(
+            @RequestParam(name = "role", required = false) String role,
             @RequestParam(name = "name", required = false) String name,
             @RequestParam(name = "phone", required = false) String phone,
             @RequestParam(name = "address", required = false) String address,
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "size", required = false) Integer size
     ) throws BizException {
-        return new BasePagingResponse<>(customerService.getCustomerInfo(name, phone,address,page, size));
+        return new BasePagingResponse<>(customerService.getCustomerInfo(role, name, phone, address, page, size));
     }
 
     @GetMapping("{id}")

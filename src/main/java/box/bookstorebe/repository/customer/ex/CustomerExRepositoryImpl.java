@@ -1,9 +1,6 @@
 package box.bookstorebe.repository.customer.ex;
-
-import box.bookstorebe.document.account.AccountDocument;
 import box.bookstorebe.document.account.CustomerDocument;
-import box.bookstorebe.dto.account.AccountDto;
-import box.bookstorebe.dto.customer.CustomerInfoDto;
+import box.bookstorebe.document.account.Role;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -23,7 +20,7 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.newA
 public class CustomerExRepositoryImpl implements CustomerExRepository{
     private final MongoTemplate mongoTemplate;
     @Override
-    public Page<CustomerDocument> getCustomers(String name, String phone, String address,Integer page, Integer size) {
+    public Page<CustomerDocument> getCustomers(String role,String name, String phone, String address,Integer page, Integer size) {
         PageRequest pageRequest;
         Criteria criteria = new Criteria();
         criteria = criteria.and("deleted_at").isNull();
@@ -37,7 +34,7 @@ public class CustomerExRepositoryImpl implements CustomerExRepository{
             criteria = criteria.and("address").regex(".*" + address + ".*");
         }
 
-        long totalElement = mongoTemplate.count(new Query().addCriteria(criteria), AccountDocument.class);
+        long totalElement = mongoTemplate.count(new Query().addCriteria(criteria), CustomerDocument.class);
         if (page == null || size == null) {
             pageRequest = PageRequest.of(0, (int) totalElement);
         } else {
@@ -45,13 +42,12 @@ public class CustomerExRepositoryImpl implements CustomerExRepository{
         }
 
 
-        AggregationOperation matchOperations = match(criteria);
-
+        AggregationOperation matchCustomer = match(criteria);
+        AggregationOperation lookupAccount = Aggregation.lookup("accounts", "account_id", "_id", "account_info");
+        AggregationOperation matchRole = match(Criteria.where("account_info.role").is(role));
         SortOperation sortOperation = Aggregation.sort(Sort.by(Sort.Order.desc("_id")));
-
         SkipOperation skipOperation = Aggregation.skip(pageRequest.getOffset());
         LimitOperation limitOperation = Aggregation.limit(pageRequest.getPageSize());
-
         ProjectionOperation projectionOperation = Aggregation.project()
                 .and("_id").as("id")
                 .and("account_id").as("account_id")
@@ -60,7 +56,9 @@ public class CustomerExRepositoryImpl implements CustomerExRepository{
                 .and("address").as("address");
 
         Aggregation aggregation = newAggregation(
-                matchOperations,
+                matchCustomer,
+                lookupAccount,
+                matchRole,
                 sortOperation,
                 skipOperation,
                 limitOperation,

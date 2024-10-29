@@ -18,4 +18,5 @@ public class CustomerInfoDto {
     private String name;
     private String phoneNumber;
     private List<String> address;
+    private Integer isEnabled;
 }
