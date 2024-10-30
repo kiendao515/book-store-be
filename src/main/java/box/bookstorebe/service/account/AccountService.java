@@ -46,6 +46,7 @@ public class AccountService {
         accounts.forEach(account -> {
             CustomerDocument customer = customerMap.get(account.getId());
             if (customer != null) {
+                account.setAvatar(customer.getAvatar());
                 account.setName(customer.getName());
                 account.setPhone(customer.getPhoneNumber());
                 account.setAddress(customer.getAddress().isEmpty() ? null : customer.getAddress().get(0));

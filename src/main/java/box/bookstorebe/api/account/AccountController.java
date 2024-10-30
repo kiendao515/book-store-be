@@ -21,7 +21,7 @@ public class AccountController {
     // route này cho admin crud account khách hàng
 
     @GetMapping()
-    @PreAuthorize("hasAnyAuthority('ADMIN')")
+//    @PreAuthorize("hasAnyAuthority('ADMIN')")
     public BasePagingResponse<AccountDto> getAllUsers(
             @RequestParam(name = "role", required = false) String role,
             @RequestParam(name = "email", required = false) String email,
@@ -37,7 +37,7 @@ public class AccountController {
     }
 
     @PostMapping()
-    @PreAuthorize("hasAnyAuthority('ADMIN')")
+//    @PreAuthorize("hasAnyAuthority('ADMIN')")
     public BaseResponse<String> createNewUser(@RequestBody @Valid UserModel userModel) throws BizException {
         userService.createAccount(userModel, Role.USER,1);
         return new BaseResponse<>(Const.ResultCode.SUCCESS, "Create new user successfully");
@@ -50,7 +50,7 @@ public class AccountController {
     }
 
     @DeleteMapping("{id}")
-    @PreAuthorize("hasAnyAuthority('ADMIN')")
+//    @PreAuthorize("hasAnyAuthority('ADMIN')")
     public BaseResponse<String> deleteUser(@PathVariable String id) throws BizException {
         userService.deleteAccount(id);
         return new BaseResponse<>(Const.ResultCode.SUCCESS, "Delete user successfully");

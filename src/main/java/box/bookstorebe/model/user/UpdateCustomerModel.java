@@ -16,4 +16,5 @@ public class UpdateCustomerModel {
     private String name;
     private String phone;
     private List<String> address;
+    private String avatar;
 }

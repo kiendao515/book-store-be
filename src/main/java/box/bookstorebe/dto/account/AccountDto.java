@@ -22,4 +22,6 @@ public class AccountDto {
     private String phone;
     @Field("address")
     private String address;
+    @Field("avatar")
+    private String avatar;
 }

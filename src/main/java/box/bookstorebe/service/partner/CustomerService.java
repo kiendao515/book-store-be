@@ -67,17 +67,23 @@ public class CustomerService {
         customerDocument.setAddress(customerModel.getAddress());
         customerDocument.setPhoneNumber(customerModel.getPhone());
         customerDocument.setName(customerModel.getName());
+        customerDocument.setAvatar(customerModel.getAvatar());
         AccountDocument accountDocument = accountService.createAccount(new UserModel(customerModel.getEmail(), customerModel.getPassword()), Role.USER, 1);
         customerDocument.setAccountId(accountDocument.getId());
         customerRepository.save(customerDocument);
     }
 
     public void updateCustomerInfo(String id, UpdateCustomerModel userModel) throws BizException {
-        CustomerDocument customerDocument = customerRepository.findById(id).orElseThrow(() -> new BizException("User info not found"));
-        accountRepository.findById(customerDocument.getAccountId()).orElseThrow(() -> new BizException("Invalid id"));
+        AccountDocument accountDocument= accountRepository.findById(id).orElseThrow(() -> new BizException("Invalid id"));
+        CustomerDocument customerDocument = customerRepository.findByAccountId(accountDocument.getId());
+        if(customerDocument == null){
+            throw new BizException("invalid account id");
+        }
         customerDocument.setName(userModel.getName());
         customerDocument.setPhoneNumber(userModel.getPhone());
         customerDocument.setAddress(userModel.getAddress());
+        customerDocument.setAvatar(userModel.getAvatar());
+        customerRepository.save(customerDocument);
     }
 
     public void deleteAccount(String id) throws BizException {

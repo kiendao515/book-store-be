@@ -28,6 +28,9 @@ public class CustomerDocument {
     @Field(name = "phone_number")
     private String phoneNumber;
 
+    @Field(name = "avatar")
+    private String avatar;
+
     @Field(name = "address")
     private List<String> address;
 

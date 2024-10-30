@@ -18,4 +18,5 @@ public class CustomerModel {
     private List<String> address;
     private String email;
     private String password;
+    private String avatar;
 }
