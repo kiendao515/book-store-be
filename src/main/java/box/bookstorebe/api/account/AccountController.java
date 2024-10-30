@@ -10,6 +10,7 @@ import box.bookstorebe.model.user.UserModel;
 import box.bookstorebe.service.account.AccountService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,12 +21,14 @@ public class AccountController {
     // route này cho admin crud account khách hàng
 
     @GetMapping()
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     public BasePagingResponse<AccountDto> getAllUsers(
+            @RequestParam(name = "role", required = false) String role,
             @RequestParam(name = "email", required = false) String email,
             @RequestParam(value = "page", required = false) Integer page,
             @RequestParam(value = "size", required = false) Integer size
     ) {
-        return new BasePagingResponse<>(userService.getAccounts(email, page, size));
+        return new BasePagingResponse<>(userService.getAccounts(role, email, page, size));
     }
 
     @GetMapping("{id}")
@@ -34,6 +37,7 @@ public class AccountController {
     }
 
     @PostMapping()
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     public BaseResponse<String> createNewUser(@RequestBody @Valid UserModel userModel) throws BizException {
         userService.createAccount(userModel, Role.USER,1);
         return new BaseResponse<>(Const.ResultCode.SUCCESS, "Create new user successfully");
@@ -46,6 +50,7 @@ public class AccountController {
     }
 
     @DeleteMapping("{id}")
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     public BaseResponse<String> deleteUser(@PathVariable String id) throws BizException {
         userService.deleteAccount(id);
         return new BaseResponse<>(Const.ResultCode.SUCCESS, "Delete user successfully");

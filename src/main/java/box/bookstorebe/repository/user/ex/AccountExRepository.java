@@ -4,5 +4,5 @@ import box.bookstorebe.dto.account.AccountDto;
 import org.springframework.data.domain.Page;
 
 public interface AccountExRepository {
-    Page<AccountDto> getUsers(String email, Integer page, Integer size);
+    Page<AccountDto> getUsers(String role, String email, Integer page, Integer size);
 }

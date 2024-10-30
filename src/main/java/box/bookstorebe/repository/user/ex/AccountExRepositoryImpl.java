@@ -23,13 +23,15 @@ public class AccountExRepositoryImpl implements AccountExRepository {
     private final MongoTemplate mongoTemplate;
 
     @Override
-    public Page<AccountDto> getUsers(String email, Integer page, Integer size) {
+    public Page<AccountDto> getUsers(String role,String email, Integer page, Integer size) {
         PageRequest pageRequest;
         Criteria criteria = new Criteria();
         if (email != null) {
             criteria = criteria.and("email").is(email);
         }
-
+        if (role != null){
+            criteria = criteria.and("role").is(role);
+        }
         long totalElement = mongoTemplate.count(new Query().addCriteria(criteria), AccountDocument.class);
         if (page == null || size == null) {
             pageRequest = PageRequest.of(0, (int) totalElement);
@@ -50,7 +52,8 @@ public class AccountExRepositoryImpl implements AccountExRepository {
                 .and("first_name").as("first_name")
                 .and("last_name").as("last_name")
                 .and("email").as("email")
-                .and("role").as("role");
+                .and("role").as("role")
+                .and("enabled").as("enabled");
 
         Aggregation aggregation = newAggregation(
                 matchOperations,

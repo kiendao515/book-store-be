@@ -14,4 +14,12 @@ public class AccountDto {
     private String email;
     @Field("role")
     private Role role;
+    @Field("enabled")
+    private Integer enabled;
+    @Field("name")
+    private String name;
+    @Field("phone")
+    private String phone;
+    @Field("address")
+    private String address;
 }

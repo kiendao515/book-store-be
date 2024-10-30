@@ -1,11 +1,13 @@
 package box.bookstorebe.service.account;
 
 import box.bookstorebe.document.account.AccountDocument;
+import box.bookstorebe.document.account.CustomerDocument;
 import box.bookstorebe.document.account.Role;
 import box.bookstorebe.dto.account.AccountDto;
 import box.bookstorebe.exception.BizException;
 import box.bookstorebe.mapper.account.AccountMapper;
 import box.bookstorebe.model.user.UserModel;
+import box.bookstorebe.repository.customer.CustomerRepository;
 import box.bookstorebe.repository.user.AccountRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +18,9 @@ import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -23,6 +28,7 @@ import java.util.Base64;
 public class AccountService {
     private final AccountRepository accountRepository;
     private final PasswordEncoder passwordEncoder;
+    private final CustomerRepository customerRepository;
 
     public static String generateSalt() {
         SecureRandom random = new SecureRandom();
@@ -31,8 +37,21 @@ public class AccountService {
         return Base64.getEncoder().encodeToString(saltBytes);
     }
 
-    public Page<AccountDto> getAccounts(String email, Integer page, Integer size) {
-        return accountRepository.getUsers(email, page, size);
+    public Page<AccountDto> getAccounts(String role, String email, Integer page, Integer size) {
+        Page<AccountDto> accounts= accountRepository.getUsers(role, email, page, size);
+        List<String> listAccountId = accounts.stream().map(AccountDto::getId).toList();
+        List<CustomerDocument> customerDocuments = customerRepository.findAllByAccountIdIn(listAccountId);
+        Map<String, CustomerDocument> customerMap = customerDocuments.stream()
+                .collect(Collectors.toMap(CustomerDocument::getAccountId, customer -> customer));
+        accounts.forEach(account -> {
+            CustomerDocument customer = customerMap.get(account.getId());
+            if (customer != null) {
+                account.setName(customer.getName());
+                account.setPhone(customer.getPhoneNumber());
+                account.setAddress(customer.getAddress().isEmpty() ? null : customer.getAddress().get(0));
+            }
+        });
+        return accounts;
     }
 
     public AccountDto getAccountDetail(String id) throws BizException {
