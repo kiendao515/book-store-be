@@ -64,7 +64,6 @@ public class BookService extends BaseService {
         List<String> bookIds = new ArrayList<>();
         for (BookDocument bookDocument : bookDocuments) {
             resultCategoryIds.add(bookDocument.getCategoryId());
-//            resultImageIds.addAll(bookDocument.getDemoImageIds());
             bookIds.add(bookDocument.getId());
         }
         List<CategoryDocument> categoryDocuments = categoryRepository.findAllById(resultCategoryIds);
@@ -81,10 +80,13 @@ public class BookService extends BaseService {
 //
         List<BookInventory> bookRealityDocuments = bookRealityRepository.findAllByBookIdIn(bookIds);
         Map<String, List<BookInventory>> bookRealityMap = bookRealityDocuments.stream().collect(Collectors.groupingBy(BookInventory::getBookId));
-//
         List<BookDto> content = new ArrayList<>();
         for (BookDocument bookDocument : bookDocuments) {
             List<BookInventory> bookRealities = bookRealityMap.getOrDefault(bookDocument.getId(), new ArrayList<>());
+            Integer totalBook = 0;
+            for (BookInventory b: bookRealities) {
+                totalBook += b.getQuantity();
+            }
 
             BookDto bookDto = BookDto.builder()
                     .id(bookDocument.getId())
@@ -101,6 +103,7 @@ public class BookService extends BaseService {
                     .demoUrl(bookDocument.getDemoUrl())
                     .tags(bookDocument.getTags())
                     .category(categoryDocumentMap.getOrDefault(bookDocument.getCategoryId(),null))
+                    .numberOfBooks(totalBook)
                     .createdAt(bookDocument.getCreatedAt())
                     .updatedAt(bookDocument.getUpdatedAt())
                     .build();

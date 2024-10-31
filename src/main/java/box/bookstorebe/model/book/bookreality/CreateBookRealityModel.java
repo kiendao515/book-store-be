@@ -18,7 +18,7 @@ import java.util.List;
 public class CreateBookRealityModel {
     private BigDecimal price;
     private BookType type;
-    private String coverImageId;
+    private String coverImage;
     private String bookId;
     private Integer quantity;
     private String storeId;

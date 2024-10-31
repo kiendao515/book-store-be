@@ -31,4 +31,5 @@ public class BookDto {
     private CategoryDocument category;
     private ZonedDateTime createdAt;
     private ZonedDateTime updatedAt;
+    private Integer numberOfBooks;
 }

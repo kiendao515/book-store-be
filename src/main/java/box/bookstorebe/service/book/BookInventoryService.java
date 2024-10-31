@@ -37,8 +37,8 @@ public class BookInventoryService {
         bookInventory.setBookId(bookDocument.getId());
         bookInventory.setType(bookRealityModel.getType());
         bookInventory.setPrice(bookRealityModel.getPrice());
-        bookInventory.setCoverImage(bookRealityModel.getCoverImageId());
-        bookInventory.setQuantity(bookInventory.getQuantity());
+        bookInventory.setCoverImage(bookRealityModel.getCoverImage());
+        bookInventory.setQuantity(bookRealityModel.getQuantity());
         bookInventory.setStoreId(storeDocument.getId());
         bookInventory.setCreatedAt(ZonedDateTime.now());
         bookInventory.setUpdatedAt(ZonedDateTime.now());

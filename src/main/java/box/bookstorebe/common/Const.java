@@ -28,7 +28,8 @@ public final class Const {
             "/api/v1/file/**",
             "/api/v1/notifications/**",
             "/api/v1/accounts/**",
-            "/api/v1/customers/**"
+            "/api/v1/customers/**",
+            "/api/v1/inventories/**"
     };
 
 
