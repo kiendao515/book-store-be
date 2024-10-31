@@ -4,6 +4,7 @@ import box.bookstorebe.document.account.AccountDocument;
 import box.bookstorebe.document.account.CustomerDocument;
 import box.bookstorebe.document.account.Role;
 import box.bookstorebe.dto.account.AccountDto;
+import box.bookstorebe.dto.account.DeleteAccountDto;
 import box.bookstorebe.dto.customer.CustomerInfoDto;
 import box.bookstorebe.exception.BizException;
 import box.bookstorebe.mapper.account.AccountMapper;
@@ -13,12 +14,16 @@ import box.bookstorebe.model.user.UserModel;
 import box.bookstorebe.repository.customer.CustomerRepository;
 import box.bookstorebe.repository.user.AccountRepository;
 import box.bookstorebe.service.account.AccountService;
+import jakarta.mail.Address;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -62,9 +67,21 @@ public class CustomerService {
         return customerInfoDto;
     }
 
+    public CustomerDocument createCustomerInfo(UpdateCustomerModel customer) throws BizException {
+        CustomerDocument customerDocument = new CustomerDocument();
+        customerDocument.setName(customer.getName());
+        List<String> address = new ArrayList<>();
+        address.add(customer.getAddress());
+        customerDocument.setAddress(address);
+        customerDocument.setPhoneNumber(customer.getPhone());
+        return customerDocument;
+    }
+
     public void createCustomerInfoAndAccount(CustomerModel customerModel) throws BizException {
         CustomerDocument customerDocument = new CustomerDocument();
-        customerDocument.setAddress(customerModel.getAddress());
+        List<String> address = new ArrayList<>();
+        address.add(customerModel.getAddress());
+        customerDocument.setAddress(address);
         customerDocument.setPhoneNumber(customerModel.getPhone());
         customerDocument.setName(customerModel.getName());
         customerDocument.setAvatar(customerModel.getAvatar());
@@ -73,16 +90,36 @@ public class CustomerService {
         customerRepository.save(customerDocument);
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void updateCustomerInfo(String id, UpdateCustomerModel userModel) throws BizException {
-        AccountDocument accountDocument= accountRepository.findById(id).orElseThrow(() -> new BizException("Invalid id"));
+        AccountDocument accountDocument = accountRepository.findById(id).orElseThrow(() -> new BizException("Invalid id"));
         CustomerDocument customerDocument = customerRepository.findByAccountId(accountDocument.getId());
-        if(customerDocument == null){
-            throw new BizException("invalid account id");
+        if(userModel.getEnabled() != null){
+            if(!userModel.getEnabled().equals("0") && !userModel.getEnabled().equals("1")){
+                throw new BizException("invalid enabled param");
+            }
+            accountDocument.setEnabled(Integer.parseInt(userModel.getEnabled()));
+            accountRepository.save(accountDocument);
         }
-        customerDocument.setName(userModel.getName());
-        customerDocument.setPhoneNumber(userModel.getPhone());
-        customerDocument.setAddress(userModel.getAddress());
-        customerDocument.setAvatar(userModel.getAvatar());
+        if (customerDocument == null) {
+            customerDocument = createCustomerInfo(userModel);
+            customerDocument.setAccountId(accountDocument.getId());
+        }else{
+            if (userModel.getName() != null) {
+                customerDocument.setName(userModel.getName());
+            }
+            if (userModel.getAddress() != null) {
+                List<String> address = new ArrayList<>();
+                address.add(userModel.getAddress());
+                customerDocument.setAddress(address);
+            }
+            if (userModel.getPhone() != null) {
+                customerDocument.setPhoneNumber(userModel.getPhone());
+            }
+            if (userModel.getAvatar() != null) {
+                customerDocument.setAvatar(userModel.getAvatar());
+            }
+        }
         customerRepository.save(customerDocument);
     }
 
@@ -90,5 +127,18 @@ public class CustomerService {
         CustomerDocument customer = customerRepository.findById(id).orElseThrow(() -> new BizException("Invalid id"));
         customer.setDeletedAd(ZonedDateTime.now());
         customerRepository.save(customer);
+    }
+
+    public void deleteAccountAndCustomerInfo(DeleteAccountDto deleteAccountDto) throws BizException {
+        for(String id : deleteAccountDto.getAccountIds()){
+            AccountDocument accountDocument = accountRepository.findById(id).orElseThrow(() -> new BizException("Invalid account id"));
+            accountDocument.setDeletedAt(ZonedDateTime.now());
+            accountRepository.save(accountDocument);
+            CustomerDocument customer = customerRepository.findByAccountId(id);
+            if(customer != null){
+                customer.setDeletedAd(ZonedDateTime.now());
+                customerRepository.save(customer);
+            }
+        }
     }
 }

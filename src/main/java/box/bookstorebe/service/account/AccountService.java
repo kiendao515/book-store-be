@@ -3,10 +3,12 @@ package box.bookstorebe.service.account;
 import box.bookstorebe.document.account.AccountDocument;
 import box.bookstorebe.document.account.CustomerDocument;
 import box.bookstorebe.document.account.Role;
+import box.bookstorebe.document.bookstore.StoreDocument;
 import box.bookstorebe.dto.account.AccountDto;
 import box.bookstorebe.exception.BizException;
 import box.bookstorebe.mapper.account.AccountMapper;
 import box.bookstorebe.model.user.UserModel;
+import box.bookstorebe.repository.bookstore.BookStoreRepository;
 import box.bookstorebe.repository.customer.CustomerRepository;
 import box.bookstorebe.repository.user.AccountRepository;
 import lombok.AllArgsConstructor;
@@ -29,6 +31,7 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final PasswordEncoder passwordEncoder;
     private final CustomerRepository customerRepository;
+    private final BookStoreRepository storeRepository;
 
     public static String generateSalt() {
         SecureRandom random = new SecureRandom();
@@ -40,18 +43,35 @@ public class AccountService {
     public Page<AccountDto> getAccounts(String role, String email, Integer page, Integer size) {
         Page<AccountDto> accounts= accountRepository.getUsers(role, email, page, size);
         List<String> listAccountId = accounts.stream().map(AccountDto::getId).toList();
-        List<CustomerDocument> customerDocuments = customerRepository.findAllByAccountIdIn(listAccountId);
-        Map<String, CustomerDocument> customerMap = customerDocuments.stream()
-                .collect(Collectors.toMap(CustomerDocument::getAccountId, customer -> customer));
-        accounts.forEach(account -> {
-            CustomerDocument customer = customerMap.get(account.getId());
-            if (customer != null) {
-                account.setAvatar(customer.getAvatar());
-                account.setName(customer.getName());
-                account.setPhone(customer.getPhoneNumber());
-                account.setAddress(customer.getAddress().isEmpty() ? null : customer.getAddress().get(0));
-            }
-        });
+        if("USER".equals(role)) {
+            List<CustomerDocument> customerDocuments = customerRepository.findAllByAccountIdIn(listAccountId);
+            Map<String, CustomerDocument> customerMap = customerDocuments.stream()
+                    .collect(Collectors.toMap(CustomerDocument::getAccountId, customer -> customer));
+            accounts.forEach(account -> {
+                CustomerDocument customer = customerMap.get(account.getId());
+                if (customer != null) {
+                    account.setAvatar(customer.getAvatar());
+                    account.setName(customer.getName());
+                    account.setPhone(customer.getPhoneNumber());
+                    account.setAddress(customer.getAddress().isEmpty() ? null : customer.getAddress().get(0));
+                }
+            });
+        }
+        if("STORE".equals(role)) {
+            List<StoreDocument> storeDocuments = storeRepository.findAllByAccountIdIn(listAccountId);
+            Map<String, StoreDocument> storeDocumentMap = storeDocuments.stream()
+                    .collect(Collectors.toMap(StoreDocument::getAccountId, store -> store));
+            accounts.forEach(account -> {
+                StoreDocument customer = storeDocumentMap.get(account.getId());
+                if (customer != null) {
+                    account.setAvatar(customer.getThumbnail());
+                    account.setName(customer.getName());
+                    account.setPhone(customer.getPhoneNumber());
+                    account.setAddress(customer.getAddress());
+                    account.setDescription(customer.getDescription());
+                }
+            });
+        }
         return accounts;
     }
 

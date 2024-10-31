@@ -15,7 +15,7 @@ import java.util.List;
 public class CustomerModel {
     private String name;
     private String phone;
-    private List<String> address;
+    private String address;
     private String email;
     private String password;
     private String avatar;

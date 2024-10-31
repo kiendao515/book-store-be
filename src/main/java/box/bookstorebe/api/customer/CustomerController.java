@@ -2,6 +2,7 @@ package box.bookstorebe.api.customer;
 
 import box.bookstorebe.common.Const;
 import box.bookstorebe.dto.account.AccountDto;
+import box.bookstorebe.dto.account.DeleteAccountDto;
 import box.bookstorebe.dto.common.BasePagingResponse;
 import box.bookstorebe.dto.common.BaseResponse;
 import box.bookstorebe.dto.customer.CustomerInfoDto;
@@ -13,6 +14,8 @@ import box.bookstorebe.service.partner.CustomerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/customers")
@@ -49,9 +52,9 @@ public class CustomerController {
         return new BaseResponse<>(Const.ResultCode.SUCCESS, "Update customer info successfully");
     }
 
-    @DeleteMapping("{id}")
-    public BaseResponse<String> deleteUser(@PathVariable String id) throws BizException {
-        customerService.deleteAccount(id);
+    @DeleteMapping()
+    public BaseResponse<String> deleteUser(@RequestBody DeleteAccountDto accountIds) throws BizException {
+        customerService.deleteAccountAndCustomerInfo(accountIds);
         return new BaseResponse<>(Const.ResultCode.SUCCESS, "Delete user successfully");
     }
 }

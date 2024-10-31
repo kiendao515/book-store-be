@@ -14,7 +14,7 @@ public class CreateBookstoreAndAccount {
     private String name;
     private String thumbnail;
     private String address;
-    private String phoneNumber;
+    private String phone;
     private String description;
     private String email;
     private String password;

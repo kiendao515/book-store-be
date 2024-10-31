@@ -1,6 +1,7 @@
 package box.bookstorebe.api.bookstore;
 
 import box.bookstorebe.common.Const;
+import box.bookstorebe.dto.account.DeleteAccountDto;
 import box.bookstorebe.dto.bookstore.BookStoreDto;
 import box.bookstorebe.dto.common.BasePagingResponse;
 import box.bookstorebe.dto.common.BaseResponse;
@@ -34,14 +35,14 @@ public class BookStoreController {
         return new BaseResponse<>(Const.ResultCode.SUCCESS, bookStoreService.findById(id));
     }
 
-    @PostMapping
-    public BaseResponse<String> createNewBookStore(@RequestBody @Valid CreateBookStoreModel bookStoreModel) throws BizException {
-        bookStoreService.createNewBookStore(bookStoreModel);
-        return new BaseResponse<>(Const.ResultCode.SUCCESS, "Create new book store successfully");
-    }
+//    @PostMapping
+//    public BaseResponse<String> createNewBookStore(@RequestBody @Valid CreateBookStoreModel bookStoreModel) throws BizException {
+//        bookStoreService.createNewBookStore(bookStoreModel);
+//        return new BaseResponse<>(Const.ResultCode.SUCCESS, "Create new book store successfully");
+//    }
 
-    @PostMapping("/account")
-    @PreAuthorize("hasAnyAuthority('ADMIN')")
+    @PostMapping()
+//    @PreAuthorize("hasAnyAuthority('ADMIN')")
     public BaseResponse<String> createNewBookStoreAndAccount(@RequestBody @Valid CreateBookstoreAndAccount bookStoreModel) throws BizException {
         bookStoreService.createNewBookStoreAndAccount(bookStoreModel);
         return new BaseResponse<>(Const.ResultCode.SUCCESS, "Create new book store and account successfully");
@@ -54,9 +55,9 @@ public class BookStoreController {
         return new BaseResponse<>(Const.ResultCode.SUCCESS, "Update book store successfully");
     }
 
-    @DeleteMapping("{id}")
-    public BaseResponse<String> deleteBook(@PathVariable String id) throws BizException {
-        bookStoreService.deleteBookStore(id);
+    @DeleteMapping()
+    public BaseResponse<String> deleteBook(@RequestBody DeleteAccountDto deleteAccountDto) throws BizException {
+        bookStoreService.deleteBookStore(deleteAccountDto);
         return new BaseResponse<>(Const.ResultCode.SUCCESS, "Delete book store successfully");
     }
 }

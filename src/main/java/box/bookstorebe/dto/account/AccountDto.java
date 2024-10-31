@@ -24,4 +24,6 @@ public class AccountDto {
     private String address;
     @Field("avatar")
     private String avatar;
+    @Field("description")
+    private String description;
 }

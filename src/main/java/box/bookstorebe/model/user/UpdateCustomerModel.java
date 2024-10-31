@@ -15,6 +15,7 @@ import java.util.List;
 public class UpdateCustomerModel {
     private String name;
     private String phone;
-    private List<String> address;
+    private String address;
     private String avatar;
+    private String enabled;
 }

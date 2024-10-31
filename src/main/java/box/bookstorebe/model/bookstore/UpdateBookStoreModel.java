@@ -12,8 +12,9 @@ import lombok.NoArgsConstructor;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class UpdateBookStoreModel {
     private String name;
-    private String thumbnail;
+    private String avatar;
     private String address;
-    private String phoneNumber;
+    private String phone;
     private String description;
+    private String enabled;
 }
