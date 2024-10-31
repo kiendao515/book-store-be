@@ -42,10 +42,10 @@ application:
 #              MongoTemplate: DEBUG
 
 aws:
-  endpointUrl: ${ENDPOINT:https://video-storage-v1.s3.ap-south-1.amazonaws.com}
-  accessKey: ${ACCESS_KEY:AKIA4MTWGUI7UYFLIF5K}
-  secretKey: ${SECRET_KEY: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}
-  bucketName: ${BUCKET_NAME:video-storage-v1}
+  endpointUrl: ${ENDPOINT:https://abc.com}
+  accessKey: ${ACCESS_KEY:jddhdd}
+  secretKey: ${SECRET_KEY:dgdghd}
+  bucketName: ${BUCKET_NAME:abc}
   region: ${REGION:ap-south-1}
 app:
   client:

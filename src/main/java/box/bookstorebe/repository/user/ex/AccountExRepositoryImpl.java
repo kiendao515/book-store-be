@@ -26,6 +26,7 @@ public class AccountExRepositoryImpl implements AccountExRepository {
     public Page<AccountDto> getUsers(String role,String email, Integer page, Integer size) {
         PageRequest pageRequest;
         Criteria criteria = new Criteria();
+        criteria = criteria.and("deleted_at").is(null);
         if (email != null) {
             criteria = criteria.and("email").is(email);
         }

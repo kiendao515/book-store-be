@@ -20,7 +20,7 @@ public final class Const {
             "/api/v1/orders/**",
             "/api/v1/book-reality/**",
             "/api/v1/categories/**",
-//            "/api/v1/book-stores/**",
+            "/api/v1/book-stores/**",
             "/api/v1/collections/**",
             "/api/v1/book-search-requests/**",
             "/api/v1/people/**",

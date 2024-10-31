@@ -43,6 +43,15 @@ public class AccountDocument implements UserDetails {
     @Field(name = "salt")
     private String salt;
 
+    @Field(name = "deleted_at")
+    private ZonedDateTime deletedAt;
+
+    @Field(name = "created_at")
+    private ZonedDateTime createdAt;
+
+    @Field(name = "updated_at")
+    private ZonedDateTime updatedAt;
+
     @Field(name = "token")
     private String token;
 
