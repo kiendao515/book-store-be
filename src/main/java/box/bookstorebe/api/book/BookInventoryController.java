@@ -11,15 +11,17 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/inventories")
 @RequiredArgsConstructor
 public class BookInventoryController {
     private final BookInventoryService bookInventoryService;
 
-    @GetMapping("{id}")
-    public BaseResponse<BookInventory> getBookRealityDetail(@PathVariable String id) throws BizException {
-        return new BaseResponse<>(Const.ResultCode.SUCCESS, bookInventoryService.findById(id));
+    @GetMapping()
+    public BaseResponse<List<BookInventory>> getBookInventoryDetail(@RequestParam String bookId, @RequestParam String storeId) throws BizException {
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, bookInventoryService.getDetailBookInventory(bookId, storeId));
     }
 
     @PostMapping

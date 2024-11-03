@@ -29,6 +29,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -182,12 +183,16 @@ public class BookService extends BaseService {
         bookDocument.setPublishYear(bookModel.getPublishYear());
         bookDocument.setIsbn(bookModel.getIsbn());
         bookDocument.setPublisher(bookModel.getPublisher());
-        bookDocument.setAuthorName(bookModel.getAuthor());
+        bookDocument.setAuthorName(bookModel.getAuthorName());
         bookDocument.setCoverImage(bookModel.getCoverImage());
         bookDocument.setBackImage(bookModel.getBackImage());
         bookDocument.setDemoImage(bookModel.getDemoImage());
         bookDocument.setDemoUrl(bookModel.getDemoUrl());
         bookDocument.setUpdatedAt(ZonedDateTime.now());
+        if(!bookModel.getTags().isBlank()){
+            String[] arr = bookModel.getTags().split(",");
+            bookDocument.setTags(Arrays.stream(arr).toList());
+        }
         bookRepository.save(bookDocument);
     }
 

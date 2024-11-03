@@ -27,8 +27,7 @@ public class BookInventoryDto {
     private Integer quantity;
     private BookType type; // NEW, LIKE NEW, OLD
     private String storeId;
-    private boolean isOwnStore; // xac định xem sách đuoc lưu trữ ở hộp
-    private String coverImageId;
+    private String coverImage;
     private ZonedDateTime createdAt;
     private ZonedDateTime updatedAt;
 }

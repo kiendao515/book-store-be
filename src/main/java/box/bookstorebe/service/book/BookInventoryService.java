@@ -3,6 +3,7 @@ package box.bookstorebe.service.book;
 import box.bookstorebe.document.bookstore.StoreDocument;
 import box.bookstorebe.document.book.BookDocument;
 import box.bookstorebe.document.book.BookInventory;
+import box.bookstorebe.dto.book.BookInventoryDto;
 import box.bookstorebe.exception.BizException;
 import box.bookstorebe.model.book.bookreality.CreateBookRealityModel;
 import box.bookstorebe.model.book.bookreality.UpdateBookRealityModel;
@@ -15,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.ZonedDateTime;
+import java.util.List;
 
 @AllArgsConstructor
 @Service
@@ -26,8 +28,9 @@ public class BookInventoryService {
     private final ImageRepository imageRepository;
     private final BookService bookService;
 
-    public BookInventory findById(String id) throws BizException {
-        return bookInventoryRepository.findById(id).orElseThrow(() -> new BizException("Invalid book reality id"));
+    public List<BookInventory> getDetailBookInventory(String bookId,String storeId) throws BizException {
+        if(bookId.isBlank() || storeId.isBlank()) throw new BizException("invalid params");
+        return bookInventoryRepository.findAllByBookIdAndStoreId(bookId, storeId);
     }
 
     public void createBookInventory(CreateBookRealityModel bookRealityModel) throws BizException {

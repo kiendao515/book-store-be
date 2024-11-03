@@ -9,7 +9,7 @@ public interface BookInventoryRepository extends MongoRepository<BookInventory, 
     void deleteByBookId(String bookId);
 
     List<BookInventory> findAllByBookId(String bookId);
-    BookInventory findAllByBookIdAndStoreId(String storeId,String bookId);
+    List<BookInventory> findAllByBookIdAndStoreId(String storeId,String bookId);
 
     List<BookInventory> findAllByBookIdAndStoreIdAndType(String storeId,String bookId, String type);
 

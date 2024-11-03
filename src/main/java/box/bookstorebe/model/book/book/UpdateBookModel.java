@@ -20,15 +20,12 @@ public class UpdateBookModel {
     private String isbn;
     private String publishingUnitId;
     private String publisher;
-    private String author;
-    private String editorId;
-    private String translatorId;
-    private String coverDrawerId;
+    private String authorName;
     private String coverImage;
     private String backImage;
     private List<String> demoImage;
     private String demoUrl;
-    private List<String> tagIds;
+    private String tags;
     private String categoryId;
     private String storeId;
 }
