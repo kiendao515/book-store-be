@@ -15,8 +15,10 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import javax.swing.text.html.Option;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @AllArgsConstructor
 @Service
@@ -48,14 +50,25 @@ public class BookInventoryService {
         bookInventoryRepository.save(bookInventory);
     }
 
-    public void updateBookInventory(String id, UpdateBookRealityModel bookRealityModel) throws BizException {
-        BookInventory bookInventory = bookInventoryRepository.findById(id).orElseThrow(() -> new BizException("Invalid book reality id"));
-        BookDocument bookDocument = bookRepository.findById(bookInventory.getBookId()).orElseThrow(() -> new BizException("Invalid book id"));
+    public void updateBookInventory(UpdateBookRealityModel bookRealityModel) throws BizException {
+        // kiểm tra xem có inventory id k, nếu có thì là update còn k có thì là thêm mới
+        Optional<BookInventory> bookInventoryOptional = bookInventoryRepository.findById(bookRealityModel.getId());
+        BookInventory bookInventory;
+        if(bookRealityModel.getId() == null || !bookInventoryOptional.isPresent()){
+            bookInventory = new BookInventory();
+            bookInventory.setCreatedAt(ZonedDateTime.now());
+        }else{
+            bookInventory= bookInventoryOptional.get();
+        }
+        BookDocument bookDocument = bookRepository.findById(bookRealityModel.getBookId()).orElseThrow(() -> new BizException("Invalid book id"));
+        StoreDocument store = storeRepository.findById(bookRealityModel.getStoreId()).orElseThrow(()-> new BizException("invalid store id"));
         bookInventory.setBookId(bookDocument.getId());
         bookInventory.setType(bookRealityModel.getType());
         bookInventory.setCoverImage(bookRealityModel.getCoverImage());
-        bookInventory.setQuantity(bookInventory.getQuantity());
+        bookInventory.setQuantity(bookRealityModel.getQuantity());
         bookInventory.setPrice(bookRealityModel.getPrice());
+        bookInventory.setStoreId(store.getId());
+        bookInventory.setLocation(bookRealityModel.getLocation());
         bookInventory.setUpdatedAt(ZonedDateTime.now());
         bookInventoryRepository.save(bookInventory);
     }

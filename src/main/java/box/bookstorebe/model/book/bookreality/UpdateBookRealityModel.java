@@ -17,6 +17,9 @@ import java.util.List;
 @NoArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class UpdateBookRealityModel {
+    @Field("id")
+    private String id;
+
     @Field("price")
     private BigDecimal price;
 
@@ -31,4 +34,10 @@ public class UpdateBookRealityModel {
 
     @Field("quantity")
     private Integer quantity;
+
+    @Field("store_id")
+    private String storeId;
+
+    @Field("location")
+    private String location;
 }

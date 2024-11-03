@@ -1,6 +1,7 @@
 package box.bookstorebe.repository.book;
 
 import box.bookstorebe.document.book.BookInventory;
+import box.bookstorebe.document.book.BookType;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;
@@ -14,4 +15,6 @@ public interface BookInventoryRepository extends MongoRepository<BookInventory, 
     List<BookInventory> findAllByBookIdAndStoreIdAndType(String storeId,String bookId, String type);
 
     List<BookInventory> findAllByBookIdIn(List<String> bookIds);
+
+    BookInventory findByBookIdAndStoreIdAndType(String storeId, String bookId, BookType type);
 }

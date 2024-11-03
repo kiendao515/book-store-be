@@ -19,7 +19,7 @@ public class BookInventory {
     @Id
     private String id;
 
-    @Field("book_information_id")
+    @Field("book_id")
     @Indexed
     private String bookId;
 

@@ -30,9 +30,9 @@ public class BookInventoryController {
         return new BaseResponse<>(Const.ResultCode.SUCCESS, "Create new reality book successfully");
     }
 
-    @PutMapping("{id}")
-    public BaseResponse<String> updateBook(@PathVariable String id, @RequestBody @Valid UpdateBookRealityModel bookModel) throws BizException {
-        bookInventoryService.updateBookInventory(id, bookModel);
+    @PutMapping()
+    public BaseResponse<String> updateBook(@RequestBody @Valid UpdateBookRealityModel bookModel) throws BizException {
+        bookInventoryService.updateBookInventory(bookModel);
         return new BaseResponse<>(Const.ResultCode.SUCCESS, "Update reality book successfully");
     }
 
