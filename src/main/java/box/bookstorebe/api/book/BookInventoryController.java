@@ -4,6 +4,7 @@ import box.bookstorebe.common.Const;
 import box.bookstorebe.document.book.BookInventory;
 import box.bookstorebe.dto.common.BaseResponse;
 import box.bookstorebe.exception.BizException;
+import box.bookstorebe.model.book.bookreality.CreateBookAndInventory;
 import box.bookstorebe.model.book.bookreality.CreateBookRealityModel;
 import box.bookstorebe.model.book.bookreality.UpdateBookRealityModel;
 import box.bookstorebe.service.book.BookInventoryService;
@@ -27,6 +28,12 @@ public class BookInventoryController {
     @PostMapping
     public BaseResponse<String> createNewBookReality(@RequestBody @Valid CreateBookRealityModel bookModel) throws BizException {
         bookInventoryService.createBookInventory(bookModel);
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, "Create new reality book successfully");
+    }
+
+    @PostMapping("/create")
+    public BaseResponse<String> createNewBookAndUpdateInventory(@RequestBody @Valid CreateBookAndInventory bookModel) throws BizException {
+        bookInventoryService.createBookAndInventory(bookModel);
         return new BaseResponse<>(Const.ResultCode.SUCCESS, "Create new reality book successfully");
     }
 

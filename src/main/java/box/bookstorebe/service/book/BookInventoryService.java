@@ -5,6 +5,7 @@ import box.bookstorebe.document.book.BookDocument;
 import box.bookstorebe.document.book.BookInventory;
 import box.bookstorebe.dto.book.BookInventoryDto;
 import box.bookstorebe.exception.BizException;
+import box.bookstorebe.model.book.bookreality.CreateBookAndInventory;
 import box.bookstorebe.model.book.bookreality.CreateBookRealityModel;
 import box.bookstorebe.model.book.bookreality.UpdateBookRealityModel;
 import box.bookstorebe.repository.book.BookInventoryRepository;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import javax.swing.text.html.Option;
 import java.time.ZonedDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -71,6 +73,43 @@ public class BookInventoryService {
         bookInventory.setLocation(bookRealityModel.getLocation());
         bookInventory.setUpdatedAt(ZonedDateTime.now());
         bookInventoryRepository.save(bookInventory);
+    }
+
+    public void createBookAndInventory(CreateBookAndInventory createBookAndInventory) throws BizException {
+        BookDocument bookDocument = new BookDocument();
+        bookDocument.setName(createBookAndInventory.getName());
+        bookDocument.setNumberOfPage(createBookAndInventory.getNumberOfPage());
+        bookDocument.setDescription(createBookAndInventory.getDescription());
+        bookDocument.setPublisher(createBookAndInventory.getPublisher());
+        bookDocument.setAuthorName(createBookAndInventory.getAuthorName());
+        bookDocument.setPublishYear(createBookAndInventory.getPublishYear());
+        bookDocument.setIsbn(createBookAndInventory.getIsbn());
+        bookDocument.setCoverImage(createBookAndInventory.getCoverImage());
+        bookDocument.setBackImage(createBookAndInventory.getBackImage());
+        bookDocument.setDemoImage(createBookAndInventory.getDemoImage());
+        bookDocument.setDemoUrl(createBookAndInventory.getDemoUrl());
+        if(!createBookAndInventory.getTags().isBlank()){
+            String[] arr = createBookAndInventory.getTags().split(",");
+            bookDocument.setTags(Arrays.stream(arr).toList());
+        }
+        bookDocument.setCategoryId(createBookAndInventory.getCategoryId());
+        bookDocument.setCreatedAt(ZonedDateTime.now());
+        bookDocument.setUpdatedAt(ZonedDateTime.now());
+        BookDocument bookDocument1= bookRepository.save(bookDocument);
+        StoreDocument storeDocument = storeRepository.findById(createBookAndInventory.getStoreId()).orElseThrow(()-> new BizException("invalid store id"));
+        for(CreateBookAndInventory.BookInventory bookInventory: createBookAndInventory.getBookInventory()){
+            BookInventory newBookInventory = new BookInventory();
+            newBookInventory.setBookId(bookDocument1.getId());
+            newBookInventory.setType(bookInventory.getType());
+            newBookInventory.setPrice(bookInventory.getPrice());
+//        bookInventory.setCoverImage(bookRealityModel.getCoverImage());
+            newBookInventory.setQuantity(bookInventory.getQuantity());
+            newBookInventory.setLocation(bookInventory.getLocation());
+            newBookInventory.setStoreId(storeDocument.getId());
+            newBookInventory.setCreatedAt(ZonedDateTime.now());
+            newBookInventory.setUpdatedAt(ZonedDateTime.now());
+            bookInventoryRepository.save(newBookInventory);
+        }
     }
 
     public void deleteBookReality(String id) throws BizException {

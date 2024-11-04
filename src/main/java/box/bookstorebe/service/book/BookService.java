@@ -155,24 +155,27 @@ public class BookService extends BaseService {
 
     }
 
-    public void createNewBook(CreateBookModel bookModel) throws BizException {
+    public BookDocument createNewBook(CreateBookModel bookModel) throws BizException {
         BookDocument bookDocument = new BookDocument();
         bookDocument.setName(bookModel.getName());
         bookDocument.setNumberOfPage(bookModel.getNumberOfPage());
         bookDocument.setDescription(bookModel.getDescription());
         bookDocument.setPublisher(bookModel.getPublisher());
-        bookDocument.setAuthorName(bookModel.getAuthor());
+        bookDocument.setAuthorName(bookModel.getAuthorName());
         bookDocument.setPublishYear(bookModel.getPublishYear());
         bookDocument.setIsbn(bookModel.getIsbn());
         bookDocument.setCoverImage(bookModel.getCoverImage());
         bookDocument.setBackImage(bookModel.getBackImage());
         bookDocument.setDemoImage(bookModel.getDemoImage());
         bookDocument.setDemoUrl(bookModel.getDemoUrl());
-        bookDocument.setTags(bookModel.getTags());
+        if(!bookModel.getTags().isBlank()){
+            String[] arr = bookModel.getTags().split(",");
+            bookDocument.setTags(Arrays.stream(arr).toList());
+        }
         bookDocument.setCategoryId(bookModel.getCategoryId());
         bookDocument.setCreatedAt(ZonedDateTime.now());
         bookDocument.setUpdatedAt(ZonedDateTime.now());
-        bookRepository.save(bookDocument);
+        return bookRepository.save(bookDocument);
     }
 
     public void updateBook(String id, UpdateBookModel bookModel) throws BizException {

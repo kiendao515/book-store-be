@@ -67,9 +67,9 @@ public class BookInformationController {
     }
 
     @PostMapping
-    public BaseResponse<String> createNewBook(@RequestBody @Valid CreateBookModel bookModel) throws BizException {
-        bookService.createNewBook(bookModel);
-        return new BaseResponse<>(Const.ResultCode.SUCCESS, "Create new book successfully");
+    public BaseResponse<BookDocument> createNewBook(@RequestBody @Valid CreateBookModel bookModel) throws BizException {
+        BookDocument bookDocument= bookService.createNewBook(bookModel);
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, bookDocument);
     }
 
     @PutMapping("{id}")
