@@ -50,15 +50,15 @@ public class BookInformationController {
 
     @GetMapping()
     public BasePagingResponse<BookDto> getBooks(
-            @RequestParam(name = "name", required = false) String name,
-            @RequestParam(name = "category_id", required = false) String categoryId,
+            @RequestParam(name = "q", required = false) String q,
+            @RequestParam(name = "categoryId", required = false) String categoryId,
             @RequestParam(name = "store_id", required = false) String storeId,
             @RequestParam(name = "start_at", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime startAt,
             @RequestParam(name = "end_at", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime endAt,
             @RequestParam(name = "page", required = false) Integer page,
             @RequestParam(name = "size", required = false) Integer size
     ) {
-        return new BasePagingResponse<>(bookService.getBooks(name, categoryId, storeId, startAt, endAt, page, size));
+        return new BasePagingResponse<>(bookService.getBooks(q, categoryId, storeId, startAt, endAt, page, size));
     }
 
     @GetMapping("{id}")

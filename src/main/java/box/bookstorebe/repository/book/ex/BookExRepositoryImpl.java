@@ -32,8 +32,8 @@ public class BookExRepositoryImpl implements BookExRepository {
             criteria = criteria.and("name").regex(".*" + name + ".*");
         }
 
-        if (categoryId != null) {
-            criteria = criteria.and("category_id").in(List.of(categoryId));
+        if (categoryId != null && categoryId != "") {
+            criteria = criteria.and("category_id").is(categoryId);
         }
 
         if (storeId != null) {
