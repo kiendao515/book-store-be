@@ -192,6 +192,7 @@ public class BookService extends BaseService {
         bookDocument.setDemoImage(bookModel.getDemoImage());
         bookDocument.setDemoUrl(bookModel.getDemoUrl());
         bookDocument.setUpdatedAt(ZonedDateTime.now());
+        bookDocument.setCategoryId(bookModel.getCategoryId());
         if(!bookModel.getTags().isBlank()){
             String[] arr = bookModel.getTags().split(",");
             bookDocument.setTags(Arrays.stream(arr).toList());
