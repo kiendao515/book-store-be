@@ -28,10 +28,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -54,12 +51,19 @@ public class BookService extends BaseService {
             String name,
             String categoryId,
             String storeId,
-            ZonedDateTime createdAt,
-            ZonedDateTime updatedAt,
+            String createdAt,
+            String updatedAt,
             Integer page,
             Integer size
     ) {
-        Page<BookDocument> bookDocuments = bookRepository.getBooks(name, categoryId, storeId, createdAt, updatedAt, page, size);
+        ZonedDateTime created = null;
+        ZonedDateTime updated = null;
+        if (!Objects.equals(createdAt, "") && !Objects.equals(updatedAt, "")) {
+            created = ZonedDateTime.parse(createdAt);
+            updated = ZonedDateTime.parse(updatedAt);
+        }
+
+        Page<BookDocument> bookDocuments = bookRepository.getBooks(name, categoryId, storeId, created, updated, page, size);
 
         List<String> resultCategoryIds = new ArrayList<>();
         List<String> bookIds = new ArrayList<>();
@@ -85,7 +89,7 @@ public class BookService extends BaseService {
         for (BookDocument bookDocument : bookDocuments) {
             List<BookInventory> bookRealities = bookRealityMap.getOrDefault(bookDocument.getId(), new ArrayList<>());
             Integer totalBook = 0;
-            for (BookInventory b: bookRealities) {
+            for (BookInventory b : bookRealities) {
                 totalBook += b.getQuantity();
             }
 
@@ -103,7 +107,7 @@ public class BookService extends BaseService {
                     .demoImages(bookDocument.getDemoImage())
                     .demoUrl(bookDocument.getDemoUrl())
                     .tags(bookDocument.getTags())
-                    .category(categoryDocumentMap.getOrDefault(bookDocument.getCategoryId(),null))
+                    .category(categoryDocumentMap.getOrDefault(bookDocument.getCategoryId(), null))
                     .numberOfBooks(totalBook)
                     .createdAt(bookDocument.getCreatedAt())
                     .updatedAt(bookDocument.getUpdatedAt())
@@ -117,7 +121,7 @@ public class BookService extends BaseService {
     public BookDto findById(String id) throws BizException {
         BookDocument bookDocument = bookRepository.findById(id).orElseThrow(() -> new BizException("Invalid book id"));
 
-        CategoryDocument categoryDocument = categoryRepository.findById(bookDocument.getCategoryId()).orElseThrow(()-> new BizException("invalid category"));
+        CategoryDocument categoryDocument = categoryRepository.findById(bookDocument.getCategoryId()).orElseThrow(() -> new BizException("invalid category"));
         List<BookInventory> bookRealityDocuments = bookRealityRepository.findAllByBookId(bookDocument.getId());
 
 //        List<BookRealityDto> bookRealityDtos = new ArrayList<>();
@@ -168,8 +172,8 @@ public class BookService extends BaseService {
         bookDocument.setBackImage(bookModel.getBackImage());
         bookDocument.setDemoImage(bookModel.getDemoImage());
         bookDocument.setDemoUrl(bookModel.getDemoUrl());
-        if(!bookModel.getTags().isBlank()){
-            String[] arr = bookModel.getTags().split(",");
+        if (!bookModel.getTags().isBlank()) {
+            String[] arr = bookModel.getTags().split(";");
             bookDocument.setTags(Arrays.stream(arr).toList());
         }
         bookDocument.setCategoryId(bookModel.getCategoryId());
@@ -193,7 +197,7 @@ public class BookService extends BaseService {
         bookDocument.setDemoUrl(bookModel.getDemoUrl());
         bookDocument.setUpdatedAt(ZonedDateTime.now());
         bookDocument.setCategoryId(bookModel.getCategoryId());
-        if(!bookModel.getTags().isBlank()){
+        if (!bookModel.getTags().isBlank()) {
             String[] arr = bookModel.getTags().split(",");
             bookDocument.setTags(Arrays.stream(arr).toList());
         }
@@ -201,8 +205,9 @@ public class BookService extends BaseService {
     }
 
     public void updateMultipleBookReality(String id, UpdateMultipleBookRealityModel bookRealityModel) throws BizException {
-        if(bookRealityModel.getQuantity() <0) throw new BizException("Số lượng quyển sách phải lớn hơn 0");
-        if(bookRealityModel.getPrice().equals(BigDecimal.valueOf(0))) throw new BizException("Giá trị quyển sách phải lớn hơn 0");
+        if (bookRealityModel.getQuantity() < 0) throw new BizException("Số lượng quyển sách phải lớn hơn 0");
+        if (bookRealityModel.getPrice().equals(BigDecimal.valueOf(0)))
+            throw new BizException("Giá trị quyển sách phải lớn hơn 0");
         List<BookInventory> bookInventories = bookRealityRepository.findAllByBookIdAndStoreIdAndType(bookRealityModel.getStoreId(), id, bookRealityModel.getType().name());
         for (BookInventory bookReality : bookInventories) {
             bookReality.setPrice(bookRealityModel.getPrice());

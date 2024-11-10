@@ -53,8 +53,8 @@ public class BookInformationController {
             @RequestParam(name = "q", required = false) String q,
             @RequestParam(name = "categoryId", required = false) String categoryId,
             @RequestParam(name = "store_id", required = false) String storeId,
-            @RequestParam(name = "start_at", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime startAt,
-            @RequestParam(name = "end_at", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime endAt,
+            @RequestParam(name = "start_at", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) String startAt,
+            @RequestParam(name = "end_at", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) String endAt,
             @RequestParam(name = "page", required = false) Integer page,
             @RequestParam(name = "size", required = false) Integer size
     ) {

@@ -28,6 +28,7 @@ public class CreateBookAndInventory {
     private String demoUrl;
     private String tags;
     private String categoryId;
+    private String collectionId;
     private String storeId;
     private List<BookInventory> bookInventory;
     @Data

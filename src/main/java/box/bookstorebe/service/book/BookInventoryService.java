@@ -78,6 +78,7 @@ public class BookInventoryService {
     public void createBookAndInventory(CreateBookAndInventory createBookAndInventory) throws BizException {
         BookDocument bookDocument = new BookDocument();
         bookDocument.setName(createBookAndInventory.getName());
+        bookDocument.setCollectionId(createBookAndInventory.getCollectionId());
         bookDocument.setNumberOfPage(createBookAndInventory.getNumberOfPage());
         bookDocument.setDescription(createBookAndInventory.getDescription());
         bookDocument.setPublisher(createBookAndInventory.getPublisher());
