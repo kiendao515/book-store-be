@@ -163,7 +163,7 @@ public class PaymentService {
         orderDocument.setStatus(Const.OrderStatus.READY_TO_PACKAGE);
         orderRepository.save(orderDocument);
 //        paymentRepository.save(paymentDocument);
-        mailService.sendEmailOrderDetail(orderDocument.getEmail(),orderDocument);
+//        mailService.sendEmailOrderDetail(orderDocument.getEmail(),orderDocument);
     }
     public PaymentDocument getPaymentByOrderId(String orderId) throws BizException{
         return mongoTemplate.findOne(new Query(Criteria.where("order._id").is(orderId)), PaymentDocument.class);

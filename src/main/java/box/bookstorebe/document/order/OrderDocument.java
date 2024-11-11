@@ -19,26 +19,11 @@ public class OrderDocument {
     @Id
     private String id;
 
-    @Field(name= "user_id")
-    private String userId;
+    @Field(name= "account_id")
+    private String accountId;
 
     @Field(name = "address")
     private String address;
-
-    @Field(name = "customer_name")
-    private String customerName;
-
-    @Field(name = "customer_phone")
-    private String customerPhone;
-
-    @Field(name = "email")
-    private String email;
-
-    @Field(name = "created_at")
-    private ZonedDateTime createdAt;
-
-    @Field(name = "updated_at")
-    private ZonedDateTime updatedAt;
 
     @Field(name = "status")
     private String status;// created -> cancel -> confirm -> shipping -> done
@@ -49,14 +34,29 @@ public class OrderDocument {
     @Field(name = "shipping_fee")
     private BigDecimal shippingFee;
 
+    @Field(name = "total_amount")
+    private BigDecimal totalAmount;
+
+    @Field(name = "transaction_id")
+    private String transactionId; // dùng cho vnpay
+
     @Field(name = "order_code")
     @Indexed
     private String orderCode;
+
     @Field(name = "shipping_code")
     private String shippingCode;
+
     @Field(name = "shipping_company")
     private String shippingCompany;
+
     @Field(name = "note")
     private String note;
+
+    @Field(name = "created_at")
+    private ZonedDateTime createdAt;
+
+    @Field(name = "updated_at")
+    private ZonedDateTime updatedAt;
 
 }

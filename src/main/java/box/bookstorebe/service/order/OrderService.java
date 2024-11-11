@@ -114,7 +114,7 @@ public class OrderService {
         if(order.isPaymentMethod()){
             return paymentService.createOrder(request,total, savedOrder.getId(), returnUrl);
         }else{
-            mailService.sendEmailOrderDetail(orderDocument.getEmail(),orderDocument);
+//            mailService.sendEmailOrderDetail(orderDocument.getEmail(),orderDocument);
         }
         return "order successfully!";
     }
@@ -144,11 +144,11 @@ public class OrderService {
             OrderDto orderDto = new OrderDto();
             orderDto.setId(order.getId());
             orderDto.setAddress(order.getAddress());
-            orderDto.setCustomerName(order.getCustomerName());
-            orderDto.setCustomerPhone(order.getCustomerPhone());
+//            orderDto.setCustomerName(order.getCustomerName());
+//            orderDto.setCustomerPhone(order.getCustomerPhone());
             orderDto.setCreatedAt(order.getCreatedAt());
             orderDto.setStatus(order.getStatus());
-            orderDto.setEmail(order.getEmail());
+//            orderDto.setEmail(order.getEmail());
             orderDto.setNote(order.getNote());
             orderDto.setPaymentType(order.isPaymentType());
 //            List<BookRealityDto> bookDtos = new ArrayList<>();
@@ -183,9 +183,9 @@ public class OrderService {
         return OrderDto.builder()
                 .id(orderDocument.getId())
                 .address(orderDocument.getAddress())
-                .email(orderDocument.getEmail())
-                .customerName(orderDocument.getCustomerName())
-                .customerPhone(orderDocument.getCustomerPhone())
+//                .email(orderDocument.getEmail())
+//                .customerName(orderDocument.getCustomerName())
+//                .customerPhone(orderDocument.getCustomerPhone())
                 .status(orderDocument.getStatus())
                 .createdAt(orderDocument.getCreatedAt())
 //                .books(bookRealityDtoList)
@@ -202,9 +202,9 @@ public class OrderService {
     public void updateOrder(String id, UpdateOrderModel order) throws BizException {
         OrderDocument orderDocument = orderRepository.findById(id).orElseThrow(()-> new BizException("orderId is invalid"));
         orderDocument.setAddress(order.getAddress());
-        orderDocument.setEmail(order.getEmail());
-        orderDocument.setCustomerName(order.getCustomerName());
-        orderDocument.setCustomerPhone(order.getCustomerPhone());
+//        orderDocument.setEmail(order.getEmail());
+//        orderDocument.setCustomerName(order.getCustomerName());
+//        orderDocument.setCustomerPhone(order.getCustomerPhone());
         orderDocument.setShippingCode(order.getShippingCode());
         orderDocument.setNote(order.getNote());
         orderDocument.setShippingCompany(order.getShippingCompany());

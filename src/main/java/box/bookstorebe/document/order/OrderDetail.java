@@ -21,9 +21,6 @@ public class OrderDetail {
     @Field(name = "book_inventory_id")
     private String bookInventoryId;
 
-    @Field(name = "type")
-    private Enum type;
-
     @Field(name = "quantity")
     private Integer quantity;
 }

@@ -15,8 +15,8 @@ public class CartDocument {
     @Id
     private String id;
 
-    @Field(name= "user_id")
-    private String userId;
+    @Field(name= "account_id")
+    private String accountId;
 
     @Field(name = "book_inventory_id")
     private String bookInventoryId;
