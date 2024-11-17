@@ -23,9 +23,9 @@ public class UpdateBookModel {
     private String authorName;
     private String coverImage;
     private String backImage;
-    private List<String> demoImage;
+    private List<String> contentImage;
     private String demoUrl;
-    private String tags;
+    private List<String> tags;
     private String categoryId;
     private String storeId;
 }

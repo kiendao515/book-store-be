@@ -1,5 +1,6 @@
 package box.bookstorebe.dto.book;
 
+import box.bookstorebe.document.book.BookInventory;
 import box.bookstorebe.document.book.CategoryDocument;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
@@ -25,11 +26,13 @@ public class BookDto {
     private String publisher;
     private String coverImage;
     private String backImage;
-    private List<String> demoImages;
+    private List<String> contentImage;
     private String demoUrl;
     private List<String> tags;
     private CategoryDocument category;
     private ZonedDateTime createdAt;
     private ZonedDateTime updatedAt;
     private Integer numberOfBooks;
+    private Integer soldQuantity;
+    private List<BookInventory> bookInventories;
 }

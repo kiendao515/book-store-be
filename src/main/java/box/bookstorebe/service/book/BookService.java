@@ -5,6 +5,8 @@ import box.bookstorebe.configuration.security.RequestScope;
 import box.bookstorebe.document.account.AccountDocument;
 import box.bookstorebe.document.book.*;
 import box.bookstorebe.document.common.SystemConfigDocument;
+import box.bookstorebe.document.order.OrderDocument;
+import box.bookstorebe.document.order.OrderItem;
 import box.bookstorebe.dto.book.BookDto;
 import box.bookstorebe.dto.book.BookFavoriteDto;
 import box.bookstorebe.dto.book.BookSettingDto;
@@ -18,6 +20,8 @@ import box.bookstorebe.repository.bookstore.BookStoreRepository;
 import box.bookstorebe.repository.common.image.ImageRepository;
 import box.bookstorebe.repository.common.person.PersonRepository;
 import box.bookstorebe.repository.common.systemconfig.SystemConfigRepository;
+import box.bookstorebe.repository.order.OrderItemRepository;
+import box.bookstorebe.repository.order.OrderRepository;
 import box.bookstorebe.repository.user.AccountRepository;
 import box.bookstorebe.service.BaseService;
 import lombok.AllArgsConstructor;
@@ -46,6 +50,8 @@ public class BookService extends BaseService {
     private final SystemConfigRepository systemConfigRepository;
     private final AccountRepository accountRepository;
     private final BookFavoriteRepository bookFavoriteRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final OrderRepository orderRepository;
 
     public Page<BookDto> getBooks(
             String name,
@@ -58,7 +64,7 @@ public class BookService extends BaseService {
     ) {
         ZonedDateTime created = null;
         ZonedDateTime updated = null;
-        if (!Objects.equals(createdAt, "") && !Objects.equals(updatedAt, "")) {
+        if (!Objects.equals(createdAt, null) && !Objects.equals(updatedAt, null)) {
             created = ZonedDateTime.parse(createdAt);
             updated = ZonedDateTime.parse(updatedAt);
         }
@@ -73,25 +79,38 @@ public class BookService extends BaseService {
         }
         List<CategoryDocument> categoryDocuments = categoryRepository.findAllById(resultCategoryIds);
         Map<String, CategoryDocument> categoryDocumentMap = categoryDocuments.stream().collect(Collectors.toMap(CategoryDocument::getId, Function.identity()));
-//
-//        List<PersonDocument> personDocuments = personRepository.findAllById(resultPersonIds);
-//        Map<String, PersonDocument> personMap = personDocuments.stream().collect(Collectors.toMap(PersonDocument::getId, Function.identity()));
-//
-//        List<CommonEntity> commonEntities = commonEntityRepository.findAllById(resultCommonEntityIds);
-//        Map<String, CommonEntity> commonEntityMap = commonEntities.stream().collect(Collectors.toMap(CommonEntity::getId, Function.identity()));
-//
-//        List<BookStoreDocument> bookStoreDocuments = bookStoreRepository.findAllById(resultBookStoreIds);
-//        Map<String, BookStoreDocument> bookStoreMap = bookStoreDocuments.stream().collect(Collectors.toMap(BookStoreDocument::getId, Function.identity()));
-//
         List<BookInventory> bookRealityDocuments = bookRealityRepository.findAllByBookIdIn(bookIds);
         Map<String, List<BookInventory>> bookRealityMap = bookRealityDocuments.stream().collect(Collectors.groupingBy(BookInventory::getBookId));
+
+        // Lấy thông tin số lượng sách đã bán từ order_item và orders
+        List<OrderItem> orderItems = orderItemRepository.findAllByBookInventoryIdIn(bookRealityDocuments.stream()
+                .map(BookInventory::getId)
+                .collect(Collectors.toList()));
+
+        // Lọc các đơn hàng có trạng thái "done"
+        List<String> doneOrderIds = orderRepository.findAllByStatus(Const.OrderStatus.DONE).stream()
+                .map(OrderDocument::getId)
+                .toList();
+
+        Map<String, String> inventoryToBookMap = bookRealityDocuments.stream()
+                .collect(Collectors.toMap(BookInventory::getId, BookInventory::getBookId));
+
+        Map<String, Integer> bookSellMap = orderItems.stream()
+                .filter(orderItem -> doneOrderIds.contains(orderItem.getOrderId())) // Chỉ lấy các đơn hàng "done"
+                .collect(Collectors.groupingBy(
+                        orderItem -> inventoryToBookMap.get(orderItem.getBookInventoryId()), // Map book_inventory_id -> book_id
+                        Collectors.summingInt(OrderItem::getQuantity) // Tổng số lượng đã bán
+                ));
+
         List<BookDto> content = new ArrayList<>();
         for (BookDocument bookDocument : bookDocuments) {
             List<BookInventory> bookRealities = bookRealityMap.getOrDefault(bookDocument.getId(), new ArrayList<>());
-            Integer totalBook = 0;
-            for (BookInventory b : bookRealities) {
-                totalBook += b.getQuantity();
-            }
+            Integer totalBook = bookRealities.stream()
+                    .mapToInt(BookInventory::getQuantity)
+                    .sum();
+
+            Integer bookSell = bookSellMap.getOrDefault(bookDocument.getId(), 0);
+
 
             BookDto bookDto = BookDto.builder()
                     .id(bookDocument.getId())
@@ -104,13 +123,15 @@ public class BookService extends BaseService {
                     .authorName(bookDocument.getAuthorName())
                     .coverImage(bookDocument.getCoverImage())
                     .backImage(bookDocument.getBackImage())
-                    .demoImages(bookDocument.getDemoImage())
+                    .contentImage(bookDocument.getDemoImage())
                     .demoUrl(bookDocument.getDemoUrl())
                     .tags(bookDocument.getTags())
                     .category(categoryDocumentMap.getOrDefault(bookDocument.getCategoryId(), null))
                     .numberOfBooks(totalBook)
                     .createdAt(bookDocument.getCreatedAt())
                     .updatedAt(bookDocument.getUpdatedAt())
+                    .soldQuantity(bookSell)
+                    .bookInventories(bookRealities)
                     .build();
             content.add(bookDto);
         }
@@ -151,7 +172,7 @@ public class BookService extends BaseService {
                 .isbn(bookDocument.getIsbn())
                 .coverImage(bookDocument.getCoverImage())
                 .backImage(bookDocument.getBackImage())
-                .demoImages(bookDocument.getDemoImage())
+                .contentImage(bookDocument.getDemoImage())
                 .demoUrl(bookDocument.getDemoUrl())
                 .createdAt(bookDocument.getCreatedAt())
                 .updatedAt(bookDocument.getUpdatedAt())
@@ -170,12 +191,13 @@ public class BookService extends BaseService {
         bookDocument.setIsbn(bookModel.getIsbn());
         bookDocument.setCoverImage(bookModel.getCoverImage());
         bookDocument.setBackImage(bookModel.getBackImage());
-        bookDocument.setDemoImage(bookModel.getDemoImage());
+        bookDocument.setDemoImage(bookModel.getContentImage());
         bookDocument.setDemoUrl(bookModel.getDemoUrl());
-        if (!bookModel.getTags().isBlank()) {
-            String[] arr = bookModel.getTags().split(";");
-            bookDocument.setTags(Arrays.stream(arr).toList());
-        }
+//        if (!bookModel.getTags().isBlank()) {
+//            String[] arr = bookModel.getTags().split(";");
+//            bookDocument.setTags(Arrays.stream(arr).toList());
+//        }
+        bookDocument.setTags(bookModel.getTags());
         bookDocument.setCategoryId(bookModel.getCategoryId());
         bookDocument.setCreatedAt(ZonedDateTime.now());
         bookDocument.setUpdatedAt(ZonedDateTime.now());
@@ -193,14 +215,15 @@ public class BookService extends BaseService {
         bookDocument.setAuthorName(bookModel.getAuthorName());
         bookDocument.setCoverImage(bookModel.getCoverImage());
         bookDocument.setBackImage(bookModel.getBackImage());
-        bookDocument.setDemoImage(bookModel.getDemoImage());
+        bookDocument.setDemoImage(bookModel.getContentImage());
         bookDocument.setDemoUrl(bookModel.getDemoUrl());
         bookDocument.setUpdatedAt(ZonedDateTime.now());
         bookDocument.setCategoryId(bookModel.getCategoryId());
-        if (!bookModel.getTags().isBlank()) {
-            String[] arr = bookModel.getTags().split(",");
-            bookDocument.setTags(Arrays.stream(arr).toList());
-        }
+//        if (!bookModel.getTags().isBlank()) {
+//            String[] arr = bookModel.getTags().split(",");
+//            bookDocument.setTags(Arrays.stream(arr).toList());
+//        }
+        bookDocument.setTags(bookModel.getTags());
         bookRepository.save(bookDocument);
     }
 
