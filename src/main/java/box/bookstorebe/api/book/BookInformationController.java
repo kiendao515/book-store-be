@@ -51,7 +51,7 @@ public class BookInformationController {
     @GetMapping()
     public BasePagingResponse<BookDto> getBooks(
             @RequestParam(name = "q", required = false) String q,
-            @RequestParam(name = "categoryId", required = false) String categoryId,
+            @RequestParam(name = "category_id", required = false) String categoryId,
             @RequestParam(name = "store_id", required = false) String storeId,
             @RequestParam(name = "start_at", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) String startAt,
             @RequestParam(name = "end_at", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) String endAt,

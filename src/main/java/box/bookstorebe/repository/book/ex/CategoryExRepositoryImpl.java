@@ -46,20 +46,20 @@ public class CategoryExRepositoryImpl implements CategoryExRepository {
         AggregationOperation matchOperations = match(criteria);
 
         AggregationOperation customLookupOperation = context -> new Document("$lookup",
-                new Document("from", "books")
+                new Document("from", "book_information")
                         .append("let", new Document("categoryId", new Document("$toString", "$_id")))
                         .append("pipeline", List.of(
                                 new Document("$match",
                                         new Document("$expr",
-                                                new Document("$in", Arrays.asList("$$categoryId", "$category_ids"))
+                                                new Document("$eq", Arrays.asList("$$categoryId", "$category_id"))
                                         )
                                 )
                         ))
-                        .append("as", "books")
+                        .append("as", "book_information")
         );
 
         AggregationOperation addFieldsOperation = Aggregation.addFields()
-                .addField("num_of_books").withValueOf(ArrayOperators.Size.lengthOfArray("books")).build();
+                .addField("num_of_books").withValueOf(ArrayOperators.Size.lengthOfArray("book_information")).build();
 
         ProjectionOperation projectOperation = Aggregation.project()
                 .and("_id").as("_id")
