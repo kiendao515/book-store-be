@@ -140,40 +140,55 @@ public class BookService extends BaseService {
     }
 
     public BookDto findById(String id) throws BizException {
-        BookDocument bookDocument = bookRepository.findById(id).orElseThrow(() -> new BizException("Invalid book id"));
+        BookDocument bookDocument = bookRepository.findById(id)
+                .orElseThrow(() -> new BizException("Invalid book id"));
+        CategoryDocument categoryDocument = categoryRepository.findById(bookDocument.getCategoryId())
+                .orElseThrow(() -> new BizException("Invalid category"));
 
-        CategoryDocument categoryDocument = categoryRepository.findById(bookDocument.getCategoryId()).orElseThrow(() -> new BizException("invalid category"));
         List<BookInventory> bookRealityDocuments = bookRealityRepository.findAllByBookId(bookDocument.getId());
 
-//        List<BookRealityDto> bookRealityDtos = new ArrayList<>();
-//        for (BookRealityDocument bookRealityDocument : bookRealityDocuments) {
-//            ImageDocument imageDocument = imageMap.getOrDefault(bookRealityDocument.getCoverImageId(), null);
-//            BookRealityDto bookRealityDto = BookRealityDto.builder()
-//                    .id(bookRealityDocument.getId())
-//                    .price(bookRealityDocument.getPrice())
-//                    .status(Const.BookRealityStatus.valueOf(bookRealityDocument.getStatus()))
-//                    .type(Const.BookRealityType.valueOf(bookRealityDocument.getType()))
-//                    .coverImage(imageDocument)
-//                    .createdAt(bookRealityDocument.getCreatedAt())
-//                    .updatedAt(bookRealityDocument.getUpdatedAt())
-//                    .build();
-//            bookRealityDtos.add(bookRealityDto);
-//        }
+        List<OrderItem> orderItems = orderItemRepository.findAllByBookInventoryIdIn(
+                bookRealityDocuments.stream().map(BookInventory::getId).collect(Collectors.toList())
+        );
 
+        List<String> doneOrderIds = orderRepository.findAllByStatus(Const.OrderStatus.DONE).stream()
+                .map(OrderDocument::getId)
+                .toList();
+
+        Map<String, String> inventoryToBookMap = bookRealityDocuments.stream()
+                .collect(Collectors.toMap(BookInventory::getId, BookInventory::getBookId));
+
+        Map<String, Integer> bookSellMap = orderItems.stream()
+                .filter(orderItem -> doneOrderIds.contains(orderItem.getOrderId()))
+                .collect(Collectors.groupingBy(
+                        orderItem -> inventoryToBookMap.get(orderItem.getBookInventoryId()),
+                        Collectors.summingInt(OrderItem::getQuantity)
+                ));
+
+        Integer totalBook = bookRealityDocuments.stream()
+                .mapToInt(BookInventory::getQuantity)
+                .sum();
+        Integer bookSell = bookSellMap.getOrDefault(bookDocument.getId(), 0);
+
+        // Xây dựng BookDto
         return BookDto.builder()
                 .id(bookDocument.getId())
                 .name(bookDocument.getName())
                 .description(bookDocument.getDescription())
                 .numberOfPage(bookDocument.getNumberOfPage())
-                .category(categoryDocument)
-                .publisher(bookDocument.getPublisher())
-                .authorName(bookDocument.getAuthorName())
                 .publishYear(bookDocument.getPublishYear())
                 .isbn(bookDocument.getIsbn())
+                .publisher(bookDocument.getPublisher())
+                .authorName(bookDocument.getAuthorName())
                 .coverImage(bookDocument.getCoverImage())
                 .backImage(bookDocument.getBackImage())
                 .contentImage(bookDocument.getDemoImage())
                 .demoUrl(bookDocument.getDemoUrl())
+                .tags(bookDocument.getTags())
+                .category(categoryDocument)
+                .numberOfBooks(totalBook)
+                .soldQuantity(bookSell)
+                .bookInventories(bookRealityDocuments)
                 .createdAt(bookDocument.getCreatedAt())
                 .updatedAt(bookDocument.getUpdatedAt())
                 .build();
