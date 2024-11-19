@@ -22,6 +22,7 @@ import java.util.List;
 public class AccountDocument implements UserDetails {
     public AccountDocument(String token, String userId) {
         this.token = token;
+        this.id = userId;
         this.expiryDate = calculateExpiryDate(EXPIRATION);
     }
     private static final int EXPIRATION = 60 * 24;

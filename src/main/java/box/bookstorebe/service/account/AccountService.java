@@ -19,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
+import java.time.ZonedDateTime;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -94,7 +95,12 @@ public class AccountService {
         newUser.setSalt(salt);
         newUser.setRole(role);
         newUser.setEnabled(isEnable);
+        newUser.setExpiryDate(calculateExpiryDate(60 * 24));
         return accountRepository.save(newUser);
+    }
+
+    private ZonedDateTime calculateExpiryDate(int expiryTimeInMinutes) {
+        return ZonedDateTime.now().plusMinutes(expiryTimeInMinutes);
     }
 
     public void updateAccount(String id, UserModel userModel) throws BizException {

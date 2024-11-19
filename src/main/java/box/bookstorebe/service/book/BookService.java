@@ -64,7 +64,7 @@ public class BookService extends BaseService {
     ) {
         ZonedDateTime created = null;
         ZonedDateTime updated = null;
-        if (!Objects.equals(createdAt, null) && !Objects.equals(updatedAt, null)) {
+        if (createdAt != null && updatedAt!=null && !createdAt.isBlank() && !updatedAt.isBlank()) {
             created = ZonedDateTime.parse(createdAt);
             updated = ZonedDateTime.parse(updatedAt);
         }

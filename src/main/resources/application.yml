@@ -49,6 +49,6 @@ aws:
   region: ${REGION:ap-south-1}
 app:
   client:
-    url: ${CLIENT_URL:http://localhost:3000}
+    url: ${CLIENT_URL:http://localhost:5173}
   domain:
     url: ${DOMAIN_URL:http://localhost:8080}
