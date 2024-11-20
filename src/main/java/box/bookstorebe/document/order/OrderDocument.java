@@ -22,6 +22,12 @@ public class OrderDocument {
     @Field(name= "account_id")
     private String accountId;
 
+    @Field(name = "receiver_name")
+    private String receiverName;
+
+    @Field(name = "receiver_phone")
+    private String receiverPhone;
+
     @Field(name = "address")
     private String address;
 

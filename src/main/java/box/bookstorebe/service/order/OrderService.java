@@ -1,53 +1,64 @@
 package box.bookstorebe.service.order;
 
-import box.bookstorebe.api.order.OrderController;
+import box.bookstorebe.client.CommonClient;
 import box.bookstorebe.common.Const;
-import box.bookstorebe.document.book.BookDocument;
+import box.bookstorebe.configuration.security.RequestScope;
+
+import box.bookstorebe.document.book.BookInventory;
 import box.bookstorebe.document.order.OrderDocument;
+import box.bookstorebe.document.order.OrderItemDocument;
 import box.bookstorebe.document.payment.PaymentDocument;
 import box.bookstorebe.dto.order.OrderDto;
 import box.bookstorebe.exception.BizException;
-import box.bookstorebe.model.order.BookOrder;
 import box.bookstorebe.model.order.CreateOrderModel;
+import box.bookstorebe.model.order.OrderItem;
+import box.bookstorebe.model.order.ShippingFeeRequest;
 import box.bookstorebe.model.order.UpdateOrderModel;
 import box.bookstorebe.repository.book.BookInventoryRepository;
 import box.bookstorebe.repository.book.BookRepository;
+import box.bookstorebe.repository.order.OrderItemRepository;
 import box.bookstorebe.repository.order.OrderRepository;
+import box.bookstorebe.service.BaseService;
 import box.bookstorebe.service.book.BookInventoryService;
 import box.bookstorebe.service.book.BookService;
 import box.bookstorebe.service.common.MailService;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @Service
 @Slf4j
-public class OrderService {
+public class OrderService extends BaseService {
     private final OrderRepository orderRepository;
-    private final BookInventoryRepository bookRealityRepository;
+    private final BookInventoryRepository bookInventoryRepository;
     private final BookRepository bookRepository;
     private final BookService bookService;
-    private final BookInventoryService bookRealityService;
+    private final BookInventoryService bookInventoryService;
     private final PaymentService paymentService;
     private static final AtomicLong counter = new AtomicLong();
     private final MongoTemplate mongoTemplate;
     private final MailService mailService;
+    private final OrderItemRepository orderItemRepository;
 
     protected String getSaltString() {
         String SALTCHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
@@ -62,61 +73,67 @@ public class OrderService {
     }
     @Transactional
     public String createOrder(HttpServletRequest request,CreateOrderModel order, String returnUrl) throws BizException, MessagingException {
-        OrderDocument orderDocument = new OrderDocument();
-        List<String> bookIds = order.getBooks().stream()
-                .map(BookOrder::getId)
-                .collect(Collectors.toList());
-        BigDecimal total = new BigDecimal(0);
+        RequestScope currentUser = this.getCurrentUserInfo();
+        if (currentUser == null) {
+            throw new BizException("Invalid token");
+        }
+        List<String> bookInventoryIds = order.getOrderItems().stream()
+                .map(OrderItem::getBookInventoryId).toList();
+        List<BookInventory> bookInventories = bookInventoryRepository.findAllByIdIn(bookInventoryIds);
+        if (bookInventories.size() != bookInventoryIds.size()) {
+            throw new BizException("Some books are not available in inventory.");
+        }
 
-        List<BookDocument> listBook = bookRepository.findAllById(bookIds);
-        Set<String> set = new HashSet<>(bookIds);
-        List<String> distinctList = new ArrayList<>(set);
-//        List<BookRealityDocument> orderBooks = new ArrayList<>();
-//        if (listBook.size() < distinctList.size()) {
-//            throw new BizException("bookId is invalid!");
-//        }
-//        for (int i = 0; i <order.getBooks().size(); i++) {
-//            List<BookRealityDocument> bookRealityDocuments= bookRealityRepository.findAllByBookId(order.getBooks().get(i).getId());
-//            int finalI = i;
-//            if(bookRealityDocuments.stream().filter(bookRealityDocument ->
-//                    ( bookRealityDocument.getType().equals(order.getBooks().get(finalI).getType()) &&
-//                            bookRealityDocument.getStatus().equals(Const.BookRealityStatus.AVAILABLE.toString()))).count()
-//                    < order.getBooks().get(finalI).getQuantity()){
-//                throw new BizException("số lượng sách "+order.getBooks().get(finalI).getName()+
-//                        "có tình trạng " +order.getBooks().get(finalI).getType() +" không đủ!");
-//            }
-//            List<BookRealityDocument> availableBooks = bookRealityDocuments.stream().filter(bookRealityDocument ->
-//                    bookRealityDocument.getType().equals(order.getBooks().get(finalI).getType()) &&
-//                            bookRealityDocument.getStatus().equals(Const.BookRealityStatus.AVAILABLE.toString())).limit(order.getBooks().get(finalI).getQuantity()).toList();
-//            for(BookRealityDocument bookRealityDocument:availableBooks){
-//                bookRealityDocument.setStatus(Const.BookRealityStatus.UNAVAILABLE.toString());
-//                bookRealityRepository.save(bookRealityDocument);
-//                orderBooks.add(bookRealityDocument);
-//                total.add(new BigDecimal(bookRealityDocument.getPrice()));
-//            }
-//
-//        }
-//        orderDocument.setCreatedAt(ZonedDateTime.now());
-//        orderDocument.setAddress(order.getAddress());
-//        orderDocument.setCustomerName(order.getCustomerName());
-//        orderDocument.setCustomerPhone(order.getCustomerPhone());
-//        orderDocument.setEmail(order.getEmail());
-//        orderDocument.setItems(orderBooks);
-//        orderDocument.setPaymentType(order.isPaymentMethod());
-//        orderDocument.setOrderId(getSaltString());
+        for (OrderItem orderItem : order.getOrderItems()) {
+            BookInventory inventory = bookInventories.stream()
+                    .filter(book -> book.getId().equals(orderItem.getBookInventoryId()))
+                    .findFirst()
+                    .orElseThrow(() -> new BizException("Book inventory ID " + orderItem.getBookInventoryId() + " not found"));
+            if (inventory.getQuantity() < orderItem.getQuantity()) {
+                throw new BizException("Not enough quantity for book inventory ID " + orderItem.getBookInventoryId());
+            }
+        }
+
+
+        OrderDocument orderDocument = new OrderDocument();
+        orderDocument.setCreatedAt(ZonedDateTime.now());
+        orderDocument.setAddress(order.getAddress());
+        orderDocument.setReceiverName(order.getCustomerName());
+        orderDocument.setReceiverPhone(order.getCustomerPhone());
+        orderDocument.setAccountId(currentUser.getAccountId());
+        orderDocument.setPaymentType(order.isPaymentMethod());
+        orderDocument.setOrderCode(getSaltString());
         orderDocument.setStatus(Const.OrderStatus.CREATED);
         orderDocument.setNote(order.getNote());
 
-        if(total.compareTo(Const.AMOUNT_CAN_FREESHIP) < 0){
-            total.add(Const.SHIPPING_FEE);
+        OrderDocument savedOrder = orderRepository.save(orderDocument);
+
+        List<OrderItemDocument> orderItemDocuments = new ArrayList<>();
+        for (OrderItem orderItem : order.getOrderItems()) {
+            BookInventory inventory = bookInventories.stream()
+                    .filter(book -> book.getId().equals(orderItem.getBookInventoryId()))
+                    .findFirst()
+                    .orElseThrow(() -> new BizException("Book inventory ID " + orderItem.getBookInventoryId() + " not found"));
+            inventory.setQuantity(inventory.getQuantity() - orderItem.getQuantity());
+            bookInventoryRepository.save(inventory);
+
+            OrderItemDocument orderItemDocument = new OrderItemDocument();
+            orderItemDocument.setOrderId(savedOrder.getId());
+            orderItemDocument.setBookInventoryId(inventory.getId());
+            orderItemDocument.setQuantity(orderItem.getQuantity());
+            orderItemDocuments.add(orderItemDocument);
         }
-        OrderDocument savedOrder= orderRepository.save(orderDocument);
-        if(order.isPaymentMethod()){
-            return paymentService.createOrder(request,total, savedOrder.getId(), returnUrl);
-        }else{
-//            mailService.sendEmailOrderDetail(orderDocument.getEmail(),orderDocument);
-        }
-        return "order successfully!";
+        orderItemRepository.saveAll(orderItemDocuments);
+//        if (order.isPaymentMethod()) {
+//            // Redirect to payment service
+//            BigDecimal total = calculateTotal(orderItemDocuments, bookInventories);
+//            return paymentService.createOrder(request, total, savedOrder.getId(), returnUrl);
+//        } else {
+//            // Send email notification
+//            mailService.sendEmailOrderDetail(order.getEmail(), savedOrder, orderItemDocuments);
+//        }
+
+        return "Order successfully created!";
     }
 
     public String retryPayment(String id,String returnUrl,HttpServletRequest request) throws BizException {

@@ -12,6 +12,7 @@ import box.bookstorebe.model.auth.RegisterRequestModel;
 import box.bookstorebe.model.book.book.UpdateBookModel;
 import box.bookstorebe.model.book.bookreality.CreateBookRealityModel;
 import box.bookstorebe.model.order.CreateOrderModel;
+import box.bookstorebe.model.order.ShippingFeeRequest;
 import box.bookstorebe.model.order.UpdateOrderModel;
 import box.bookstorebe.service.auth.AuthService;
 import box.bookstorebe.service.order.OrderService;

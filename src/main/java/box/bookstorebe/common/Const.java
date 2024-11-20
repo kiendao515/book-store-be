@@ -11,7 +11,9 @@ public final class Const {
     public enum AccountType{
         ADMIN, USER, STORE
     }
-
+    public static final String[] AUTH_WHITELIST_PAYMENT = {
+            "/api/v1/notifications"
+    };
     public static final String[] AUTH_WHITELIST = {
             "/api/v1/auth/**",
             "/api/v1/collections/**",
@@ -29,7 +31,9 @@ public final class Const {
             "/api/v1/notifications/**",
             "/api/v1/accounts/**",
             "/api/v1/customers/**",
-            "/api/v1/inventories/**"
+            "/api/v1/inventories/**",
+            "/api/v1/shipping/**",
+            "/api/v1/carts/**"
     };
 
 

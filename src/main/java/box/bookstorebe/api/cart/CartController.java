@@ -21,7 +21,7 @@ import java.util.List;
 public class CartController {
     private final CartService cartService;
     @PostMapping
-    public BaseResponse<String> addToCart(@RequestBody @Valid CreateCartModel cartModel, HttpServletRequest request) throws BizException, MessagingException {
+    public BaseResponse<String> addToCart(@RequestBody @Valid CreateCartModel cartModel) throws BizException, MessagingException {
         cartService.saveCart(cartModel);
         return new BaseResponse<>(Const.ResultCode.SUCCESS, "Thêm vào giỏ hàng thành công!");
     }

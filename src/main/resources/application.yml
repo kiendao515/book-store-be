@@ -52,3 +52,6 @@ app:
     url: ${CLIENT_URL:http://localhost:5173}
   domain:
     url: ${DOMAIN_URL:http://localhost:8080}
+  ghtk:
+    url: ${GHTK_DOMAIN:https://services.giaohangtietkiem.vn}
+    token: ${GHTK_TOKEN:8QzEMIs81mYV6nGvxyu0mV82Vorz8QgTdZeEhD}

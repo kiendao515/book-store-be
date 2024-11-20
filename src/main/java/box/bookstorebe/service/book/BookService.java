@@ -6,7 +6,7 @@ import box.bookstorebe.document.account.AccountDocument;
 import box.bookstorebe.document.book.*;
 import box.bookstorebe.document.common.SystemConfigDocument;
 import box.bookstorebe.document.order.OrderDocument;
-import box.bookstorebe.document.order.OrderItem;
+import box.bookstorebe.document.order.OrderItemDocument;
 import box.bookstorebe.dto.book.BookDto;
 import box.bookstorebe.dto.book.BookFavoriteDto;
 import box.bookstorebe.dto.book.BookSettingDto;
@@ -42,11 +42,7 @@ import java.util.stream.Collectors;
 public class BookService extends BaseService {
     private final BookRepository bookRepository;
     private final CategoryRepository categoryRepository;
-    private final ImageRepository imageRepository;
-    private final BookStoreRepository bookStoreRepository;
     private final BookInventoryRepository bookRealityRepository;
-    private final PersonRepository personRepository;
-    private final CommonEntityRepository commonEntityRepository;
     private final SystemConfigRepository systemConfigRepository;
     private final AccountRepository accountRepository;
     private final BookFavoriteRepository bookFavoriteRepository;
@@ -83,7 +79,7 @@ public class BookService extends BaseService {
         Map<String, List<BookInventory>> bookRealityMap = bookRealityDocuments.stream().collect(Collectors.groupingBy(BookInventory::getBookId));
 
         // Lấy thông tin số lượng sách đã bán từ order_item và orders
-        List<OrderItem> orderItems = orderItemRepository.findAllByBookInventoryIdIn(bookRealityDocuments.stream()
+        List<OrderItemDocument> orderItems = orderItemRepository.findAllByBookInventoryIdIn(bookRealityDocuments.stream()
                 .map(BookInventory::getId)
                 .collect(Collectors.toList()));
 
@@ -99,7 +95,7 @@ public class BookService extends BaseService {
                 .filter(orderItem -> doneOrderIds.contains(orderItem.getOrderId())) // Chỉ lấy các đơn hàng "done"
                 .collect(Collectors.groupingBy(
                         orderItem -> inventoryToBookMap.get(orderItem.getBookInventoryId()), // Map book_inventory_id -> book_id
-                        Collectors.summingInt(OrderItem::getQuantity) // Tổng số lượng đã bán
+                        Collectors.summingInt(OrderItemDocument::getQuantity) // Tổng số lượng đã bán
                 ));
 
         List<BookDto> content = new ArrayList<>();
@@ -147,7 +143,7 @@ public class BookService extends BaseService {
 
         List<BookInventory> bookRealityDocuments = bookRealityRepository.findAllByBookId(bookDocument.getId());
 
-        List<OrderItem> orderItems = orderItemRepository.findAllByBookInventoryIdIn(
+        List<OrderItemDocument> orderItems = orderItemRepository.findAllByBookInventoryIdIn(
                 bookRealityDocuments.stream().map(BookInventory::getId).collect(Collectors.toList())
         );
 
@@ -162,7 +158,7 @@ public class BookService extends BaseService {
                 .filter(orderItem -> doneOrderIds.contains(orderItem.getOrderId()))
                 .collect(Collectors.groupingBy(
                         orderItem -> inventoryToBookMap.get(orderItem.getBookInventoryId()),
-                        Collectors.summingInt(OrderItem::getQuantity)
+                        Collectors.summingInt(OrderItemDocument::getQuantity)
                 ));
 
         Integer totalBook = bookRealityDocuments.stream()

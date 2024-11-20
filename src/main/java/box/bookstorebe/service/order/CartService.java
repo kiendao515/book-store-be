@@ -44,18 +44,21 @@ public class CartService extends BaseService {
         }
         AccountDocument user = accountRepository.findById(currentUser.getAccountId()).orElseThrow(() -> new BizException("Invalid account id"));
         BookInventory bookInventory = bookRealityRepository.findById(cartModel.getBookInventoryId()).orElseThrow(() -> new BizException("Invalid book inventory id"));
-        CartDocument cartDocument = cartRepository.findByAccountIdAndBookInventoryId(currentUser.getAccountId(),bookInventory.getId());
-        if(cartDocument == null) {
+        CartDocument cartDocument = cartRepository.findByAccountIdAndBookInventoryId(currentUser.getAccountId(), bookInventory.getId());
+        if (cartDocument == null) {
             cartDocument = new CartDocument();
+            cartDocument.setQuantity(cartModel.getQuantity());
         }
-        if (bookInventory.getQuantity() < cartModel.getQuantity()) {
+        if (bookInventory.getQuantity() < (cartDocument.getQuantity() + cartModel.getQuantity())) {
             throw new BizException("Số lượng vượt quá tồn kho");
+        } else {
+            cartDocument.setQuantity(cartModel.getQuantity() + cartModel.getQuantity());
         }
-        cartDocument.setQuantity(cartModel.getQuantity());
         cartDocument.setBookInventoryId(cartModel.getBookInventoryId());
         cartDocument.setAccountId(user.getId());
         cartRepository.save(cartDocument);
     }
+
     public List<CartDto> getCarts() throws BizException {
         List<CartDto> cartDtoList = new ArrayList<>();
         RequestScope currentUser = this.getCurrentUserInfo();
@@ -64,14 +67,14 @@ public class CartService extends BaseService {
         }
         AccountDocument acc = accountRepository.findById(currentUser.getAccountId()).orElseThrow(() -> new BizException("Invalid account id"));
         List<CartDocument> cartDocument = cartRepository.findAllByAccountId(acc.getId());
-        if(cartDocument == null) {
+        if (cartDocument == null) {
             return cartDtoList;
         }
         cartDocument.forEach(cart -> {
             BookInventory bookInventory;
             try {
-                bookInventory = bookRealityRepository.findById(cart.getBookInventoryId()).orElseThrow(()-> new BizException("Invalid book inventory id"));
-                BookDocument bookDocument = bookRepository.findById(bookInventory.getBookId()).orElseThrow(()-> new BizException("Invalid book id"));
+                bookInventory = bookRealityRepository.findById(cart.getBookInventoryId()).orElseThrow(() -> new BizException("Invalid book inventory id"));
+                BookDocument bookDocument = bookRepository.findById(bookInventory.getBookId()).orElseThrow(() -> new BizException("Invalid book id"));
                 CartDto cartDto = new CartDto();
                 cartDto.setQuantity(cart.getQuantity());
                 cartDto.setBook(bookDocument);
