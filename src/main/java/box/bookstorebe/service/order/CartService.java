@@ -15,16 +15,13 @@ import box.bookstorebe.repository.user.AccountRepository;
 import box.bookstorebe.service.BaseService;
 import box.bookstorebe.service.book.BookInventoryService;
 import box.bookstorebe.service.book.BookService;
-import box.bookstorebe.service.common.MailService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicLong;
+
 
 @AllArgsConstructor
 @Service
@@ -80,6 +77,7 @@ public class CartService extends BaseService {
                 cartDto.setBook(bookDocument);
                 cartDto.setId(cart.getId());
                 cartDto.setType(bookInventory.getType());
+                cartDto.setPrice(bookInventory.getPrice());
                 cartDtoList.add(cartDto);
             } catch (BizException e) {
                 throw new RuntimeException(e);
