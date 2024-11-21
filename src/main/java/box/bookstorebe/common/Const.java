@@ -128,5 +128,6 @@ public final class Const {
     public static final BigDecimal AMOUNT_CAN_FREESHIP = new BigDecimal(500000);
     public static final String ADMIN_EMAIL = "hieusachhop@gmail.com";
     public static final String ADMIN_PASS = "123456";
-
+    public static final String PICK_ADDRESS_CITY = "thành phố hà nội";
+    public static final String PICK_ADDRESS_DISTRICT = "quận tây hồ";
 }

@@ -1,6 +1,7 @@
 package box.bookstorebe.api.order;
 
 import box.bookstorebe.common.Const;
+import box.bookstorebe.document.order.OrderDocument;
 import box.bookstorebe.dto.auth.AuthResponseDto;
 import box.bookstorebe.dto.book.BookDto;
 import box.bookstorebe.dto.common.BasePagingResponse;
@@ -43,9 +44,9 @@ public class OrderController {
     private String serverUrl;
 
     @PostMapping
-    public BaseResponse<String> createOrder(@RequestBody @Valid CreateOrderModel orderModel,HttpServletRequest request) throws BizException, MessagingException {
-        String paymentUrl = orderService.createOrder(request,orderModel,serverUrl);
-        return new BaseResponse<>(Const.ResultCode.SUCCESS, paymentUrl);
+    public BaseResponse<?> createOrder(@RequestBody @Valid CreateOrderModel orderModel, HttpServletRequest request) throws BizException, MessagingException {
+       Object result = orderService.createOrder(request,orderModel,serverUrl);
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, result);
     }
 
     @GetMapping()

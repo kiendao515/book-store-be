@@ -1,4 +1,5 @@
 package box.bookstorebe.document.order;
+import box.bookstorebe.dto.common.AddressDto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -28,8 +29,20 @@ public class OrderDocument {
     @Field(name = "receiver_phone")
     private String receiverPhone;
 
-    @Field(name = "address")
-    private String address;
+    @Field(name = "province")
+    private AddressDto.AddressDetail province;
+
+    @Field(name = "district")
+    private AddressDto.AddressDetail district;
+
+    @Field(name = "ward")
+    private AddressDto.AddressDetail ward;
+
+    @Field(name = "street")
+    private String street;
+
+//    @Field(name = "address")
+//    private String address;
 
     @Field(name = "status")
     private String status;// created -> cancel -> confirm -> shipping -> done

@@ -23,4 +23,5 @@ public class CartDto {
     private BookType type;
     private Integer quantity;
     private BigDecimal price;
+    private String bookInventoryId;
 }

@@ -78,6 +78,7 @@ public class CartService extends BaseService {
                 cartDto.setId(cart.getId());
                 cartDto.setType(bookInventory.getType());
                 cartDto.setPrice(bookInventory.getPrice());
+                cartDto.setBookInventoryId(bookInventory.getId());
                 cartDtoList.add(cartDto);
             } catch (BizException e) {
                 throw new RuntimeException(e);

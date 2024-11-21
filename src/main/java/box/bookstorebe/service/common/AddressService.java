@@ -76,19 +76,19 @@ public class AddressService {
 //        return result;
 //    }
 
-//    public AddressDto getAddress(String provinceCode, String districtCode, String wardCode) throws BizException {
-//        List<ProvinceDocument> provinceDocuments = provinceRepository.getAllProvinces(provinceCode, districtCode, wardCode);
-//        if (provinceDocuments.isEmpty()) {
-//            throw new BizException("Invalid params");
-//        }
-//        ProvinceDocument province = provinceDocuments.get(0);
-//        ProvinceDocument.District district = province.getDistricts().stream().filter(d -> d.getCode().equals(districtCode)).findFirst().orElseThrow(() -> new BizException("Invalid params"));
-//        ProvinceDocument.Ward ward = district.getWards().stream().filter(w -> w.getCode().equals(wardCode)).findFirst().orElseThrow(() -> new BizException("Invalid params"));
-//        AddressDto result = new AddressDto();
-//        result.setProvince(new ShippingAddressDocument.AddressDetail(province.getCode(), province.getFullName()));
-//        result.setDistrict(new ShippingAddressDocument.AddressDetail(district.getCode(), district.getFullName()));
-//        result.setWard(new ShippingAddressDocument.AddressDetail(ward.getCode(), ward.getFullName()));
-//        return result;
-//    }
+    public AddressDto getAddress(String provinceCode, String districtCode, String wardCode) throws BizException {
+        List<ProvinceDocument> provinceDocuments = provinceRepository.getAllProvinces(provinceCode, districtCode, wardCode);
+        if (provinceDocuments.isEmpty()) {
+            throw new BizException("Invalid params");
+        }
+        ProvinceDocument province = provinceDocuments.get(0);
+        ProvinceDocument.District district = province.getDistricts().stream().filter(d -> d.getCode().equals(districtCode)).findFirst().orElseThrow(() -> new BizException("Invalid params"));
+        ProvinceDocument.Ward ward = district.getWards().stream().filter(w -> w.getCode().equals(wardCode)).findFirst().orElseThrow(() -> new BizException("Invalid params"));
+        AddressDto result = new AddressDto();
+        result.setProvince(new AddressDto.AddressDetail(province.getCode(), province.getFullName()));
+        result.setDistrict(new AddressDto.AddressDetail(district.getCode(), district.getFullName()));
+        result.setWard(new AddressDto.AddressDetail(ward.getCode(), ward.getFullName()));
+        return result;
+    }
 
 }

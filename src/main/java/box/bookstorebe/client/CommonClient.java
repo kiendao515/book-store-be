@@ -31,8 +31,8 @@ public class CommonClient {
                 "address=" + request.getAddress() +
                 "&province=" + request.getProvince() +
                 "&district=" + request.getDistrict() +
-                "&pick_province=" + request.getPickProvince() +
-                "&pick_district=" + request.getPickDistrict() +
+                "&pick_province=thành phố hà nội" +
+                "&pick_district=quận tây hồ" +
                 "&weight=" + request.getWeight() +
                 "&value=" + request.getValue() +
                 "&deliver_option=" + request.getDeliverOption();

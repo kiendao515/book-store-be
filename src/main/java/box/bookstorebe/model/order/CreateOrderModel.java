@@ -14,11 +14,14 @@ import java.util.List;
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class CreateOrderModel {
-    private String address;
     private String customerName;
     private String customerPhone;
     private String email;
     private List<OrderItem> orderItems;
     private boolean paymentMethod;
     private String note;
+    private String provinceCode;
+    private String districtCode;
+    private String wardCode;
+    private String street;
 }

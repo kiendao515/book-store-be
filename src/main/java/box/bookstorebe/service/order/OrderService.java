@@ -8,6 +8,7 @@ import box.bookstorebe.document.book.BookInventory;
 import box.bookstorebe.document.order.OrderDocument;
 import box.bookstorebe.document.order.OrderItemDocument;
 import box.bookstorebe.document.payment.PaymentDocument;
+import box.bookstorebe.dto.common.AddressDto;
 import box.bookstorebe.dto.order.OrderDto;
 import box.bookstorebe.exception.BizException;
 import box.bookstorebe.model.order.CreateOrderModel;
@@ -21,6 +22,7 @@ import box.bookstorebe.repository.order.OrderRepository;
 import box.bookstorebe.service.BaseService;
 import box.bookstorebe.service.book.BookInventoryService;
 import box.bookstorebe.service.book.BookService;
+import box.bookstorebe.service.common.AddressService;
 import box.bookstorebe.service.common.MailService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -59,6 +61,8 @@ public class OrderService extends BaseService {
     private final MongoTemplate mongoTemplate;
     private final MailService mailService;
     private final OrderItemRepository orderItemRepository;
+    private final AddressService addressService;
+    private final CommonClient commonClient;
 
     protected String getSaltString() {
         String SALTCHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
@@ -71,12 +75,14 @@ public class OrderService extends BaseService {
         return salt.toString();
 
     }
+
     @Transactional
-    public String createOrder(HttpServletRequest request,CreateOrderModel order, String returnUrl) throws BizException, MessagingException {
+    public Object createOrder(HttpServletRequest request, CreateOrderModel order, String returnUrl) throws BizException, MessagingException {
         RequestScope currentUser = this.getCurrentUserInfo();
         if (currentUser == null) {
             throw new BizException("Invalid token");
         }
+        BigDecimal totalAmount = new BigDecimal(0);
         List<String> bookInventoryIds = order.getOrderItems().stream()
                 .map(OrderItem::getBookInventoryId).toList();
         List<BookInventory> bookInventories = bookInventoryRepository.findAllByIdIn(bookInventoryIds);
@@ -96,8 +102,24 @@ public class OrderService extends BaseService {
 
 
         OrderDocument orderDocument = new OrderDocument();
+        if (order.getDistrictCode() != null && order.getWardCode() != null && order.getProvinceCode() != null) {
+            AddressDto addressDto = addressService.getAddress(order.getProvinceCode(), order.getDistrictCode(), order.getWardCode());
+            orderDocument.setProvince(addressDto.getProvince());
+            orderDocument.setDistrict(addressDto.getDistrict());
+            orderDocument.setWard(addressDto.getWard());
+            ShippingFeeRequest shippingFeeRequest = new ShippingFeeRequest();
+            shippingFeeRequest.setProvince(addressDto.getProvince().getFullName());
+            shippingFeeRequest.setDistrict(addressDto.getDistrict().getFullName());
+            shippingFeeRequest.setPickDistrict(Const.PICK_ADDRESS_DISTRICT);
+            shippingFeeRequest.setPickProvince(Const.PICK_ADDRESS_CITY);
+            shippingFeeRequest.setWeight("2000");
+            BigDecimal fee = commonClient.calculateShippingFee(shippingFeeRequest);
+            orderDocument.setShippingFee(fee);
+            totalAmount = totalAmount.add(fee);
+        }
         orderDocument.setCreatedAt(ZonedDateTime.now());
-        orderDocument.setAddress(order.getAddress());
+        orderDocument.setStreet(order.getStreet());
+//        orderDocument.setAddress(o);
         orderDocument.setReceiverName(order.getCustomerName());
         orderDocument.setReceiverPhone(order.getCustomerPhone());
         orderDocument.setAccountId(currentUser.getAccountId());
@@ -105,7 +127,7 @@ public class OrderService extends BaseService {
         orderDocument.setOrderCode(getSaltString());
         orderDocument.setStatus(Const.OrderStatus.CREATED);
         orderDocument.setNote(order.getNote());
-
+        orderDocument.setShippingCompany("GIAO HÀNG TIẾT KIỆM");
         OrderDocument savedOrder = orderRepository.save(orderDocument);
 
         List<OrderItemDocument> orderItemDocuments = new ArrayList<>();
@@ -114,8 +136,10 @@ public class OrderService extends BaseService {
                     .filter(book -> book.getId().equals(orderItem.getBookInventoryId()))
                     .findFirst()
                     .orElseThrow(() -> new BizException("Book inventory ID " + orderItem.getBookInventoryId() + " not found"));
-            inventory.setQuantity(inventory.getQuantity() - orderItem.getQuantity());
-            bookInventoryRepository.save(inventory);
+            totalAmount = totalAmount.add(inventory.getPrice());
+            // không trừ số lượng ở đây
+//            inventory.setQuantity(inventory.getQuantity() - orderItem.getQuantity());
+//            bookInventoryRepository.save(inventory);
 
             OrderItemDocument orderItemDocument = new OrderItemDocument();
             orderItemDocument.setOrderId(savedOrder.getId());
@@ -123,22 +147,23 @@ public class OrderService extends BaseService {
             orderItemDocument.setQuantity(orderItem.getQuantity());
             orderItemDocuments.add(orderItemDocument);
         }
+        savedOrder.setTotalAmount(totalAmount);
+        orderRepository.save(savedOrder);
         orderItemRepository.saveAll(orderItemDocuments);
-//        if (order.isPaymentMethod()) {
-//            // Redirect to payment service
+        if (order.isPaymentMethod()) {
+            // Redirect to payment service
 //            BigDecimal total = calculateTotal(orderItemDocuments, bookInventories);
 //            return paymentService.createOrder(request, total, savedOrder.getId(), returnUrl);
-//        } else {
-//            // Send email notification
-//            mailService.sendEmailOrderDetail(order.getEmail(), savedOrder, orderItemDocuments);
-//        }
+        } else {
+            mailService.sendEmailOrderDetail(order.getEmail(), savedOrder, orderItemDocuments);
+        }
 
-        return "Order successfully created!";
+        return savedOrder;
     }
 
-    public String retryPayment(String id,String returnUrl,HttpServletRequest request) throws BizException {
-        BigDecimal total=new BigDecimal(0);
-        OrderDocument orderDocument = orderRepository.findById(id).orElseThrow(()-> new BizException("orderId is invalid"));
+    public String retryPayment(String id, String returnUrl, HttpServletRequest request) throws BizException {
+        BigDecimal total = new BigDecimal(0);
+        OrderDocument orderDocument = orderRepository.findById(id).orElseThrow(() -> new BizException("orderId is invalid"));
         PaymentDocument paymentDocument = paymentService.getPaymentByOrderId(id);
 //        if(paymentDocument == null && orderDocument.isPaymentType()){
 //            for (BookRealityDocument b:orderDocument.getItems()) {
@@ -153,14 +178,14 @@ public class OrderService extends BaseService {
         return "create link payment success!";
     }
 
-    public Page<OrderDto> getOrders(String customerPhone,String id,String paymentType,String status,ZonedDateTime startAt,ZonedDateTime endAt ,
+    public Page<OrderDto> getOrders(String customerPhone, String id, String paymentType, String status, ZonedDateTime startAt, ZonedDateTime endAt,
                                     Integer page, Integer size) throws BizException {
-        Page<OrderDocument> orderDocuments =orderRepository.getOrders(customerPhone,id,paymentType,status,startAt,endAt,page,size);
+        Page<OrderDocument> orderDocuments = orderRepository.getOrders(customerPhone, id, paymentType, status, startAt, endAt, page, size);
         List<OrderDto> rs = new ArrayList<>();
-        for (OrderDocument order:orderDocuments) {
+        for (OrderDocument order : orderDocuments) {
             OrderDto orderDto = new OrderDto();
             orderDto.setId(order.getId());
-            orderDto.setAddress(order.getAddress());
+            orderDto.setAddress(order.getStreet() + "," + order.getWard().getFullName() + "," + order.getDistrict().getFullName() + "," + order.getProvince().getFullName());
 //            orderDto.setCustomerName(order.getCustomerName());
 //            orderDto.setCustomerPhone(order.getCustomerPhone());
             orderDto.setCreatedAt(order.getCreatedAt());
@@ -183,8 +208,9 @@ public class OrderService extends BaseService {
         }
         return new PageImpl<>(rs, orderDocuments.getPageable(), orderDocuments.getTotalElements());
     }
+
     public OrderDto findById(String id) throws BizException {
-        OrderDocument orderDocument = orderRepository.findById(id).orElseThrow(()-> new BizException("orderId is invalid"));
+        OrderDocument orderDocument = orderRepository.findById(id).orElseThrow(() -> new BizException("orderId is invalid"));
 //        List<BookRealityDocument> list= bookRealityRepository.findAllById(orderDocument.getItems().
 //                stream().map(BookRealityDocument::getId).collect(Collectors.toList()));
 //        List<BookRealityDto> bookRealityDtoList = new ArrayList<>();
@@ -193,13 +219,13 @@ public class OrderService extends BaseService {
 //            bookRealityDtoList.add(bookDto);
 //        }
         PaymentDocument paymentDocument = paymentService.getPaymentByOrderId(id);
-        boolean isPaid=false;
-        if(paymentDocument != null){
-            isPaid= true;
+        boolean isPaid = false;
+        if (paymentDocument != null) {
+            isPaid = true;
         }
         return OrderDto.builder()
                 .id(orderDocument.getId())
-                .address(orderDocument.getAddress())
+                .address(orderDocument.getStreet() + "," + orderDocument.getWard().getFullName() + "," + orderDocument.getDistrict().getFullName() + "," + orderDocument.getProvince().getFullName())
 //                .email(orderDocument.getEmail())
 //                .customerName(orderDocument.getCustomerName())
 //                .customerPhone(orderDocument.getCustomerPhone())
@@ -217,18 +243,18 @@ public class OrderService extends BaseService {
 
     @Transactional
     public void updateOrder(String id, UpdateOrderModel order) throws BizException {
-        OrderDocument orderDocument = orderRepository.findById(id).orElseThrow(()-> new BizException("orderId is invalid"));
-        orderDocument.setAddress(order.getAddress());
+        OrderDocument orderDocument = orderRepository.findById(id).orElseThrow(() -> new BizException("orderId is invalid"));
+//        orderDocument.setAddress(order.getAddress());
 //        orderDocument.setEmail(order.getEmail());
 //        orderDocument.setCustomerName(order.getCustomerName());
 //        orderDocument.setCustomerPhone(order.getCustomerPhone());
         orderDocument.setShippingCode(order.getShippingCode());
         orderDocument.setNote(order.getNote());
         orderDocument.setShippingCompany(order.getShippingCompany());
-        if(!orderDocument.getStatus().equalsIgnoreCase(order.getStatus())){
-            switch (order.getStatus()){
+        if (!orderDocument.getStatus().equalsIgnoreCase(order.getStatus())) {
+            switch (order.getStatus()) {
                 case Const.OrderStatus.CANCEL:
-                    if(orderDocument.getStatus().equals(Const.OrderStatus.CREATED)){
+                    if (orderDocument.getStatus().equals(Const.OrderStatus.CREATED)) {
                         handleOrderStatus(orderDocument, Const.OrderStatus.CREATED, order.getStatus(), "can't cancel order now!");
 //                        orderDocument.getItems().forEach(bookRealityDocument -> {
 //                            bookRealityDocument.setStatus(Const.BookRealityStatus.AVAILABLE.toString());
@@ -240,7 +266,7 @@ public class OrderService extends BaseService {
                     handleOrderStatus(orderDocument, Const.OrderStatus.CREATED, order.getStatus(), "can't confirm order now!");
                     break;
                 case Const.OrderStatus.READY_TO_SHIP:
-                    handleOrderStatus(orderDocument,Const.OrderStatus.READY_TO_PACKAGE,order.getStatus(), "can't set status ready_to_ship");
+                    handleOrderStatus(orderDocument, Const.OrderStatus.READY_TO_PACKAGE, order.getStatus(), "can't set status ready_to_ship");
                 case Const.OrderStatus.SHIPPING:
                     handleOrderStatus(orderDocument, Const.OrderStatus.READY_TO_SHIP, order.getStatus(), "can't change order status to shipping now!");
                     break;
@@ -254,6 +280,7 @@ public class OrderService extends BaseService {
         orderDocument.setUpdatedAt(ZonedDateTime.now());
         orderRepository.save(orderDocument);
     }
+
     private void handleOrderStatus(OrderDocument orderDocument, String currentStatus, String newStatus, String errorMessage) throws BizException {
         if (orderDocument.getStatus().equals(currentStatus)) {
             orderDocument.setStatus(newStatus);
