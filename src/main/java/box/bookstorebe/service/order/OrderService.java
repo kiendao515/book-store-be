@@ -20,6 +20,7 @@ import box.bookstorebe.repository.book.BookRepository;
 import box.bookstorebe.repository.order.OrderItemRepository;
 import box.bookstorebe.repository.order.OrderRepository;
 import box.bookstorebe.service.BaseService;
+import box.bookstorebe.service.account.AccountService;
 import box.bookstorebe.service.book.BookInventoryService;
 import box.bookstorebe.service.book.BookService;
 import box.bookstorebe.service.common.AddressService;
@@ -46,6 +47,7 @@ import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @Service
@@ -63,6 +65,7 @@ public class OrderService extends BaseService {
     private final OrderItemRepository orderItemRepository;
     private final AddressService addressService;
     private final CommonClient commonClient;
+    private final AccountService accountService;
 
     protected String getSaltString() {
         String SALTCHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
@@ -178,35 +181,52 @@ public class OrderService extends BaseService {
         return "create link payment success!";
     }
 
-    public Page<OrderDto> getOrders(String customerPhone, String id, String paymentType, String status, ZonedDateTime startAt, ZonedDateTime endAt,
+    public Page<OrderDto> getOrders(String customerPhone, String id, String paymentType, String status, String startAt, String endAt,
                                     Integer page, Integer size) throws BizException {
-        Page<OrderDocument> orderDocuments = orderRepository.getOrders(customerPhone, id, paymentType, status, startAt, endAt, page, size);
-        List<OrderDto> rs = new ArrayList<>();
-        for (OrderDocument order : orderDocuments) {
-            OrderDto orderDto = new OrderDto();
-            orderDto.setId(order.getId());
-            orderDto.setAddress(order.getStreet() + "," + order.getWard().getFullName() + "," + order.getDistrict().getFullName() + "," + order.getProvince().getFullName());
-//            orderDto.setCustomerName(order.getCustomerName());
-//            orderDto.setCustomerPhone(order.getCustomerPhone());
-            orderDto.setCreatedAt(order.getCreatedAt());
-            orderDto.setStatus(order.getStatus());
-//            orderDto.setEmail(order.getEmail());
-            orderDto.setNote(order.getNote());
-            orderDto.setPaymentType(order.isPaymentType());
-//            List<BookRealityDto> bookDtos = new ArrayList<>();
-//            for(BookRealityDocument book: order.getItems()){
-//                BookRealityDto bookDto = new BookRealityDto();
-//                bookDto.setId(book.getId());
-//                bookDto.setPrice(book.getPrice());
-//                bookDto.setCreatedAt(book.getCreatedAt());
-//                BookDocument bookDocument = bookRepository.findById(book.getBookId()).orElse(null);
-//                bookDto.setNumberOfPage(bookDocument!= null ? bookDocument.getNumberOfPage() : 0);
-//                bookDtos.add(bookDto);
-//            }
-//            orderDto.setBooks(bookDtos);
-            rs.add(orderDto);
+        ZonedDateTime created = null;
+        ZonedDateTime updated = null;
+        if (startAt != null && endAt!=null && !startAt.isBlank() && !endAt.isBlank()) {
+            created = ZonedDateTime.parse(startAt);
+            updated = ZonedDateTime.parse(endAt);
         }
-        return new PageImpl<>(rs, orderDocuments.getPageable(), orderDocuments.getTotalElements());
+        Page<OrderDocument> orderDocuments = orderRepository.getOrders(customerPhone, id, paymentType, status, created, updated, page, size);
+        List<OrderDto> orderDtos = orderDocuments.getContent().stream()
+                .map(order -> {
+                    OrderDto orderDto = new OrderDto();
+                    orderDto.setId(order.getId());
+                    orderDto.setAddress(buildAddress(order));
+                    orderDto.setCustomerName(order.getReceiverName());
+                    orderDto.setCustomerPhone(order.getReceiverPhone());
+                    orderDto.setCreatedAt(order.getCreatedAt());
+                    orderDto.setUpdatedAt(order.getUpdatedAt());
+                    orderDto.setStatus(order.getStatus());
+                    orderDto.setOrderCode(order.getOrderCode());
+                    try {
+                        orderDto.setAccount(accountService.getAccountDetail(order.getAccountId()));
+                    } catch (BizException e) {
+                        throw new RuntimeException(e);
+                    }
+                    orderDto.setNote(order.getNote());
+                    orderDto.setPaymentType(order.isPaymentType());
+                    orderDto.setShippingFee(order.getShippingFee());
+                    orderDto.setTotalAmount(order.getTotalAmount());
+                    orderDto.setTransactionId(order.getTransactionId());
+                    orderDto.setOrderItems(fetchOrderItems(order.getId()));
+                    return orderDto;
+                }).collect(Collectors.toList());
+        return new PageImpl<>(orderDtos, orderDocuments.getPageable(), orderDocuments.getTotalElements());
+    }
+
+    private List<OrderItemDocument> fetchOrderItems(String orderId) {
+        return orderItemRepository.findAllByOrderId(orderId);
+    }
+
+    private String buildAddress(OrderDocument order) {
+        return String.join(", ",
+                order.getStreet(),
+                order.getWard().getFullName(),
+                order.getDistrict().getFullName(),
+                order.getProvince().getFullName());
     }
 
     public OrderDto findById(String id) throws BizException {

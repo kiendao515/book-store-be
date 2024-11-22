@@ -55,8 +55,8 @@ public class OrderController {
             @RequestParam(name = "id", required = false) String id,
             @RequestParam(name = "payment_type", required = false) String paymentType,
             @RequestParam(name = "status", required = false) String status,
-            @RequestParam(name = "start_at", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime startAt,
-            @RequestParam(name = "end_at", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime endAt,
+            @RequestParam(name = "start_at", required = false) String startAt,
+            @RequestParam(name = "end_at", required = false) String endAt,
             @RequestParam(name = "page", required = false) Integer page,
             @RequestParam(name = "size", required = false) Integer size
     ) throws BizException {

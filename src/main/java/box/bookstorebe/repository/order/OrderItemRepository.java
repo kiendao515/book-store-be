@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface OrderItemRepository extends MongoRepository<OrderItemDocument, String> {
     List<OrderItemDocument> findAllByBookInventoryIdIn(List<String> ids);
+    List<OrderItemDocument> findAllByOrderId(String id);
 }

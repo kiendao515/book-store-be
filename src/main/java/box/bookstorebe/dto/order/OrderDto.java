@@ -1,5 +1,9 @@
 package box.bookstorebe.dto.order;
 
+import box.bookstorebe.document.account.AccountDocument;
+import box.bookstorebe.document.book.BookInventory;
+import box.bookstorebe.document.order.OrderItemDocument;
+import box.bookstorebe.dto.account.AccountDto;
 import box.bookstorebe.dto.book.BookDto;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
@@ -9,6 +13,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.List;
 
@@ -31,5 +36,10 @@ public class OrderDto {
     private String note;
     private String shippingCode;
     private String shippingCompany;
-    private String orderId;
+    private String orderCode;
+    private List<OrderItemDocument> orderItems;
+    private BigDecimal shippingFee;
+    private BigDecimal totalAmount;
+    private AccountDto account;
+    private String transactionId;
 }
