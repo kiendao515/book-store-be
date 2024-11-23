@@ -2,6 +2,7 @@ package box.bookstorebe.service.auth;
 
 import box.bookstorebe.configuration.security.RequestScope;
 import box.bookstorebe.document.account.AccountDocument;
+import box.bookstorebe.document.account.CustomerDocument;
 import box.bookstorebe.document.account.PasswordResetToken;
 import box.bookstorebe.document.account.Role;
 import box.bookstorebe.dto.account.AccountDto;
@@ -12,7 +13,9 @@ import box.bookstorebe.exception.BizException;
 import box.bookstorebe.model.auth.ChangePasswordRequestModel;
 import box.bookstorebe.model.auth.LoginRequestModel;
 import box.bookstorebe.model.auth.RegisterRequestModel;
+import box.bookstorebe.model.auth.UpdateUserInfoModel;
 import box.bookstorebe.model.user.UserModel;
+import box.bookstorebe.repository.customer.CustomerRepository;
 import box.bookstorebe.repository.user.AccountRepository;
 import box.bookstorebe.repository.user.PasswordResetTokenRepository;
 import box.bookstorebe.service.BaseService;
@@ -41,6 +44,7 @@ import java.util.concurrent.Executors;
 @RequiredArgsConstructor
 public class AuthService extends BaseService {
     private final AccountRepository accountRepository;
+    private final CustomerRepository customerRepository;
     private final JwtService jwtService;
     private final AccountService accountService;
     private final MailService mailService;
@@ -154,6 +158,7 @@ public class AuthService extends BaseService {
             throw new BizException("Invalid token");
         }
         AccountDocument user = accountRepository.findById(currentUser.getAccountId()).orElseThrow(() -> new BizException("Invalid user"));
+        CustomerDocument customerDocument = customerRepository.findByAccountId(user.getId());
         UserProfileDto userProfileDto = new UserProfileDto();
         userProfileDto.setId(user.getId());
         userProfileDto.setEmail(user.getEmail());
@@ -161,5 +166,29 @@ public class AuthService extends BaseService {
         return userProfileDto;
     }
 
+    public UserProfileDto updateUserInfo(UpdateUserInfoModel userInfoModel) throws BizException {
+        RequestScope currentUser = this.getCurrentUserInfo();
+        if (currentUser == null) {
+            throw new BizException("Invalid token");
+        }
+        CustomerDocument user = customerRepository.findByAccountId(currentUser.getAccountId());
+        if(user == null){
+            user = new CustomerDocument();
+            user.setAccountId(currentUser.getAccountId());
+        }
+        user.setName(userInfoModel.getFullName());
+        user.setPhoneNumber(userInfoModel.getPhoneNumber());
+        user.setDateOfBirth(userInfoModel.getDateOfBirth());
+        customerRepository.save(user);
+        return UserProfileDto.builder()
+                .id(user.getId())
+                .email(currentUser.getEmail())
+                .fullName(user.getName())
+                .phoneNumber(user.getPhoneNumber())
+                .dateOfBirth(user.getDateOfBirth())
+                .role(currentUser.getRole().name())
+                .build();
+
+    }
 
 }

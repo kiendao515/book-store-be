@@ -9,6 +9,7 @@ import box.bookstorebe.model.auth.*;
 import box.bookstorebe.service.auth.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -50,6 +51,11 @@ public class AuthController {
     @PutMapping("/change-password")
     public BaseResponse<String> changePassword(@RequestBody @Valid ChangePasswordRequestModel model) throws BizException {
         return new BaseResponse<>(Const.ResultCode.SUCCESS, authService.changePassword(model));
+    }
+    @PutMapping("/user-info")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'USER')")
+    public BaseResponse<UserProfileDto> updateUserInfo(@RequestBody @Valid UpdateUserInfoModel model) throws BizException {
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, authService.updateUserInfo(model));
     }
 
 }

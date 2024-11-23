@@ -31,6 +31,9 @@ public class CustomerDocument {
     @Field(name = "avatar")
     private String avatar;
 
+    @Field(name = "date_of_birth")
+    private ZonedDateTime dateOfBirth;
+
     @Field(name = "address")
     private List<String> address;
 
