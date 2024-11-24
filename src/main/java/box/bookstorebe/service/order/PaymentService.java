@@ -104,6 +104,7 @@ public class PaymentService {
         String vnp_SecureHash = PaymentConfig.hmacSHA512(PaymentConfig.vnp_HashSecret, hashData.toString());
         queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
         String paymentUrl = PaymentConfig.vnp_PayUrl + "?" + queryUrl;
+        log.info(paymentUrl);
         return paymentUrl;
     }
 

@@ -156,7 +156,7 @@ public class OrderService extends BaseService {
         if (order.isPaymentMethod()) {
             // Redirect to payment service
 //            BigDecimal total = calculateTotal(orderItemDocuments, bookInventories);
-//            return paymentService.createOrder(request, total, savedOrder.getId(), returnUrl);
+            return paymentService.createOrder(request, totalAmount, savedOrder.getOrderCode(), returnUrl);
         } else {
             mailService.sendEmailOrderDetail(order.getEmail(), savedOrder, orderItemDocuments);
         }
