@@ -59,6 +59,9 @@ public class OrderDocument {
     @Field(name = "transaction_id")
     private String transactionId; // dùng cho vnpay
 
+//    @Field(name = "payment_time")
+//    private ZonedDateTime paymentTime;
+
     @Field(name = "order_code")
     @Indexed
     private String orderCode;

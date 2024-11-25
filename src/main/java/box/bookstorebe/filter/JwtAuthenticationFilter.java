@@ -87,7 +87,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         response.setStatus(statusCode);
         response.setHeader("Access-Control-Allow-Origin", "*");
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        Map<String, String> error = new HashMap<>();
+        Map<String, Object> error = new HashMap<>();
+        error.put("result",false);
         error.put("error_message", message);
         new ObjectMapper().writeValue(response.getOutputStream(), error);
     }

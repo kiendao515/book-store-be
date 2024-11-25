@@ -6,6 +6,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+@Slf4j
 @Service
 public class JwtService {
     @Value("${application.security.jwt.secret-key}")
@@ -41,9 +43,15 @@ public class JwtService {
 
     public TokenDecode extractToken(String token) {
         TokenDecode tokenDecode = new TokenDecode();
-        tokenDecode.setAccountId(extractClaim(token, claims -> claims.get("account_id", String.class)));
-        tokenDecode.setEmail(extractClaim(token, claims -> claims.get("email", String.class)));
-        tokenDecode.setRole(extractClaim(token, claims -> claims.get("role", String.class)));
+        try {
+            tokenDecode.setAccountId(extractClaim(token, claims -> claims.get("account_id", String.class)));
+            tokenDecode.setEmail(extractClaim(token, claims -> claims.get("email", String.class)));
+            tokenDecode.setRole(extractClaim(token, claims -> claims.get("role", String.class)));
+        }catch (Exception e){
+            log.warn(e.getMessage());
+            return null;
+        }
+
         return tokenDecode;
     }
 

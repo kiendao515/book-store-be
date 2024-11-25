@@ -2,6 +2,7 @@ package box.bookstorebe.client;
 
 import box.bookstorebe.common.Const;
 import box.bookstorebe.dto.ghtk.GhtkDto;
+import box.bookstorebe.dto.ghtk.OrderDetail;
 import box.bookstorebe.model.order.ShippingFeeRequest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,6 +26,10 @@ public class CommonClient {
     private String ghtkUrl;
     @Value("${app.ghtk.token}")
     private String ghtkToken;
+    @Value("${app.ghtk.web}")
+    private String webGhtkUrl;
+    @Value("${app.ghtk.webToken}")
+    private String webGhtkToken;
 
     public BigDecimal calculateShippingFee(ShippingFeeRequest request) {
         String url = ghtkUrl + "/services/shipment/fee?" +
@@ -52,5 +57,23 @@ public class CommonClient {
             log.info(e.getMessage());
         }
         return new BigDecimal(25000);
+    }
+
+    public OrderDetail getOrderDetail(String id){
+        String url = webGhtkUrl + "/api/v1/package/package-detail?alias="+id;
+        RestTemplate restTemplate = new RestTemplate();
+        var headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.add("Authorization", "Bearer " + webGhtkToken);
+        try {
+            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(null, headers);
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, requestEntity, String.class);
+            log.info(response.getBody());
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.readValue(response.getBody(), OrderDetail.class);
+        } catch (Exception e) {
+            log.info(e.getMessage());
+        }
+        return null;
     }
 }

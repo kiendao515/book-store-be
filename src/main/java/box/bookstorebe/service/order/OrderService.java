@@ -139,7 +139,7 @@ public class OrderService extends BaseService {
                     .filter(book -> book.getId().equals(orderItem.getBookInventoryId()))
                     .findFirst()
                     .orElseThrow(() -> new BizException("Book inventory ID " + orderItem.getBookInventoryId() + " not found"));
-            totalAmount = totalAmount.add(inventory.getPrice());
+            totalAmount = totalAmount.add(inventory.getPrice().multiply(BigDecimal.valueOf(orderItem.getQuantity())));
             // không trừ số lượng ở đây
 //            inventory.setQuantity(inventory.getQuantity() - orderItem.getQuantity());
 //            bookInventoryRepository.save(inventory);
@@ -241,6 +241,33 @@ public class OrderService extends BaseService {
         PaymentDocument paymentDocument = paymentService.getPaymentByOrderId(id);
         boolean isPaid = false;
         if (paymentDocument != null) {
+            isPaid = true;
+        }
+        return OrderDto.builder()
+                .id(orderDocument.getId())
+                .address(orderDocument.getStreet() + "," + orderDocument.getWard().getFullName() + "," + orderDocument.getDistrict().getFullName() + "," + orderDocument.getProvince().getFullName())
+//                .email(orderDocument.getEmail())
+//                .customerName(orderDocument.getCustomerName())
+//                .customerPhone(orderDocument.getCustomerPhone())
+                .status(orderDocument.getStatus())
+                .createdAt(orderDocument.getCreatedAt())
+//                .books(bookRealityDtoList)
+                .isPaid(isPaid)
+                .paymentType(orderDocument.isPaymentType())
+                .note(orderDocument.getNote())
+//                .orderId(orderDocument.getOrderId())
+                .shippingCode(orderDocument.getShippingCode())
+                .shippingCompany(orderDocument.getShippingCompany())
+                .build();
+    }
+
+    public OrderDto findByOrderCode(String code) throws BizException {
+        OrderDocument orderDocument = orderRepository.findByOrderCode(code);
+        if(orderDocument == null ){
+            throw new BizException("order code is invalid");
+        }
+        boolean isPaid = false;
+        if (orderDocument.getTransactionId() != null) {
             isPaid = true;
         }
         return OrderDto.builder()

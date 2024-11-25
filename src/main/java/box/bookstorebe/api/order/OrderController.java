@@ -70,7 +70,7 @@ public class OrderController {
 
     @GetMapping("/detail/{id}")
     public BaseResponse<OrderDto> searchOrderResult(@PathVariable String id) throws BizException {
-        return new BaseResponse<>(Const.ResultCode.SUCCESS, orderService.findById(id));
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, orderService.findByOrderCode(id));
     }
 
 
@@ -99,11 +99,10 @@ public class OrderController {
     public RedirectView getPayment(HttpServletRequest request, Model model) throws BizException, MessagingException {
         int paymentStatus =paymentService.orderReturn(request);
         String orderInfo = request.getParameter("vnp_OrderInfo");
-        String paymentTime = request.getParameter("vnp_PayDate");
         String transactionId = request.getParameter("vnp_TransactionNo");
-        String totalPrice = request.getParameter("vnp_Amount");
+//        String totalPrice = request.getParameter("vnp_Amount");
         if(paymentStatus == 1){
-            paymentService.createPayment(new BigDecimal(totalPrice),orderInfo,paymentTime,transactionId);
+            paymentService.createPayment(orderInfo,transactionId);
         }
         return new RedirectView(checkoutUrl+"/order-result?orderId="+orderInfo);
     }

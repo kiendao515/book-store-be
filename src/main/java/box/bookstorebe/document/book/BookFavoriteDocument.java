@@ -22,7 +22,7 @@ public class BookFavoriteDocument {
     @Field("book_id")
     private String bookId;
 
-    @Field("user_id")
+    @Field("account_id")
     private String userId;
 
     @Field("created_at")

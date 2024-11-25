@@ -1,11 +1,15 @@
 package box.bookstorebe.service.order;
 import box.bookstorebe.common.Const;
 import box.bookstorebe.configuration.payment.PaymentConfig;
+import box.bookstorebe.document.account.AccountDocument;
 import box.bookstorebe.document.order.OrderDocument;
+import box.bookstorebe.document.order.OrderItemDocument;
 import box.bookstorebe.document.payment.PaymentDocument;
 import box.bookstorebe.exception.BizException;
+import box.bookstorebe.repository.order.OrderItemRepository;
 import box.bookstorebe.repository.order.OrderRepository;
 import box.bookstorebe.repository.payment.PaymentRepository;
+import box.bookstorebe.repository.user.AccountRepository;
 import box.bookstorebe.service.common.MailService;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -38,6 +42,9 @@ public class PaymentService {
     private final ExecutorService executor = Executors.newFixedThreadPool(10);
     private final JavaMailSenderImpl mailSender;
     private final MongoTemplate mongoTemplate;
+    private final OrderItemRepository orderItemRepository;
+    private final AccountRepository accountRepository;
+
     public String createOrder(HttpServletRequest request, BigDecimal total, String orderInfor, String urlReturn){
         String vnp_Version = "2.1.0";
         String vnp_Command = "pay";
@@ -50,7 +57,7 @@ public class PaymentService {
         vnp_Params.put("vnp_Version", vnp_Version);
         vnp_Params.put("vnp_Command", vnp_Command);
         vnp_Params.put("vnp_TmnCode", vnp_TmnCode);
-        vnp_Params.put("vnp_Amount", String.valueOf(total.multiply(BigDecimal.valueOf(100))));
+        vnp_Params.put("vnp_Amount", total.multiply(BigDecimal.valueOf(100)).stripTrailingZeros().toPlainString());
         vnp_Params.put("vnp_CurrCode", "VND");
 
         vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
@@ -142,29 +149,17 @@ public class PaymentService {
             return -1;
         }
     }
-    public void createPayment(BigDecimal price,String orderId,String paymentTime,String transactionId) throws BizException, MessagingException {
-        OrderDocument orderDocument= orderRepository.findById(orderId).orElseThrow(()->new BizException("invalid orderId"));
-        BigDecimal totalPrice =new BigDecimal(0);
-//        for (BookRealityDocument b :orderDocument.getItems()){
-//            totalPrice.add(new BigDecimal(b.getPrice()));
-//        }
-//        if(totalPrice.compareTo(Const.AMOUNT_CAN_FREESHIP) < 0){
-//            totalPrice.add(Const.SHIPPING_FEE);
-//        }
-//        BigDecimal amount = price.divide(BigDecimal.valueOf(100));
-//        if(totalPrice.compareTo(amount)!=0){
-//            throw new BizException("Số tiền không khớp!");
-//        }
-//        PaymentDocument checkExisted = mongoTemplate.findOne(new Query(Criteria.where("order._id").is(orderId)), PaymentDocument.class);
-//        if(checkExisted !=null){
-//            throw new BizException("Đơn hàng đã được thanh toán");
-//        }
-//        PaymentDocument paymentDocument= PaymentDocument.builder().paymentTime(paymentTime).
-//                totalPrice(amount).order(orderDocument).transactionId(transactionId).build();
+    public void createPayment(String orderId,String transactionId) throws BizException, MessagingException {
+        OrderDocument orderDocument= orderRepository.findByOrderCode(orderId);
+        if (orderDocument == null) {
+            return;
+        }
+        List<OrderItemDocument> orderItems = orderItemRepository.findAllByOrderId(orderId);
+        AccountDocument accountDocument = accountRepository.findById(orderDocument.getAccountId()).orElseThrow(()-> new BizException("account id k hop le"));
+        orderDocument.setTransactionId(transactionId);
         orderDocument.setStatus(Const.OrderStatus.READY_TO_PACKAGE);
         orderRepository.save(orderDocument);
-//        paymentRepository.save(paymentDocument);
-//        mailService.sendEmailOrderDetail(orderDocument.getEmail(),orderDocument);
+        mailService.sendEmailOrderDetail(accountDocument.getEmail(),orderDocument, orderItems);
     }
     public PaymentDocument getPaymentByOrderId(String orderId) throws BizException{
         return mongoTemplate.findOne(new Query(Criteria.where("order._id").is(orderId)), PaymentDocument.class);
