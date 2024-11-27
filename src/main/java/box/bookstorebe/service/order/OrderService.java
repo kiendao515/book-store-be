@@ -208,6 +208,7 @@ public class OrderService extends BaseService {
                     orderDto.setOrderCode(order.getOrderCode());
                     try {
                         orderDto.setAccount(accountService.getAccountDetail(order.getAccountId()));
+
                     } catch (BizException e) {
                         throw new RuntimeException(e);
                     }
