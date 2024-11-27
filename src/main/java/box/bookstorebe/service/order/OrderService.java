@@ -4,12 +4,15 @@ import box.bookstorebe.client.CommonClient;
 import box.bookstorebe.common.Const;
 import box.bookstorebe.configuration.security.RequestScope;
 
+import box.bookstorebe.document.account.AccountDocument;
+import box.bookstorebe.document.book.BookDocument;
 import box.bookstorebe.document.book.BookInventory;
 import box.bookstorebe.document.order.OrderDocument;
 import box.bookstorebe.document.order.OrderItemDocument;
 import box.bookstorebe.document.payment.PaymentDocument;
 import box.bookstorebe.dto.common.AddressDto;
 import box.bookstorebe.dto.order.OrderDto;
+import box.bookstorebe.dto.order.OrderItemDto;
 import box.bookstorebe.exception.BizException;
 import box.bookstorebe.model.order.CreateOrderModel;
 import box.bookstorebe.model.order.OrderItem;
@@ -19,6 +22,7 @@ import box.bookstorebe.repository.book.BookInventoryRepository;
 import box.bookstorebe.repository.book.BookRepository;
 import box.bookstorebe.repository.order.OrderItemRepository;
 import box.bookstorebe.repository.order.OrderRepository;
+import box.bookstorebe.repository.user.AccountRepository;
 import box.bookstorebe.service.BaseService;
 import box.bookstorebe.service.account.AccountService;
 import box.bookstorebe.service.book.BookInventoryService;
@@ -66,6 +70,7 @@ public class OrderService extends BaseService {
     private final AddressService addressService;
     private final CommonClient commonClient;
     private final AccountService accountService;
+    private final AccountRepository accountRepository;
 
     protected String getSaltString() {
         String SALTCHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
@@ -185,7 +190,7 @@ public class OrderService extends BaseService {
                                     Integer page, Integer size) throws BizException {
         ZonedDateTime created = null;
         ZonedDateTime updated = null;
-        if (startAt != null && endAt!=null && !startAt.isBlank() && !endAt.isBlank()) {
+        if (startAt != null && endAt != null && !startAt.isBlank() && !endAt.isBlank()) {
             created = ZonedDateTime.parse(startAt);
             updated = ZonedDateTime.parse(endAt);
         }
@@ -211,9 +216,9 @@ public class OrderService extends BaseService {
                     orderDto.setShippingFee(order.getShippingFee());
                     orderDto.setTotalAmount(order.getTotalAmount());
                     orderDto.setTransactionId(order.getTransactionId());
-                    orderDto.setOrderItems(fetchOrderItems(order.getId()));
                     return orderDto;
                 }).collect(Collectors.toList());
+
         return new PageImpl<>(orderDtos, orderDocuments.getPageable(), orderDocuments.getTotalElements());
     }
 
@@ -230,32 +235,55 @@ public class OrderService extends BaseService {
     }
 
     public OrderDto findById(String id) throws BizException {
-        OrderDocument orderDocument = orderRepository.findById(id).orElseThrow(() -> new BizException("orderId is invalid"));
-//        List<BookRealityDocument> list= bookRealityRepository.findAllById(orderDocument.getItems().
-//                stream().map(BookRealityDocument::getId).collect(Collectors.toList()));
-//        List<BookRealityDto> bookRealityDtoList = new ArrayList<>();
-//        for(BookRealityDocument bookRealityDocument: list){
-//            BookRealityDto bookDto = bookRealityService.findEntityById(bookRealityDocument.getId());
-//            bookRealityDtoList.add(bookDto);
-//        }
-        PaymentDocument paymentDocument = paymentService.getPaymentByOrderId(id);
+        OrderDocument orderDocument = orderRepository.findById(id).orElseThrow(() -> new BizException("invalid order id"));
         boolean isPaid = false;
-        if (paymentDocument != null) {
+        if (orderDocument.getTransactionId() != null) {
             isPaid = true;
         }
+        AccountDocument accountDocument = accountRepository.findById(orderDocument.getAccountId()).orElseThrow(() -> new BizException("account id invalid"));
+        List<OrderItemDocument> orderItemDocuments = orderItemRepository.findAllByOrderId(orderDocument.getId());
+        List<String> bookInventoryIds = orderItemDocuments.stream()
+                .map(OrderItemDocument::getBookInventoryId)
+                .collect(Collectors.toList());
+
+        Map<String, BookInventory> bookInventoryMap = bookInventoryRepository.findAllById(bookInventoryIds).stream()
+                .collect(Collectors.toMap(BookInventory::getId, inventory -> inventory));
+
+        List<String> bookIds = bookInventoryMap.values().stream()
+                .map(BookInventory::getBookId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        Map<String, BookDocument> bookMap = bookRepository.findAllById(bookIds).stream()
+                .collect(Collectors.toMap(BookDocument::getId, book -> book));
+
+        List<OrderItemDto> orderItems = orderItemDocuments.stream()
+                .map(orderItem -> {
+                    BookInventory bookInventory = bookInventoryMap.get(orderItem.getBookInventoryId());
+                    BookDocument bookDocument = bookMap.get(bookInventory.getBookId());
+                    return OrderItemDto.builder()
+                            .bookName(bookDocument.getName())
+                            .quantity(orderItem.getQuantity())
+                            .price(bookInventory.getPrice())
+                            .type(bookInventory.getType())
+                            .build();
+                })
+                .collect(Collectors.toList());
         return OrderDto.builder()
                 .id(orderDocument.getId())
                 .address(orderDocument.getStreet() + "," + orderDocument.getWard().getFullName() + "," + orderDocument.getDistrict().getFullName() + "," + orderDocument.getProvince().getFullName())
-//                .email(orderDocument.getEmail())
-//                .customerName(orderDocument.getCustomerName())
-//                .customerPhone(orderDocument.getCustomerPhone())
+                .email(accountDocument.getEmail())
+                .customerName(orderDocument.getReceiverName())
+                .customerPhone(orderDocument.getReceiverPhone())
                 .status(orderDocument.getStatus())
                 .createdAt(orderDocument.getCreatedAt())
-//                .books(bookRealityDtoList)
+                .orderItems(orderItems)
                 .isPaid(isPaid)
                 .paymentType(orderDocument.isPaymentType())
                 .note(orderDocument.getNote())
-//                .orderId(orderDocument.getOrderId())
+                .orderCode(orderDocument.getOrderCode())
+                .totalAmount(orderDocument.getTotalAmount())
+                .shippingFee(orderDocument.getShippingFee())
                 .shippingCode(orderDocument.getShippingCode())
                 .shippingCompany(orderDocument.getShippingCompany())
                 .build();
@@ -263,7 +291,7 @@ public class OrderService extends BaseService {
 
     public OrderDto findByOrderCode(String code) throws BizException {
         OrderDocument orderDocument = orderRepository.findByOrderCode(code);
-        if(orderDocument == null ){
+        if (orderDocument == null) {
             throw new BizException("order code is invalid");
         }
         boolean isPaid = false;
@@ -273,16 +301,16 @@ public class OrderService extends BaseService {
         return OrderDto.builder()
                 .id(orderDocument.getId())
                 .address(orderDocument.getStreet() + "," + orderDocument.getWard().getFullName() + "," + orderDocument.getDistrict().getFullName() + "," + orderDocument.getProvince().getFullName())
-//                .email(orderDocument.getEmail())
-//                .customerName(orderDocument.getCustomerName())
-//                .customerPhone(orderDocument.getCustomerPhone())
+//                .email(accountDocument.getEmail())
+//                .customerName(orderDocument.getReceiverName())
+//                .customerPhone(orderDocument.getReceiverPhone())
                 .status(orderDocument.getStatus())
                 .createdAt(orderDocument.getCreatedAt())
-//                .books(bookRealityDtoList)
+//                .orderItems(orderItemDocuments)
                 .isPaid(isPaid)
                 .paymentType(orderDocument.isPaymentType())
                 .note(orderDocument.getNote())
-//                .orderId(orderDocument.getOrderId())
+//                .orderCode(orderDocument.getOrderCode())
                 .shippingCode(orderDocument.getShippingCode())
                 .shippingCompany(orderDocument.getShippingCompany())
                 .build();

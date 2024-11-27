@@ -37,7 +37,7 @@ public class OrderDto {
     private String shippingCode;
     private String shippingCompany;
     private String orderCode;
-    private List<OrderItemDocument> orderItems;
+    private List<OrderItemDto> orderItems;
     private BigDecimal shippingFee;
     private BigDecimal totalAmount;
     private AccountDto account;
