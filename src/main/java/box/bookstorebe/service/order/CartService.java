@@ -45,12 +45,14 @@ public class CartService extends BaseService {
         if (cartDocument == null) {
             cartDocument = new CartDocument();
             cartDocument.setQuantity(cartModel.getQuantity());
+        }else{
+            if (bookInventory.getQuantity() < (cartDocument.getQuantity() + cartModel.getQuantity())) {
+                throw new BizException("Số lượng vượt quá tồn kho");
+            } else {
+                cartDocument.setQuantity(cartModel.getQuantity() + cartModel.getQuantity());
+            }
         }
-        if (bookInventory.getQuantity() < (cartDocument.getQuantity() + cartModel.getQuantity())) {
-            throw new BizException("Số lượng vượt quá tồn kho");
-        } else {
-            cartDocument.setQuantity(cartModel.getQuantity() + cartModel.getQuantity());
-        }
+
         cartDocument.setBookInventoryId(cartModel.getBookInventoryId());
         cartDocument.setAccountId(user.getId());
         cartRepository.save(cartDocument);
