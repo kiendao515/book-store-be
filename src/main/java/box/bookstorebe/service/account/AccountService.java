@@ -1,16 +1,21 @@
 package box.bookstorebe.service.account;
 
+import box.bookstorebe.common.Const;
 import box.bookstorebe.document.account.AccountDocument;
 import box.bookstorebe.document.account.CustomerDocument;
 import box.bookstorebe.document.account.Role;
+import box.bookstorebe.document.account.ShippingAddressDocument;
 import box.bookstorebe.document.bookstore.StoreDocument;
+import box.bookstorebe.document.order.OrderDocument;
 import box.bookstorebe.dto.account.AccountDto;
 import box.bookstorebe.exception.BizException;
 import box.bookstorebe.mapper.account.AccountMapper;
 import box.bookstorebe.model.user.UserModel;
 import box.bookstorebe.repository.bookstore.BookStoreRepository;
 import box.bookstorebe.repository.customer.CustomerRepository;
+import box.bookstorebe.repository.order.OrderRepository;
 import box.bookstorebe.repository.user.AccountRepository;
+import box.bookstorebe.repository.user.ShippingAddressRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -33,6 +38,8 @@ public class AccountService {
     private final PasswordEncoder passwordEncoder;
     private final CustomerRepository customerRepository;
     private final BookStoreRepository storeRepository;
+    private final ShippingAddressRepository shippingAddressRepository;
+    private final OrderRepository orderRepository;
 
     public static String generateSalt() {
         SecureRandom random = new SecureRandom();
@@ -42,9 +49,9 @@ public class AccountService {
     }
 
     public Page<AccountDto> getAccounts(String role, String email, Integer page, Integer size) {
-        Page<AccountDto> accounts= accountRepository.getUsers(role, email, page, size);
+        Page<AccountDto> accounts = accountRepository.getUsers(role, email, page, size);
         List<String> listAccountId = accounts.stream().map(AccountDto::getId).toList();
-        if("USER".equals(role)) {
+        if ("USER".equals(role)) {
             List<CustomerDocument> customerDocuments = customerRepository.findAllByAccountIdIn(listAccountId);
             Map<String, CustomerDocument> customerMap = customerDocuments.stream()
                     .collect(Collectors.toMap(CustomerDocument::getAccountId, customer -> customer));
@@ -54,11 +61,39 @@ public class AccountService {
                     account.setAvatar(customer.getAvatar());
                     account.setName(customer.getName());
                     account.setPhone(customer.getPhoneNumber());
-                    account.setAddress(customer.getAddress().isEmpty() ? null : customer.getAddress().get(0));
+                    account.setCreatedAt(account.getCreatedAt());
                 }
             });
+            List<String> accountIds = accounts.stream()
+                    .map(AccountDto::getId)
+                    .collect(Collectors.toList());
+            List<ShippingAddressDocument> addresses = shippingAddressRepository.findAllByUserIdInAndIsDefault(accountIds, true);
+
+            Map<String, ShippingAddressDocument> addressMap = addresses.stream()
+                    .collect(Collectors.toMap(ShippingAddressDocument::getUserId, address -> address));
+
+            accounts.forEach(account -> {
+                ShippingAddressDocument address = addressMap.get(account.getId());
+                if (address != null) {
+                    account.setAddress(
+                            address.getStreet() + ", " +
+                                    address.getWard().getFullName() + ", " +
+                                    address.getDistrict().getFullName() + ", " +
+                                    address.getProvince().getFullName()
+                    );
+                }
+            });
+
+            List<OrderDocument> completedOrders = orderRepository.findAllByAccountIdInAndStatus(accountIds, Const.OrderStatus.DONE);
+            Map<String, Long> completedOrderCountMap = completedOrders.stream()
+                    .collect(Collectors.groupingBy(OrderDocument::getAccountId, Collectors.counting()));
+
+            accounts.forEach(account -> {
+                Long completedOrderCount = completedOrderCountMap.getOrDefault(account.getId(), 0L);
+                account.setOrdersCompleted(completedOrderCount);
+            });
         }
-        if("STORE".equals(role)) {
+        if ("STORE".equals(role)) {
             List<StoreDocument> storeDocuments = storeRepository.findAllByAccountIdIn(listAccountId);
             Map<String, StoreDocument> storeDocumentMap = storeDocuments.stream()
                     .collect(Collectors.toMap(StoreDocument::getAccountId, store -> store));
@@ -112,7 +147,7 @@ public class AccountService {
         }
 
         updatedUser.setEmail(userModel.getEmail());
-        if(user!=null && user.getSalt() == null){
+        if (user != null && user.getSalt() == null) {
             throw new BizException("user account missing salt");
         }
         String combinedPasswordSalt = user.getSalt() + userModel.getPassword();

@@ -10,5 +10,6 @@ import java.util.List;
 public interface OrderRepository extends MongoRepository<OrderDocument, String>, OrderExRepository {
     OrderDocument findByOrderCode(String orderId);
     List<OrderDocument> findAllByStatus(String status);
+    List<OrderDocument> findAllByAccountIdInAndStatus(List<String> accountIds, String status);
 
 }

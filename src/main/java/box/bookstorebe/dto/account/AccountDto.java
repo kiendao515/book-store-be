@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.Data;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.time.ZonedDateTime;
+
 @Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class AccountDto {
@@ -26,4 +28,8 @@ public class AccountDto {
     private String avatar;
     @Field("description")
     private String description;
+    @Field("created_at")
+    private ZonedDateTime createdAt;
+    @Field("orders_completed")
+    private Long ordersCompleted;
 }

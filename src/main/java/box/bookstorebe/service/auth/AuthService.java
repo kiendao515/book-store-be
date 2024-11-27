@@ -158,12 +158,18 @@ public class AuthService extends BaseService {
             throw new BizException("Invalid token");
         }
         AccountDocument user = accountRepository.findById(currentUser.getAccountId()).orElseThrow(() -> new BizException("Invalid user"));
-        CustomerDocument customerDocument = customerRepository.findByAccountId(user.getId());
-        UserProfileDto userProfileDto = new UserProfileDto();
-        userProfileDto.setId(user.getId());
-        userProfileDto.setEmail(user.getEmail());
-        userProfileDto.setRole(user.getRole().name());
-        return userProfileDto;
+        if(currentUser.getRole().equals(Role.USER)){
+            CustomerDocument customerDocument = customerRepository.findByAccountId(user.getId());
+            UserProfileDto userProfileDto = new UserProfileDto();
+            userProfileDto.setId(user.getId());
+            userProfileDto.setEmail(user.getEmail());
+            userProfileDto.setDateOfBirth(customerDocument.getDateOfBirth());
+            userProfileDto.setPhoneNumber(customerDocument.getPhoneNumber());
+            userProfileDto.setFullName(customerDocument.getName());
+            userProfileDto.setRole(user.getRole().name());
+            return userProfileDto;
+        }
+        return null;
     }
 
     public UserProfileDto updateUserInfo(UpdateUserInfoModel userInfoModel) throws BizException {
