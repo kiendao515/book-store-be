@@ -8,4 +8,5 @@ import java.util.List;
 public interface CartRepository extends MongoRepository<CartDocument, String> {
      List<CartDocument> findAllByAccountId(String accountId);
      CartDocument findByAccountIdAndBookInventoryId(String accountId, String bookInventoryId);
+     List<CartDocument> findAllByAccountIdAndBookInventoryIdIn(String accountId, List<String> bookInventoryId);
 }

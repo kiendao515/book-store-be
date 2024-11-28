@@ -6,12 +6,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class CreateCartModel {
-    private String bookInventoryId;
-    private int quantity;
-    public boolean delete;
+public class SaveCartModel {
+    private List<CreateCartModel> carts;
 }

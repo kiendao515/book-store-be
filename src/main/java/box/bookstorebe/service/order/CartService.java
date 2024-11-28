@@ -34,7 +34,27 @@ public class CartService extends BaseService {
     private final BookService bookService;
     private final BookInventoryService bookRealityService;
 
-    public void saveCart(CreateCartModel cartModel) throws BizException {
+    public void saveCart(CreateCartModel cartModel) throws BizException{
+        RequestScope currentUser = this.getCurrentUserInfo();
+        if (currentUser == null) {
+            throw new BizException("Invalid token");
+        }
+        AccountDocument user = accountRepository.findById(currentUser.getAccountId()).orElseThrow(() -> new BizException("Invalid account id"));
+        BookInventory bookInventory = bookRealityRepository.findById(cartModel.getBookInventoryId()).orElseThrow(() -> new BizException("Invalid book inventory id"));
+        CartDocument cartDocument = cartRepository.findByAccountIdAndBookInventoryId(user.getId(), bookInventory.getId());
+        if(cartDocument == null) {throw new BizException("Invalid cart");}
+        if(cartModel.isDelete()){
+            cartRepository.delete(cartDocument);
+            return;
+        }
+        if(bookInventory.getQuantity() < (cartDocument.getQuantity() + cartModel.getQuantity())) {
+            throw new BizException("Số lượng vượt quá tồn kho");
+        }
+        cartDocument.setQuantity(cartDocument.getQuantity() + cartModel.getQuantity());
+        cartRepository.save(cartDocument);
+    }
+
+    public void addToCart(CreateCartModel cartModel) throws BizException {
         RequestScope currentUser = this.getCurrentUserInfo();
         if (currentUser == null) {
             throw new BizException("Invalid token");
