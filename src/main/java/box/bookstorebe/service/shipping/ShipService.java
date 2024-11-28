@@ -2,12 +2,14 @@ package box.bookstorebe.service.shipping;
 
 import box.bookstorebe.client.CommonClient;
 import box.bookstorebe.dto.ghtk.OrderDetail;
+import box.bookstorebe.dto.ghtk.PickAddressDto;
 import box.bookstorebe.model.order.ShippingFeeRequest;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @AllArgsConstructor
 @Service
@@ -19,5 +21,8 @@ public class ShipService {
     }
     public OrderDetail getOrderDetail(String orderId){
         return commonClient.getOrderDetail(orderId);
+    }
+    public List<PickAddressDto.PickupData> getListPickAddress(){
+        return commonClient.getPickAddress();
     }
 }

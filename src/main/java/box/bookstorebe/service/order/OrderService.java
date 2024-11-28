@@ -206,6 +206,7 @@ public class OrderService extends BaseService {
                     orderDto.setUpdatedAt(order.getUpdatedAt());
                     orderDto.setStatus(order.getStatus());
                     orderDto.setOrderCode(order.getOrderCode());
+                    orderDto.setPaid(order.getTransactionId()!= null ? true : false);
                     try {
                         orderDto.setAccount(accountService.getAccountDetail(order.getAccountId()));
 //                        List<OrderItemDocument> orderItemDocuments = orderItemRepository.findAllByOrderId(order.getId());

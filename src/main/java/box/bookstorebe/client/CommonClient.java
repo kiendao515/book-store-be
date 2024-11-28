@@ -3,6 +3,7 @@ package box.bookstorebe.client;
 import box.bookstorebe.common.Const;
 import box.bookstorebe.dto.ghtk.GhtkDto;
 import box.bookstorebe.dto.ghtk.OrderDetail;
+import box.bookstorebe.dto.ghtk.PickAddressDto;
 import box.bookstorebe.model.order.ShippingFeeRequest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,6 +14,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -71,6 +74,24 @@ public class CommonClient {
             log.info(response.getBody());
             ObjectMapper objectMapper = new ObjectMapper();
             return objectMapper.readValue(response.getBody(), OrderDetail.class);
+        } catch (Exception e) {
+            log.info(e.getMessage());
+        }
+        return null;
+    }
+    public List<PickAddressDto.PickupData> getPickAddress(){
+        String url = ghtkUrl + "/services/shipment/list_pick_add";
+        RestTemplate restTemplate = new RestTemplate();
+        var headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.add("Token", ghtkToken);
+        try {
+            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(null, headers);
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, requestEntity, String.class);
+            log.info(response.getBody());
+            ObjectMapper objectMapper = new ObjectMapper();
+            PickAddressDto ghtkDto = objectMapper.readValue(response.getBody(), PickAddressDto.class);
+            return Arrays.stream(ghtkDto.getData()).toList();
         } catch (Exception e) {
             log.info(e.getMessage());
         }
