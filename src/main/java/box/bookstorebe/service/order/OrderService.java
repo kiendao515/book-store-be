@@ -208,35 +208,35 @@ public class OrderService extends BaseService {
                     orderDto.setOrderCode(order.getOrderCode());
                     try {
                         orderDto.setAccount(accountService.getAccountDetail(order.getAccountId()));
-                        List<OrderItemDocument> orderItemDocuments = orderItemRepository.findAllByOrderId(order.getId());
-                        List<String> bookInventoryIds = orderItemDocuments.stream()
-                                .map(OrderItemDocument::getBookInventoryId)
-                                .collect(Collectors.toList());
-
-                        Map<String, BookInventory> bookInventoryMap = bookInventoryRepository.findAllById(bookInventoryIds).stream()
-                                .collect(Collectors.toMap(BookInventory::getId, inventory -> inventory));
-
-                        List<String> bookIds = bookInventoryMap.values().stream()
-                                .map(BookInventory::getBookId)
-                                .distinct()
-                                .collect(Collectors.toList());
-
-                        Map<String, BookDocument> bookMap = bookRepository.findAllById(bookIds).stream()
-                                .collect(Collectors.toMap(BookDocument::getId, book -> book));
-
-                        List<OrderItemDto> orderItems = orderItemDocuments.stream()
-                                .map(orderItem -> {
-                                    BookInventory bookInventory = bookInventoryMap.get(orderItem.getBookInventoryId());
-                                    BookDocument bookDocument = bookMap.get(bookInventory.getBookId());
-                                    return OrderItemDto.builder()
-                                            .bookName(bookDocument.getName())
-                                            .quantity(orderItem.getQuantity())
-                                            .price(bookInventory.getPrice())
-                                            .type(bookInventory.getType())
-                                            .build();
-                                })
-                                .toList();
-                        orderDto.setOrderItems(orderItems);
+//                        List<OrderItemDocument> orderItemDocuments = orderItemRepository.findAllByOrderId(order.getId());
+//                        List<String> bookInventoryIds = orderItemDocuments.stream()
+//                                .map(OrderItemDocument::getBookInventoryId)
+//                                .collect(Collectors.toList());
+//
+//                        Map<String, BookInventory> bookInventoryMap = bookInventoryRepository.findAllById(bookInventoryIds).stream()
+//                                .collect(Collectors.toMap(BookInventory::getId, inventory -> inventory));
+//
+//                        List<String> bookIds = bookInventoryMap.values().stream()
+//                                .map(BookInventory::getBookId)
+//                                .distinct()
+//                                .collect(Collectors.toList());
+//
+//                        Map<String, BookDocument> bookMap = bookRepository.findAllById(bookIds).stream()
+//                                .collect(Collectors.toMap(BookDocument::getId, book -> book));
+//
+//                        List<OrderItemDto> orderItems = orderItemDocuments.stream()
+//                                .map(orderItem -> {
+//                                    BookInventory bookInventory = bookInventoryMap.get(orderItem.getBookInventoryId());
+//                                    BookDocument bookDocument = bookMap.get(bookInventory.getBookId());
+//                                    return OrderItemDto.builder()
+//                                            .bookName(bookDocument.getName())
+//                                            .quantity(orderItem.getQuantity())
+//                                            .price(bookInventory.getPrice())
+//                                            .type(bookInventory.getType())
+//                                            .build();
+//                                })
+//                                .toList();
+//                        orderDto.setOrderItems(orderItems);
                     } catch (BizException e) {
                         throw new RuntimeException(e);
                     }
