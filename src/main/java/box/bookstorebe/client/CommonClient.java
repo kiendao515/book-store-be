@@ -2,8 +2,10 @@ package box.bookstorebe.client;
 
 import box.bookstorebe.common.Const;
 import box.bookstorebe.dto.ghtk.GhtkDto;
+import box.bookstorebe.dto.ghtk.GhtkOrderDto;
 import box.bookstorebe.dto.ghtk.OrderDetail;
 import box.bookstorebe.dto.ghtk.PickAddressDto;
+import box.bookstorebe.model.order.GhtkOrderRequest;
 import box.bookstorebe.model.order.ShippingFeeRequest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -96,5 +98,24 @@ public class CommonClient {
             log.info(e.getMessage());
         }
         return null;
+    }
+
+    public GhtkOrderDto.OrderResult createOrder(GhtkOrderRequest ghtkOrderRequest) {
+        try {
+            String url = ghtkUrl + "/services/shipment/order";
+            RestTemplate restTemplate = new RestTemplate();
+            var headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.add("Token", ghtkToken);
+            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(null, headers);
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
+            ObjectMapper objectMapper = new ObjectMapper();
+            GhtkOrderDto ghtkDto = objectMapper.readValue(response.getBody(), GhtkOrderDto.class);
+            return ghtkDto.getData();
+        }catch (Exception e){
+            log.info(e.getMessage());
+            return null;
+        }
+
     }
 }
