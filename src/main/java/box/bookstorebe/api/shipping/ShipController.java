@@ -5,6 +5,7 @@ import box.bookstorebe.dto.common.BaseResponse;
 import box.bookstorebe.dto.ghtk.GhtkOrderDto;
 import box.bookstorebe.dto.ghtk.OrderDetail;
 import box.bookstorebe.dto.ghtk.PickAddressDto;
+import box.bookstorebe.exception.BizException;
 import box.bookstorebe.model.order.CreateOrder;
 import box.bookstorebe.model.order.LabelRequest;
 import box.bookstorebe.model.order.ShippingFeeRequest;
@@ -37,7 +38,7 @@ public class ShipController {
         return new BaseResponse<>(Const.ResultCode.SUCCESS, shipService.getListPickAddress());
     }
     @PostMapping("/order/create")
-    public BaseResponse<GhtkOrderDto.OrderResult> printLabel(@RequestBody @Valid CreateOrder request){
+    public BaseResponse<GhtkOrderDto.OrderResult> printLabel(@RequestBody @Valid CreateOrder request) throws BizException {
         return new BaseResponse<>(Const.ResultCode.SUCCESS, shipService.createGhtkOrder(request));
     }
 //    @PostMapping("/label")

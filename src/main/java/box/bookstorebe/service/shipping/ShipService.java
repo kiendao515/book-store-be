@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -61,11 +62,39 @@ public class ShipService {
         order.setPickAddress(orderDto.getPickAddress());
         Map<String,String > pickAddress = parseAddress(orderDto.getPickAddress());
 
+        // thông tin lấy hàng
         order.setPickAddress(pickAddress.get("street"));
         order.setPickProvince(pickAddress.get("city"));
         order.setPickDistrict(pickAddress.get("district"));
         order.setPickWard(pickAddress.get("ward"));
+        order.setPickTel(orderDto.getPickTel());
 
-        return commonClient.createGhtkOrder(orderDto);
+        // thông tin nhận hàng
+        order.setTel(orderDocument.getReceiverName());
+        order.setName(orderDocument.getReceiverPhone());
+        order.setAddress(orderDocument.getStreet());
+        order.setProvince(orderDocument.getProvince().getFullName());
+        order.setDistrict(orderDocument.getDistrict().getFullName());
+        order.setWard(orderDocument.getWard().getFullName());
+        order.setHamlet("Khác");
+        order.setIsFreeship("1");
+        order.setPickDate(order.getPickDate());
+        if(!orderDocument.isPaymentType()){
+            order.setPickMoney(orderDocument.getTotalAmount());
+        }else {
+            order.setPickMoney(BigDecimal.ZERO);
+        }
+        order.setNote(orderDto.getNote());
+        order.setValue(orderDocument.getTotalAmount());
+        ghtkOrderRequest.setOrder(order);
+
+        List<GhtkOrderRequest.Product> product = new ArrayList<>();
+        GhtkOrderRequest.Product product1 = new GhtkOrderRequest.Product();
+        product1.setName("sách");
+        product1.setWeight(orderDto.getWeight());
+        product.add(product1);
+        ghtkOrderRequest.setProducts(product);
+
+        return commonClient.createOrder(ghtkOrderRequest);
     }
 }

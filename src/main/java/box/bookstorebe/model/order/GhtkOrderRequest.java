@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -41,9 +42,9 @@ public class GhtkOrderRequest {
         private String hamlet;
         private String isFreeship;
         private String pickDate;
-        private double pickMoney;
+        private BigDecimal pickMoney;
         private String note;
-        private double value;
+        private BigDecimal value;
         private String transport;
         private String pickOption;
         private String deliverOption;

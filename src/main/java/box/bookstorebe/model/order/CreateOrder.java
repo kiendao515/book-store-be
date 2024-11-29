@@ -12,9 +12,9 @@ import lombok.NoArgsConstructor;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class CreateOrder {
     private String orderCode;
-    private String pickUpAddressId;
     private String note;
     private String pickName;
     private String pickTel;
     private String pickAddress;
+    private float weight;
 }
