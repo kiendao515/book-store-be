@@ -50,6 +50,7 @@ aws:
 app:
   client:
     url: ${CLIENT_URL:http://localhost:5173}
+    admin: ${ADMIN_URL:http://localhost:3000}
   domain:
     url: ${DOMAIN_URL:http://localhost:8081}
   ghtk:

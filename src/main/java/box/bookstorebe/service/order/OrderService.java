@@ -43,6 +43,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -71,6 +72,7 @@ public class OrderService extends BaseService {
     private final CommonClient commonClient;
     private final AccountService accountService;
     private final AccountRepository accountRepository;
+    private SimpMessagingTemplate messagingTemplate;
 
     protected String getSaltString() {
         String SALTCHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
@@ -158,6 +160,7 @@ public class OrderService extends BaseService {
         savedOrder.setTotalAmount(totalAmount);
         orderRepository.save(savedOrder);
         orderItemRepository.saveAll(orderItemDocuments);
+        messagingTemplate.convertAndSend("/topic/order", savedOrder);
         if (order.isPaymentMethod()) {
             // Redirect to payment service
 //            BigDecimal total = calculateTotal(orderItemDocuments, bookInventories);
