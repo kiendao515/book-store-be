@@ -348,14 +348,15 @@ public class OrderService extends BaseService {
 
     @Transactional
     public void updateOrder(String id, UpdateOrderModel order) throws BizException {
-        OrderDocument orderDocument = orderRepository.findById(id).orElseThrow(() -> new BizException("orderId is invalid"));
+        OrderDocument orderDocument = orderRepository.findByOrderCode(id);
+        if(orderDocument == null) throw new BizException("order code is invalid");
 //        orderDocument.setAddress(order.getAddress());
 //        orderDocument.setEmail(order.getEmail());
 //        orderDocument.setCustomerName(order.getCustomerName());
 //        orderDocument.setCustomerPhone(order.getCustomerPhone());
-        orderDocument.setShippingCode(order.getShippingCode());
-        orderDocument.setNote(order.getNote());
-        orderDocument.setShippingCompany(order.getShippingCompany());
+//        orderDocument.setShippingCode(order.getShippingCode());
+//        orderDocument.setNote(order.getNote());
+//        orderDocument.setShippingCompany(order.getShippingCompany());
         if (!orderDocument.getStatus().equalsIgnoreCase(order.getStatus())) {
             switch (order.getStatus()) {
                 case Const.OrderStatus.CANCEL:

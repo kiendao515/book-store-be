@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.http.converter.ByteArrayHttpMessageConverter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -64,8 +65,8 @@ public class CommonClient {
         return new BigDecimal(25000);
     }
 
-    public OrderDetail getOrderDetail(String id){
-        String url = webGhtkUrl + "/api/v1/package/package-detail?alias="+id;
+    public OrderDetail getOrderDetail(String id) {
+        String url = webGhtkUrl + "/api/v1/package/package-detail?alias=" + id;
         RestTemplate restTemplate = new RestTemplate();
         var headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -81,7 +82,8 @@ public class CommonClient {
         }
         return null;
     }
-    public List<PickAddressDto.PickupData> getPickAddress(){
+
+    public List<PickAddressDto.PickupData> getPickAddress() {
         String url = ghtkUrl + "/services/shipment/list_pick_add";
         RestTemplate restTemplate = new RestTemplate();
         var headers = new HttpHeaders();
@@ -107,15 +109,39 @@ public class CommonClient {
             var headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.add("Token", ghtkToken);
-            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(null, headers);
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
+            HttpEntity<GhtkOrderRequest> httpRequest = new HttpEntity<>(ghtkOrderRequest, headers);
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, httpRequest, String.class);
+            log.info(response.toString());
             ObjectMapper objectMapper = new ObjectMapper();
             GhtkOrderDto ghtkDto = objectMapper.readValue(response.getBody(), GhtkOrderDto.class);
-            return ghtkDto.getData();
-        }catch (Exception e){
+            return ghtkDto.getOrder();
+        } catch (Exception e) {
             log.info(e.getMessage());
             return null;
         }
 
     }
+
+    public byte[] printOrder(String label) {
+        try {
+            String url = ghtkUrl + "/services/label/" + label;
+            RestTemplate restTemplate = new RestTemplate();
+            restTemplate.getMessageConverters().add(new ByteArrayHttpMessageConverter()); // Thêm ByteArrayHttpMessageConverter
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.add("Token", ghtkToken);
+            HttpEntity<Void> httpRequest = new HttpEntity<>(null, headers);
+            ResponseEntity<byte[]> response = restTemplate.exchange(url, HttpMethod.GET, httpRequest, byte[].class);
+            log.info(response.toString());
+            log.info("Response Status: " + response.getStatusCode());
+            if (response.getStatusCode() == HttpStatus.OK) {
+                return response.getBody();
+            }
+
+        } catch (Exception e) {
+            log.error("Error occurred: " + e.getMessage(), e);
+        }
+        return null;
+    }
+
 }

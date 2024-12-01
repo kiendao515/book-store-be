@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class LabelRequest {
-    private String orderCode;
-    private String pickUpAddressId;
+public class UpdateStatusOrder {
+    private String status;
 }

@@ -27,12 +27,12 @@ public class GhtkOrderRequest {
     @NoArgsConstructor
     public static class Order {
         private String id;
-        private String pickName;
-        private String pickAddress;
-        private String pickProvince;
-        private String pickDistrict;
-        private String pickWard;
-        private String pickTel;
+        private String pick_name;
+        private String pick_address;
+        private String pick_province;
+        private String pick_district;
+        private String pick_ward;
+        private String pick_tel;
         private String tel;
         private String name;
         private String address;
@@ -40,15 +40,15 @@ public class GhtkOrderRequest {
         private String district;
         private String ward;
         private String hamlet;
-        private String isFreeship;
-        private String pickDate;
-        private BigDecimal pickMoney;
+        private String is_freeship;
+        private String pick_date;
+        private BigDecimal pick_money;
         private String note;
         private BigDecimal value;
         private String transport;
-        private String pickOption;
-        private String deliverOption;
-        private int pickSession;
+        private String pick_option;
+        private String deliver_option;
+        private int pick_session;
     }
 }
 

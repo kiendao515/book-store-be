@@ -1,6 +1,7 @@
 package box.bookstorebe.service.shipping;
 
 import box.bookstorebe.client.CommonClient;
+import box.bookstorebe.common.Const;
 import box.bookstorebe.document.order.OrderDocument;
 import box.bookstorebe.dto.ghtk.GhtkOrderDto;
 import box.bookstorebe.dto.ghtk.OrderDetail;
@@ -15,10 +16,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 @AllArgsConstructor
 @Service
@@ -26,6 +32,7 @@ import java.util.Map;
 public class ShipService {
     private CommonClient commonClient;
     private final OrderRepository orderRepository;
+    private final ExecutorService executorService = Executors.newFixedThreadPool(10);
     public BigDecimal calculateShippingFee(ShippingFeeRequest request){
         return commonClient.calculateShippingFee(request);
     }
@@ -37,52 +44,90 @@ public class ShipService {
     }
     public static Map<String, String> parseAddress(String inputAddress) throws BizException {
         Map<String, String> addressComponents = new HashMap<>();
-        String[] parts = inputAddress.split(",");
-
-        if (parts.length < 4) {
+        String[] parts = inputAddress.split("-");
+        if (parts.length < 3) {
+            throw new BizException("Thông tin không đầy đủ. Cần số điện thoại, tên và địa chỉ.");
+        }
+        String phoneNumber = parts[0].trim();
+        String name = parts[1].trim();
+        String address = parts[2].trim();
+        String[] addressParts = address.split(",");
+        if (addressParts.length < 4) {
             throw new BizException("Địa chỉ không đầy đủ thông tin.");
         }
+        String streetAndNumber = addressParts[0].trim();
+        String ward = addressParts[1].trim();
+        String district = addressParts[2].trim();
+        String city = addressParts[3].trim();
 
-        String streetAndNumber = parts[0].trim();
-        String ward = parts[1].trim();
-        String district = parts[2].trim();
-        String city = parts[3].trim();
+        // Lưu thông tin vào map
+        addressComponents.put("phone_number", phoneNumber);
+        addressComponents.put("name", name);
         addressComponents.put("street", streetAndNumber);
         addressComponents.put("ward", ward);
         addressComponents.put("district", district);
         addressComponents.put("city", city);
+
         return addressComponents;
     }
-    public GhtkOrderDto.OrderResult createGhtkOrder(CreateOrder orderDto) throws BizException {
+    public List<GhtkOrderDto.OrderResult> createGhtkOrders(List<CreateOrder> orders) throws BizException {
+        List<GhtkOrderDto.OrderResult> orderResults = new ArrayList<>();
+
+        List<Future<GhtkOrderDto.OrderResult>> futures = new ArrayList<>();
+
+        for (CreateOrder orderDto : orders) {
+            futures.add(executorService.submit(() -> {
+                return createGhtkOrder(orderDto);  // Gọi hàm createGhtkOrder cho từng đơn hàng
+            }));
+        }
+
+        for (Future<GhtkOrderDto.OrderResult> future : futures) {
+            try {
+                GhtkOrderDto.OrderResult orderResult = future.get();
+                if (orderResult != null) {
+                    orderResults.add(orderResult);
+                }
+            } catch (InterruptedException | ExecutionException e) {
+                log.info(e.getMessage());
+                throw new BizException("Lỗi trong khi xử lý đơn hàng");
+            }
+        }
+
+        return orderResults;
+    }
+
+    private GhtkOrderDto.OrderResult createGhtkOrder(CreateOrder orderDto) throws BizException {
+        // Logic xử lý cho một đơn hàng, như đã có trong mã của bạn
         OrderDocument orderDocument = orderRepository.findByOrderCode(orderDto.getOrderCode());
         GhtkOrderRequest ghtkOrderRequest = new GhtkOrderRequest();
         GhtkOrderRequest.Order order = new GhtkOrderRequest.Order();
         order.setId(orderDocument.getOrderCode());
-        order.setPickName(orderDto.getPickName());
-        order.setPickAddress(orderDto.getPickAddress());
+        order.setPick_address(orderDto.getPickAddress());
         Map<String,String > pickAddress = parseAddress(orderDto.getPickAddress());
 
         // thông tin lấy hàng
-        order.setPickAddress(pickAddress.get("street"));
-        order.setPickProvince(pickAddress.get("city"));
-        order.setPickDistrict(pickAddress.get("district"));
-        order.setPickWard(pickAddress.get("ward"));
-        order.setPickTel(orderDto.getPickTel());
+        order.setPick_name(pickAddress.get("name"));
+        order.setPick_tel(pickAddress.get("tel"));
+        order.setPick_address(pickAddress.get("street"));
+        order.setPick_province(pickAddress.get("city"));
+        order.setPick_district(pickAddress.get("district"));
+        order.setPick_ward(pickAddress.get("ward"));
+        order.setPick_tel(pickAddress.get("phone_number"));
 
         // thông tin nhận hàng
-        order.setTel(orderDocument.getReceiverName());
-        order.setName(orderDocument.getReceiverPhone());
+        order.setTel(orderDocument.getReceiverPhone());
+        order.setName(orderDocument.getReceiverName());
         order.setAddress(orderDocument.getStreet());
         order.setProvince(orderDocument.getProvince().getFullName());
         order.setDistrict(orderDocument.getDistrict().getFullName());
         order.setWard(orderDocument.getWard().getFullName());
         order.setHamlet("Khác");
-        order.setIsFreeship("1");
-        order.setPickDate(order.getPickDate());
+        order.setIs_freeship("1");
+        order.setPick_date(String.valueOf(ZonedDateTime.now()));
         if(!orderDocument.isPaymentType()){
-            order.setPickMoney(orderDocument.getTotalAmount());
-        }else {
-            order.setPickMoney(BigDecimal.ZERO);
+            order.setPick_money(orderDocument.getTotalAmount());
+        } else {
+            order.setPick_money(BigDecimal.ZERO);
         }
         order.setNote(orderDto.getNote());
         order.setValue(orderDocument.getTotalAmount());
@@ -95,6 +140,16 @@ public class ShipService {
         product.add(product1);
         ghtkOrderRequest.setProducts(product);
 
-        return commonClient.createOrder(ghtkOrderRequest);
+        GhtkOrderDto.OrderResult orderResult = commonClient.createOrder(ghtkOrderRequest);
+        if(orderResult != null){
+            orderDocument.setStatus(Const.OrderStatus.READY_TO_SHIP);
+            orderDocument.setShippingCode(orderResult.getLabel());
+            orderRepository.save(orderDocument);
+        }
+        return orderResult;
+    }
+
+    public byte[] printOrder(String label){
+        return commonClient.printOrder(label);
     }
 }
