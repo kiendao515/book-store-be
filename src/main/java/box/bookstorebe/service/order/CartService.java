@@ -59,24 +59,38 @@ public class CartService extends BaseService {
         if (currentUser == null) {
             throw new BizException("Invalid token");
         }
-        AccountDocument user = accountRepository.findById(currentUser.getAccountId()).orElseThrow(() -> new BizException("Invalid account id"));
-        BookInventory bookInventory = bookRealityRepository.findById(cartModel.getBookInventoryId()).orElseThrow(() -> new BizException("Invalid book inventory id"));
+
+        AccountDocument user = accountRepository.findById(currentUser.getAccountId())
+                .orElseThrow(() -> new BizException("Invalid account id"));
+
+        BookInventory bookInventory = bookRealityRepository.findById(cartModel.getBookInventoryId())
+                .orElseThrow(() -> new BizException("Invalid book inventory id"));
+
+        List<BookInventory> relatedInventories = bookRealityRepository.findAllByRelatedBookId(bookInventory.getId());
+
+        relatedInventories.add(bookInventory);
+
+        int totalQuantity = relatedInventories.stream()
+                .mapToInt(BookInventory::getQuantity)
+                .sum();
+
+        if (totalQuantity < cartModel.getQuantity()) {
+            throw new BizException("Số lượng vượt quá tồn kho");
+        }
+
         CartDocument cartDocument = cartRepository.findByAccountIdAndBookInventoryId(currentUser.getAccountId(), bookInventory.getId());
         if (cartDocument == null) {
             cartDocument = new CartDocument();
             cartDocument.setQuantity(cartModel.getQuantity());
-        }else{
-            if (bookInventory.getQuantity() < (cartDocument.getQuantity() + cartModel.getQuantity())) {
-                throw new BizException("Số lượng vượt quá tồn kho");
-            } else {
-                cartDocument.setQuantity(cartModel.getQuantity() + cartModel.getQuantity());
-            }
+        } else {
+            cartDocument.setQuantity(cartDocument.getQuantity() + cartModel.getQuantity());
         }
 
         cartDocument.setBookInventoryId(cartModel.getBookInventoryId());
         cartDocument.setAccountId(user.getId());
         cartRepository.save(cartDocument);
     }
+
 
     public List<CartDto> getCarts() throws BizException {
         List<CartDto> cartDtoList = new ArrayList<>();

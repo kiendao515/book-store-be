@@ -10,12 +10,15 @@ public interface BookInventoryRepository extends MongoRepository<BookInventory, 
     void deleteByBookId(String bookId);
 
     List<BookInventory> findAllByBookId(String bookId);
-    List<BookInventory> findAllByBookIdAndStoreId(String storeId,String bookId);
 
-    List<BookInventory> findAllByBookIdAndStoreIdAndType(String storeId,String bookId, String type);
+    List<BookInventory> findAllByBookIdAndStoreId(String storeId, String bookId);
+
+    List<BookInventory> findAllByBookIdAndStoreIdAndType(String storeId, String bookId, String type);
 
     List<BookInventory> findAllByBookIdIn(List<String> bookIds);
 
-    BookInventory findByBookIdAndStoreIdAndType(String storeId, String bookId, BookType type);
+    BookInventory findByBookIdAndStoreIdAndType(String bookId, String storeId, BookType type);
+    List<BookInventory> findAllByRelatedBookId(String relatedId);
+
     List<BookInventory> findAllByIdIn(List<String> bookIds);
 }

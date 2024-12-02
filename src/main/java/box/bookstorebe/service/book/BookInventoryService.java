@@ -1,5 +1,7 @@
 package box.bookstorebe.service.book;
 
+import box.bookstorebe.common.Const;
+import box.bookstorebe.document.account.AccountDocument;
 import box.bookstorebe.document.bookstore.StoreDocument;
 import box.bookstorebe.document.book.BookDocument;
 import box.bookstorebe.document.book.BookInventory;
@@ -12,6 +14,7 @@ import box.bookstorebe.repository.book.BookInventoryRepository;
 import box.bookstorebe.repository.book.BookRepository;
 import box.bookstorebe.repository.bookstore.BookStoreRepository;
 import box.bookstorebe.repository.common.image.ImageRepository;
+import box.bookstorebe.repository.user.AccountRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,6 +34,7 @@ public class BookInventoryService {
     private final BookStoreRepository storeRepository;
     private final ImageRepository imageRepository;
     private final BookService bookService;
+    private final AccountRepository accountRepository;
 
     public List<BookInventory> getDetailBookInventory(String bookId,String storeId) throws BizException {
         if(bookId.isBlank() || storeId.isBlank()) throw new BizException("invalid params");
@@ -62,8 +66,15 @@ public class BookInventoryService {
         }else{
             bookInventory= bookInventoryOptional.get();
         }
+        Optional<AccountDocument> acc = accountRepository.findByEmail(Const.ADMIN_EMAIL);
         BookDocument bookDocument = bookRepository.findById(bookRealityModel.getBookId()).orElseThrow(() -> new BizException("Invalid book id"));
         StoreDocument store = storeRepository.findById(bookRealityModel.getStoreId()).orElseThrow(()-> new BizException("invalid store id"));
+        if(!acc.isPresent()) throw new BizException("có lỗi xảy ra");
+        StoreDocument storeDocument = storeRepository.findByAccountId(acc.get().getId());
+        BookInventory bookInventory1 = bookInventoryRepository.findByBookIdAndStoreIdAndType(bookDocument.getId(),storeDocument.getId(), bookRealityModel.getType());
+        if(bookInventory1 != null){
+            bookInventory.setRelatedBookId(bookInventory1.getId());
+        }
         bookInventory.setBookId(bookDocument.getId());
         bookInventory.setType(bookRealityModel.getType());
         bookInventory.setCoverImage(bookRealityModel.getCoverImage());

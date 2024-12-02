@@ -88,29 +88,49 @@ public class OrderService extends BaseService {
 
     @Transactional
     public Object createOrder(HttpServletRequest request, CreateOrderModel order, String returnUrl) throws BizException, MessagingException {
+
         RequestScope currentUser = this.getCurrentUserInfo();
         if (currentUser == null) {
             throw new BizException("Invalid token");
         }
+
         BigDecimal totalAmount = new BigDecimal(0);
         List<String> bookInventoryIds = order.getOrderItems().stream()
-                .map(OrderItem::getBookInventoryId).toList();
+                .map(OrderItem::getBookInventoryId).collect(Collectors.toList());
         List<BookInventory> bookInventories = bookInventoryRepository.findAllByIdIn(bookInventoryIds);
         if (bookInventories.size() != bookInventoryIds.size()) {
             throw new BizException("Some books are not available in inventory.");
         }
 
+        // Kiểm tra số lượng tồn kho cho các bản ghi có relatedBookId
         for (OrderItem orderItem : order.getOrderItems()) {
             BookInventory inventory = bookInventories.stream()
                     .filter(book -> book.getId().equals(orderItem.getBookInventoryId()))
                     .findFirst()
                     .orElseThrow(() -> new BizException("Book inventory ID " + orderItem.getBookInventoryId() + " not found"));
-            if (inventory.getQuantity() < orderItem.getQuantity()) {
+
+            // Lấy tất cả các bản ghi có relatedBookId
+            List<BookInventory> relatedInventories = bookInventoryRepository.findAllByRelatedBookId(inventory.getId());
+
+            // Đảm bảo bản gốc luôn được đưa lên đầu danh sách (bản gốc có relatedBookId == null)
+            if (inventory.getRelatedBookId() != null) {
+                relatedInventories.add(inventory); // Nếu không phải bản gốc thì thêm bản gốc vào cuối
+            } else {
+                // Nếu là bản gốc thì đặt nó lên đầu danh sách
+                relatedInventories.add(0, inventory);
+            }
+
+            // Tính tổng số lượng tồn kho từ tất cả các bản ghi có cùng relatedBookId
+            int totalAvailableQuantity = relatedInventories.stream()
+                    .mapToInt(BookInventory::getQuantity)
+                    .sum();
+
+            if (totalAvailableQuantity < orderItem.getQuantity()) {
                 throw new BizException("Not enough quantity for book inventory ID " + orderItem.getBookInventoryId());
             }
         }
 
-
+        // Tạo mới OrderDocument
         OrderDocument orderDocument = new OrderDocument();
         if (order.getDistrictCode() != null && order.getWardCode() != null && order.getProvinceCode() != null) {
             AddressDto addressDto = addressService.getAddress(order.getProvinceCode(), order.getDistrictCode(), order.getWardCode());
@@ -129,7 +149,6 @@ public class OrderService extends BaseService {
         }
         orderDocument.setCreatedAt(ZonedDateTime.now());
         orderDocument.setStreet(order.getStreet());
-//        orderDocument.setAddress(o);
         orderDocument.setReceiverName(order.getCustomerName());
         orderDocument.setReceiverPhone(order.getCustomerPhone());
         orderDocument.setAccountId(currentUser.getAccountId());
@@ -140,30 +159,62 @@ public class OrderService extends BaseService {
         orderDocument.setShippingCompany("GIAO HÀNG TIẾT KIỆM");
         OrderDocument savedOrder = orderRepository.save(orderDocument);
 
+        // Tạo danh sách OrderItemDocument và giảm số lượng tồn kho
         List<OrderItemDocument> orderItemDocuments = new ArrayList<>();
         for (OrderItem orderItem : order.getOrderItems()) {
             BookInventory inventory = bookInventories.stream()
                     .filter(book -> book.getId().equals(orderItem.getBookInventoryId()))
                     .findFirst()
                     .orElseThrow(() -> new BizException("Book inventory ID " + orderItem.getBookInventoryId() + " not found"));
-            totalAmount = totalAmount.add(inventory.getPrice().multiply(BigDecimal.valueOf(orderItem.getQuantity())));
-            // không trừ số lượng ở đây
-//            inventory.setQuantity(inventory.getQuantity() - orderItem.getQuantity());
-//            bookInventoryRepository.save(inventory);
 
+            // Lấy tất cả các bản ghi có relatedBookId
+            List<BookInventory> relatedInventories = bookInventoryRepository.findAllByRelatedBookId(inventory.getId());
+
+            // Đảm bảo bản gốc luôn được đưa lên đầu danh sách
+            if (inventory.getRelatedBookId() != null) {
+                relatedInventories.add(inventory); // Nếu không phải bản gốc thì thêm bản gốc vào cuối
+            } else {
+                relatedInventories.add(0, inventory); // Nếu là bản gốc thì đặt nó lên đầu danh sách
+            }
+
+            int remainingQuantity = orderItem.getQuantity();
+
+            // Bước 1: Trừ số lượng từ bản gốc (quantity lớn hơn) trước
+            for (BookInventory relatedInventory : relatedInventories) {
+                if (remainingQuantity <= 0) break;
+
+                // Nếu bản ghi có quantity > 0, trừ số lượng vào
+                if (relatedInventory.getQuantity() > 0) {
+                    int quantityToSubtract = Math.min(remainingQuantity, relatedInventory.getQuantity());
+                    relatedInventory.setQuantity(relatedInventory.getQuantity() - quantityToSubtract);
+                    remainingQuantity -= quantityToSubtract;
+
+                    // Lưu lại thay đổi
+                    bookInventoryRepository.save(relatedInventory);
+                }
+            }
+
+            // Cộng tổng tiền vào tổng số tiền của đơn hàng
+            totalAmount = totalAmount.add(inventory.getPrice().multiply(BigDecimal.valueOf(orderItem.getQuantity())));
+
+            // Tạo OrderItemDocument
             OrderItemDocument orderItemDocument = new OrderItemDocument();
             orderItemDocument.setOrderId(savedOrder.getId());
             orderItemDocument.setBookInventoryId(inventory.getId());
             orderItemDocument.setQuantity(orderItem.getQuantity());
             orderItemDocuments.add(orderItemDocument);
         }
+
+        // Cập nhật tổng số tiền vào đơn hàng và lưu
         savedOrder.setTotalAmount(totalAmount);
         orderRepository.save(savedOrder);
+
+        // Lưu OrderItemDocument
         orderItemRepository.saveAll(orderItemDocuments);
         messagingTemplate.convertAndSend("/topic/order", savedOrder);
+
+        // Thanh toán hoặc gửi email
         if (order.isPaymentMethod()) {
-            // Redirect to payment service
-//            BigDecimal total = calculateTotal(orderItemDocuments, bookInventories);
             return paymentService.createOrder(request, totalAmount, savedOrder.getOrderCode(), returnUrl);
         } else {
             mailService.sendEmailOrderDetail(order.getEmail(), savedOrder, orderItemDocuments);
@@ -171,6 +222,10 @@ public class OrderService extends BaseService {
 
         return savedOrder;
     }
+
+
+
+
 
     public String retryPayment(String id, String returnUrl, HttpServletRequest request) throws BizException {
         BigDecimal total = new BigDecimal(0);
