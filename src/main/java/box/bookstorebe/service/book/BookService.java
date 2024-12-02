@@ -55,17 +55,22 @@ public class BookService extends BaseService {
             String storeId,
             String createdAt,
             String updatedAt,
+            String bookSearchIds,
             Integer page,
             Integer size
     ) {
         ZonedDateTime created = null;
         ZonedDateTime updated = null;
-        if (createdAt != null && updatedAt!=null && !createdAt.isBlank() && !updatedAt.isBlank()) {
+        if (createdAt != null && updatedAt != null && !createdAt.isBlank() && !updatedAt.isBlank()) {
             created = ZonedDateTime.parse(createdAt);
             updated = ZonedDateTime.parse(updatedAt);
         }
+        List<String> bookSearchIdsArr = null;
+        if (bookSearchIds != null) {
+            bookSearchIdsArr = List.of(bookSearchIds.split(","));
+        }
 
-        Page<BookDocument> bookDocuments = bookRepository.getBooks(name, categoryId, storeId, created, updated, page, size);
+        Page<BookDocument> bookDocuments = bookRepository.getBooks(name, categoryId, storeId, created, updated, bookSearchIdsArr, page, size);
 
         List<String> resultCategoryIds = new ArrayList<>();
         List<String> bookIds = new ArrayList<>();

@@ -87,7 +87,7 @@ public class BookInventoryService {
         bookDocument.setIsbn(createBookAndInventory.getIsbn());
         bookDocument.setCoverImage(createBookAndInventory.getCoverImage());
         bookDocument.setBackImage(createBookAndInventory.getBackImage());
-        bookDocument.setDemoImage(createBookAndInventory.getDemoImage());
+        bookDocument.setDemoImage(createBookAndInventory.getContentImage());
         bookDocument.setDemoUrl(createBookAndInventory.getDemoUrl());
         if(!createBookAndInventory.getTags().isBlank()){
             String[] arr = createBookAndInventory.getTags().split(",");

@@ -24,7 +24,7 @@ public class BookExRepositoryImpl implements BookExRepository {
     private final MongoTemplate mongoTemplate;
 
     @Override
-    public Page<BookDocument> getBooks(String name, String categoryId, String storeId, ZonedDateTime startAt, ZonedDateTime endAt, Integer page, Integer size) {
+    public Page<BookDocument> getBooks(String name, String categoryId, String storeId, ZonedDateTime startAt, ZonedDateTime endAt, List<String> bookSearchIds, Integer page, Integer size) {
         PageRequest pageRequest;
 
         Criteria criteria = new Criteria();
@@ -49,6 +49,9 @@ public class BookExRepositoryImpl implements BookExRepository {
             if (endAt != null) {
                 criteria = criteria.lte(endAt);
             }
+        }
+        if (bookSearchIds != null) {
+            criteria = criteria.and("_id").in(bookSearchIds);
         }
 
         long totalElement = mongoTemplate.count(new Query().addCriteria(criteria), BookDocument.class);

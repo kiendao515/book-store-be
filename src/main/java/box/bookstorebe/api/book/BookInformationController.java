@@ -55,10 +55,11 @@ public class BookInformationController {
             @RequestParam(name = "store_id", required = false) String storeId,
             @RequestParam(name = "start_at", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) String startAt,
             @RequestParam(name = "end_at", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) String endAt,
+            @RequestParam(name = "book_search_ids", required = false) String bookSearchIds,
             @RequestParam(name = "page", required = false) Integer page,
             @RequestParam(name = "size", required = false) Integer size
     ) {
-        return new BasePagingResponse<>(bookService.getBooks(q, categoryId, storeId, startAt, endAt, page, size));
+        return new BasePagingResponse<>(bookService.getBooks(q, categoryId, storeId, startAt, endAt, bookSearchIds, page, size));
     }
 
     @GetMapping("{id}")
@@ -68,7 +69,7 @@ public class BookInformationController {
 
     @PostMapping
     public BaseResponse<BookDocument> createNewBook(@RequestBody @Valid CreateBookModel bookModel) throws BizException {
-        BookDocument bookDocument= bookService.createNewBook(bookModel);
+        BookDocument bookDocument = bookService.createNewBook(bookModel);
         return new BaseResponse<>(Const.ResultCode.SUCCESS, bookDocument);
     }
 
