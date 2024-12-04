@@ -100,10 +100,11 @@ public class BookInventoryService {
         bookDocument.setBackImage(createBookAndInventory.getBackImage());
         bookDocument.setDemoImage(createBookAndInventory.getContentImage());
         bookDocument.setDemoUrl(createBookAndInventory.getDemoUrl());
-        if(!createBookAndInventory.getTags().isBlank()){
-            String[] arr = createBookAndInventory.getTags().split(",");
-            bookDocument.setTags(Arrays.stream(arr).toList());
+        if (!createBookAndInventory.getTags().isBlank()) {
+            String[] arr = createBookAndInventory.getTags().split("[,;]");
+            bookDocument.setTags(Arrays.stream(arr).map(String::trim).toList());
         }
+
         bookDocument.setCategoryId(createBookAndInventory.getCategoryId());
         bookDocument.setCreatedAt(ZonedDateTime.now());
         bookDocument.setUpdatedAt(ZonedDateTime.now());
@@ -114,7 +115,7 @@ public class BookInventoryService {
             newBookInventory.setBookId(bookDocument1.getId());
             newBookInventory.setType(bookInventory.getType());
             newBookInventory.setPrice(bookInventory.getPrice());
-//        bookInventory.setCoverImage(bookRealityModel.getCoverImage());
+            newBookInventory.setCoverImage(bookInventory.getCoverImage());
             newBookInventory.setQuantity(bookInventory.getQuantity());
             newBookInventory.setLocation(bookInventory.getLocation());
             newBookInventory.setStoreId(storeDocument.getId());

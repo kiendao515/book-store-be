@@ -40,5 +40,6 @@ public class CreateBookAndInventory {
         private BookType type;
         private Integer quantity;
         private String location;
+        private String coverImage;
     }
 }

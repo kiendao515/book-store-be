@@ -26,7 +26,7 @@ public class CreateBookModel {
     private String backImage;
     private List<String> contentImage;
     private String demoUrl;
-    private List<String> tags;
+    private String tags;
     private String categoryId;
     private String storeId;
 }

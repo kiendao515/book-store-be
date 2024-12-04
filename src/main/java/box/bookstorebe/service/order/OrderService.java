@@ -102,25 +102,19 @@ public class OrderService extends BaseService {
             throw new BizException("Some books are not available in inventory.");
         }
 
-        // Kiểm tra số lượng tồn kho cho các bản ghi có relatedBookId
         for (OrderItem orderItem : order.getOrderItems()) {
             BookInventory inventory = bookInventories.stream()
                     .filter(book -> book.getId().equals(orderItem.getBookInventoryId()))
                     .findFirst()
                     .orElseThrow(() -> new BizException("Book inventory ID " + orderItem.getBookInventoryId() + " not found"));
 
-            // Lấy tất cả các bản ghi có relatedBookId
             List<BookInventory> relatedInventories = bookInventoryRepository.findAllByRelatedBookId(inventory.getId());
 
-            // Đảm bảo bản gốc luôn được đưa lên đầu danh sách (bản gốc có relatedBookId == null)
             if (inventory.getRelatedBookId() != null) {
-                relatedInventories.add(inventory); // Nếu không phải bản gốc thì thêm bản gốc vào cuối
-            } else {
-                // Nếu là bản gốc thì đặt nó lên đầu danh sách
+                relatedInventories.add(inventory);
                 relatedInventories.add(0, inventory);
             }
 
-            // Tính tổng số lượng tồn kho từ tất cả các bản ghi có cùng relatedBookId
             int totalAvailableQuantity = relatedInventories.stream()
                     .mapToInt(BookInventory::getQuantity)
                     .sum();
@@ -167,7 +161,6 @@ public class OrderService extends BaseService {
                     .findFirst()
                     .orElseThrow(() -> new BizException("Book inventory ID " + orderItem.getBookInventoryId() + " not found"));
 
-            // Lấy tất cả các bản ghi có relatedBookId
             List<BookInventory> relatedInventories = bookInventoryRepository.findAllByRelatedBookId(inventory.getId());
 
             // Đảm bảo bản gốc luôn được đưa lên đầu danh sách

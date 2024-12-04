@@ -207,11 +207,11 @@ public class BookService extends BaseService {
         bookDocument.setBackImage(bookModel.getBackImage());
         bookDocument.setDemoImage(bookModel.getContentImage());
         bookDocument.setDemoUrl(bookModel.getDemoUrl());
-//        if (!bookModel.getTags().isBlank()) {
-//            String[] arr = bookModel.getTags().split(";");
-//            bookDocument.setTags(Arrays.stream(arr).toList());
-//        }
-        bookDocument.setTags(bookModel.getTags());
+        if (!bookModel.getTags().isBlank()) {
+            String[] arr = bookModel.getTags().split("[,;]");
+            bookDocument.setTags(Arrays.stream(arr).map(String::trim).toList());
+        }
+
         bookDocument.setCategoryId(bookModel.getCategoryId());
         bookDocument.setCreatedAt(ZonedDateTime.now());
         bookDocument.setUpdatedAt(ZonedDateTime.now());
