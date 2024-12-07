@@ -124,7 +124,6 @@ public class OrderService extends BaseService {
             }
         }
 
-        // Tạo mới OrderDocument
         OrderDocument orderDocument = new OrderDocument();
         if (order.getDistrictCode() != null && order.getWardCode() != null && order.getProvinceCode() != null) {
             AddressDto addressDto = addressService.getAddress(order.getProvinceCode(), order.getDistrictCode(), order.getWardCode());
@@ -153,7 +152,6 @@ public class OrderService extends BaseService {
         orderDocument.setShippingCompany("GIAO HÀNG TIẾT KIỆM");
         OrderDocument savedOrder = orderRepository.save(orderDocument);
 
-        // Tạo danh sách OrderItemDocument và giảm số lượng tồn kho
         List<OrderItemDocument> orderItemDocuments = new ArrayList<>();
         for (OrderItem orderItem : order.getOrderItems()) {
             BookInventory inventory = bookInventories.stream()
@@ -163,34 +161,28 @@ public class OrderService extends BaseService {
 
             List<BookInventory> relatedInventories = bookInventoryRepository.findAllByRelatedBookId(inventory.getId());
 
-            // Đảm bảo bản gốc luôn được đưa lên đầu danh sách
             if (inventory.getRelatedBookId() != null) {
-                relatedInventories.add(inventory); // Nếu không phải bản gốc thì thêm bản gốc vào cuối
+                relatedInventories.add(inventory);
             } else {
-                relatedInventories.add(0, inventory); // Nếu là bản gốc thì đặt nó lên đầu danh sách
+                relatedInventories.add(0, inventory);
             }
 
             int remainingQuantity = orderItem.getQuantity();
 
-            // Bước 1: Trừ số lượng từ bản gốc (quantity lớn hơn) trước
             for (BookInventory relatedInventory : relatedInventories) {
                 if (remainingQuantity <= 0) break;
 
-                // Nếu bản ghi có quantity > 0, trừ số lượng vào
                 if (relatedInventory.getQuantity() > 0) {
                     int quantityToSubtract = Math.min(remainingQuantity, relatedInventory.getQuantity());
                     relatedInventory.setQuantity(relatedInventory.getQuantity() - quantityToSubtract);
                     remainingQuantity -= quantityToSubtract;
 
-                    // Lưu lại thay đổi
                     bookInventoryRepository.save(relatedInventory);
                 }
             }
 
-            // Cộng tổng tiền vào tổng số tiền của đơn hàng
             totalAmount = totalAmount.add(inventory.getPrice().multiply(BigDecimal.valueOf(orderItem.getQuantity())));
 
-            // Tạo OrderItemDocument
             OrderItemDocument orderItemDocument = new OrderItemDocument();
             orderItemDocument.setOrderId(savedOrder.getId());
             orderItemDocument.setBookInventoryId(inventory.getId());
@@ -198,15 +190,13 @@ public class OrderService extends BaseService {
             orderItemDocuments.add(orderItemDocument);
         }
 
-        // Cập nhật tổng số tiền vào đơn hàng và lưu
+
         savedOrder.setTotalAmount(totalAmount);
         orderRepository.save(savedOrder);
 
-        // Lưu OrderItemDocument
         orderItemRepository.saveAll(orderItemDocuments);
         messagingTemplate.convertAndSend("/topic/order", savedOrder);
 
-        // Thanh toán hoặc gửi email
         if (order.isPaymentMethod()) {
             return paymentService.createOrder(request, totalAmount, savedOrder.getOrderCode(), returnUrl);
         } else {
@@ -260,35 +250,6 @@ public class OrderService extends BaseService {
                     orderDto.setPaid(order.getTransactionId()!= null ? true : false);
                     try {
                         orderDto.setAccount(accountService.getAccountDetail(order.getAccountId()));
-//                        List<OrderItemDocument> orderItemDocuments = orderItemRepository.findAllByOrderId(order.getId());
-//                        List<String> bookInventoryIds = orderItemDocuments.stream()
-//                                .map(OrderItemDocument::getBookInventoryId)
-//                                .collect(Collectors.toList());
-//
-//                        Map<String, BookInventory> bookInventoryMap = bookInventoryRepository.findAllById(bookInventoryIds).stream()
-//                                .collect(Collectors.toMap(BookInventory::getId, inventory -> inventory));
-//
-//                        List<String> bookIds = bookInventoryMap.values().stream()
-//                                .map(BookInventory::getBookId)
-//                                .distinct()
-//                                .collect(Collectors.toList());
-//
-//                        Map<String, BookDocument> bookMap = bookRepository.findAllById(bookIds).stream()
-//                                .collect(Collectors.toMap(BookDocument::getId, book -> book));
-//
-//                        List<OrderItemDto> orderItems = orderItemDocuments.stream()
-//                                .map(orderItem -> {
-//                                    BookInventory bookInventory = bookInventoryMap.get(orderItem.getBookInventoryId());
-//                                    BookDocument bookDocument = bookMap.get(bookInventory.getBookId());
-//                                    return OrderItemDto.builder()
-//                                            .bookName(bookDocument.getName())
-//                                            .quantity(orderItem.getQuantity())
-//                                            .price(bookInventory.getPrice())
-//                                            .type(bookInventory.getType())
-//                                            .build();
-//                                })
-//                                .toList();
-//                        orderDto.setOrderItems(orderItems);
                     } catch (BizException e) {
                         throw new RuntimeException(e);
                     }
@@ -382,16 +343,12 @@ public class OrderService extends BaseService {
         return OrderDto.builder()
                 .id(orderDocument.getId())
                 .address(orderDocument.getStreet() + "," + orderDocument.getWard().getFullName() + "," + orderDocument.getDistrict().getFullName() + "," + orderDocument.getProvince().getFullName())
-//                .email(accountDocument.getEmail())
-//                .customerName(orderDocument.getReceiverName())
-//                .customerPhone(orderDocument.getReceiverPhone())
                 .status(orderDocument.getStatus())
                 .createdAt(orderDocument.getCreatedAt())
 //                .orderItems(orderItemDocuments)
                 .isPaid(isPaid)
                 .paymentType(orderDocument.isPaymentType())
                 .note(orderDocument.getNote())
-//                .orderCode(orderDocument.getOrderCode())
                 .shippingCode(orderDocument.getShippingCode())
                 .shippingCompany(orderDocument.getShippingCompany())
                 .build();
@@ -401,22 +358,11 @@ public class OrderService extends BaseService {
     public void updateOrder(String id, UpdateOrderModel order) throws BizException {
         OrderDocument orderDocument = orderRepository.findByOrderCode(id);
         if(orderDocument == null) throw new BizException("order code is invalid");
-//        orderDocument.setAddress(order.getAddress());
-//        orderDocument.setEmail(order.getEmail());
-//        orderDocument.setCustomerName(order.getCustomerName());
-//        orderDocument.setCustomerPhone(order.getCustomerPhone());
-//        orderDocument.setShippingCode(order.getShippingCode());
-//        orderDocument.setNote(order.getNote());
-//        orderDocument.setShippingCompany(order.getShippingCompany());
         if (!orderDocument.getStatus().equalsIgnoreCase(order.getStatus())) {
             switch (order.getStatus()) {
                 case Const.OrderStatus.CANCEL:
                     if (orderDocument.getStatus().equals(Const.OrderStatus.CREATED)) {
                         handleOrderStatus(orderDocument, Const.OrderStatus.CREATED, order.getStatus(), "can't cancel order now!");
-//                        orderDocument.getItems().forEach(bookRealityDocument -> {
-//                            bookRealityDocument.setStatus(Const.BookRealityStatus.AVAILABLE.toString());
-//                            bookRealityRepository.save(bookRealityDocument);
-//                        });
                     }
                     break;
                 case Const.OrderStatus.READY_TO_PACKAGE:
