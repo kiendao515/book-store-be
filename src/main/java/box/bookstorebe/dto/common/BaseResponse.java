@@ -1,6 +1,7 @@
 package box.bookstorebe.dto.common;
 
 
+import box.bookstorebe.dto.report.OrderReportDto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Data;

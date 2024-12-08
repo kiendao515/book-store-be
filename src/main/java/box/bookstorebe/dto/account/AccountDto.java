@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.Data;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 
 @Data
@@ -32,4 +33,6 @@ public class AccountDto {
     private ZonedDateTime createdAt;
     @Field("orders_completed")
     private Long ordersCompleted;
+    @Field("total_amount")
+    private BigDecimal totalAmount;
 }

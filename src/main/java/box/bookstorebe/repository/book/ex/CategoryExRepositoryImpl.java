@@ -1,7 +1,9 @@
 package box.bookstorebe.repository.book.ex;
 
+import box.bookstorebe.common.Const;
 import box.bookstorebe.document.book.CategoryDocument;
 import box.bookstorebe.dto.book.CategoryDto;
+import box.bookstorebe.dto.book.CategorySalesStat;
 import lombok.AllArgsConstructor;
 import org.bson.Document;
 import org.springframework.data.domain.Page;
@@ -86,5 +88,30 @@ public class CategoryExRepositoryImpl implements CategoryExRepository {
         AggregationResults<CategoryDto> result = mongoTemplate.aggregate(aggregation, "categories", CategoryDto.class);
         return new PageImpl<>(result.getMappedResults(), pageRequest, totalElement);
     }
+
+
+    public List<CategorySalesStat> getTopSellingCategories() {
+        Aggregation aggregation = Aggregation.newAggregation(
+                Aggregation.lookup("book_information", "category_id", "_id", "book_info"),
+                Aggregation.lookup("book_inventory", "book_info._id", "book_id", "book_inventory"),
+                Aggregation.lookup("order_items", "book_inventory._id", "book_inventory_id", "order_items"),
+                Aggregation.lookup("orders", "order_items.order_id", "_id", "orders"),
+                Aggregation.match(Criteria.where("orders.status").is("DONE")),
+                Aggregation.group("book_info.category_id")
+                        .sum("order_items.quantity").as("totalSold")
+                        .first("book_info.category_id").as("categoryId"),
+                Aggregation.lookup("categories", "categoryId", "_id", "category"),
+                Aggregation.project("category._id", "category.name", "totalSold")
+                        .andExclude("_id"),
+                Aggregation.sort(Sort.by(Sort.Order.desc("totalSold"))),
+                Aggregation.limit(10)
+        );
+
+        // Thực hiện aggregation và trả kết quả
+        AggregationResults<CategorySalesStat> result = mongoTemplate.aggregate(aggregation, "categories", CategorySalesStat.class);
+        return result.getMappedResults();
+    }
+
+
 
 }
