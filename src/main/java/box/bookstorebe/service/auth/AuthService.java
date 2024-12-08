@@ -62,7 +62,7 @@ public class AuthService extends BaseService {
         userModel.setEmail(request.getEmail());
         userModel.setPassword(request.getPassword());
 
-        AccountDocument user = accountService.createAccount(userModel, Role.USER,0);
+        AccountDocument user = accountService.createAccount(userModel, Role.USER, 0);
         applicationEventPublisher.publishEvent(new OnRegistrationCompleteEvent(this, user, clientUrl));
         return "Register successfully. Please check your email to confirm your account.";
     }
@@ -90,7 +90,7 @@ public class AuthService extends BaseService {
     }
 
     public String confirmRegistration(String token) throws BizException {
-        AccountDocument accountDocument= accountRepository.findByToken(token).orElseThrow(()-> new BizException("invalid token"));
+        AccountDocument accountDocument = accountRepository.findByToken(token).orElseThrow(() -> new BizException("invalid token"));
         if (accountDocument.getExpiryDate().isBefore(ZonedDateTime.now())) throw new BizException("Token expired");
         accountDocument.setEnabled(1);
         accountRepository.save(accountDocument);
@@ -158,14 +158,16 @@ public class AuthService extends BaseService {
             throw new BizException("Invalid token");
         }
         AccountDocument user = accountRepository.findById(currentUser.getAccountId()).orElseThrow(() -> new BizException("Invalid user"));
-        if(currentUser.getRole().equals(Role.USER)){
+        if (currentUser.getRole().equals(Role.USER)) {
             CustomerDocument customerDocument = customerRepository.findByAccountId(user.getId());
             UserProfileDto userProfileDto = new UserProfileDto();
             userProfileDto.setId(user.getId());
             userProfileDto.setEmail(user.getEmail());
-            userProfileDto.setDateOfBirth(customerDocument.getDateOfBirth());
-            userProfileDto.setPhoneNumber(customerDocument.getPhoneNumber());
-            userProfileDto.setFullName(customerDocument.getName());
+            if (customerDocument != null) {
+                userProfileDto.setDateOfBirth(customerDocument.getDateOfBirth());
+                userProfileDto.setPhoneNumber(customerDocument.getPhoneNumber());
+                userProfileDto.setFullName(customerDocument.getName());
+            }
             userProfileDto.setRole(user.getRole().name());
             return userProfileDto;
         }
@@ -178,7 +180,7 @@ public class AuthService extends BaseService {
             throw new BizException("Invalid token");
         }
         CustomerDocument user = customerRepository.findByAccountId(currentUser.getAccountId());
-        if(user == null){
+        if (user == null) {
             user = new CustomerDocument();
             user.setAccountId(currentUser.getAccountId());
         }
