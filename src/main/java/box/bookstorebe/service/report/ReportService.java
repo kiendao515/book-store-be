@@ -12,6 +12,7 @@ import box.bookstorebe.dto.account.AccountDto;
 import box.bookstorebe.dto.book.CategorySalesStat;
 import box.bookstorebe.dto.common.BasePagingResponse;
 import box.bookstorebe.dto.order.OrderDto;
+import box.bookstorebe.dto.report.BookStockDto;
 import box.bookstorebe.dto.report.BuyerStat;
 import box.bookstorebe.dto.report.OrderReportDto;
 import box.bookstorebe.dto.report.RevenueStatDto;
@@ -226,6 +227,10 @@ public class ReportService extends BaseService {
                 .map(entry -> new RevenueStatDto(entry.getKey(), entry.getValue()))
                 .sorted(Comparator.comparing(RevenueStatDto::getDate)) // Sắp xếp theo ngày
                 .collect(Collectors.toList());
+    }
+
+    public List<BookStockDto> getBookStock(String storeId) {
+       return null;
     }
 
 

@@ -6,11 +6,13 @@ import box.bookstorebe.dto.book.CategorySalesStat;
 import box.bookstorebe.dto.common.BasePagingResponse;
 import box.bookstorebe.dto.common.BaseResponse;
 import box.bookstorebe.dto.order.OrderDto;
+import box.bookstorebe.dto.report.BookStockDto;
 import box.bookstorebe.dto.report.OrderReportDto;
 import box.bookstorebe.dto.report.RevenueStatDto;
 import box.bookstorebe.exception.BizException;
 import box.bookstorebe.service.report.ReportService;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -69,5 +71,12 @@ public class ReportController {
         return new BaseResponse<>(Const.ResultCode.SUCCESS, revenueStats);
     }
 
+
+    @GetMapping("/stocks")
+    public BaseResponse<List<BookStockDto>> getStockBookByStore(@RequestParam("store_id") String storeId) {
+
+        List<BookStockDto> revenueStats = reportService.getBookStock(storeId);
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, revenueStats);
+    }
 
 }
