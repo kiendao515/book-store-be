@@ -115,9 +115,9 @@ public class OrderService extends BaseService {
                 relatedInventories.add(0, inventory);
             }
 
-            int totalAvailableQuantity = relatedInventories.stream()
+            int totalAvailableQuantity = relatedInventories.size() != 0 ? relatedInventories.stream()
                     .mapToInt(BookInventory::getQuantity)
-                    .sum();
+                    .sum() : inventory.getQuantity();
 
             if (totalAvailableQuantity < orderItem.getQuantity()) {
                 throw new BizException("Not enough quantity for book inventory ID " + orderItem.getBookInventoryId());
@@ -207,9 +207,6 @@ public class OrderService extends BaseService {
     }
 
 
-
-
-
     public String retryPayment(String id, String returnUrl, HttpServletRequest request) throws BizException {
         BigDecimal total = new BigDecimal(0);
         OrderDocument orderDocument = orderRepository.findById(id).orElseThrow(() -> new BizException("orderId is invalid"));
@@ -247,7 +244,7 @@ public class OrderService extends BaseService {
                     orderDto.setUpdatedAt(order.getUpdatedAt());
                     orderDto.setStatus(order.getStatus());
                     orderDto.setOrderCode(order.getOrderCode());
-                    orderDto.setPaid(order.getTransactionId()!= null ? true : false);
+                    orderDto.setPaid(order.getTransactionId() != null ? true : false);
                     try {
                         orderDto.setAccount(accountService.getAccountDetail(order.getAccountId()));
                     } catch (BizException e) {
@@ -357,7 +354,7 @@ public class OrderService extends BaseService {
     @Transactional
     public void updateOrder(String id, UpdateOrderModel order) throws BizException {
         OrderDocument orderDocument = orderRepository.findByOrderCode(id);
-        if(orderDocument == null) throw new BizException("order code is invalid");
+        if (orderDocument == null) throw new BizException("order code is invalid");
         if (!orderDocument.getStatus().equalsIgnoreCase(order.getStatus())) {
             switch (order.getStatus()) {
                 case Const.OrderStatus.CANCEL:
