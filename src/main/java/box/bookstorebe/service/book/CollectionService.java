@@ -1,11 +1,14 @@
 package box.bookstorebe.service.book;
 
+import box.bookstorebe.common.Const;
+import box.bookstorebe.document.book.BookDocument;
 import box.bookstorebe.document.book.CollectionDocument;
 import box.bookstorebe.document.common.ImageDocument;
 import box.bookstorebe.dto.book.CollectionDto;
 import box.bookstorebe.exception.BizException;
 import box.bookstorebe.model.book.collection.CreateCollectionModel;
 import box.bookstorebe.model.book.collection.UpdateCollectionModel;
+import box.bookstorebe.repository.book.BookRepository;
 import box.bookstorebe.repository.book.CollectionRepository;
 import box.bookstorebe.repository.common.image.ImageRepository;
 import lombok.AllArgsConstructor;
@@ -17,6 +20,7 @@ import org.springframework.stereotype.Service;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @AllArgsConstructor
 @Service
@@ -24,10 +28,15 @@ import java.util.List;
 public class CollectionService {
     private final ImageRepository imageRepository;
     private final CollectionRepository collectionRepository;
+    private final BookRepository bookRepository;
 
-    public Page<CollectionDto> getCollections(String name, Integer page, Integer size) {
-        Page<CollectionDocument> collectionDocuments = collectionRepository.getCollections(name, page, size);
-
+    public Page<CollectionDto> getCollections(String name, Integer showQuantity, String sortBy, Const.SortDirection orderBy, Integer page, Integer size) {
+        Page<CollectionDocument> collectionDocuments = collectionRepository.getCollections(name, showQuantity, sortBy, orderBy,page, size);
+        List<String> collectionIds = collectionDocuments.getContent().stream().map(CollectionDocument::getId).filter(Objects::nonNull).toList();
+        List<BookDocument> bookDocuments = new ArrayList<>();
+        if (showQuantity.equals(1)) {
+            bookDocuments = bookRepository.findAllByCollectionIdIn(collectionIds);
+        }
         List<CollectionDto> content = new ArrayList<>();
         for (CollectionDocument collectionDocument : collectionDocuments.getContent()) {
             CollectionDto collectionDto = new CollectionDto();
@@ -37,7 +46,15 @@ public class CollectionService {
             collectionDto.setCreatedAt(collectionDocument.getCreatedAt());
             collectionDto.setUpdatedAt(collectionDocument.getUpdatedAt());
             collectionDto.setImage(collectionDocument.getImageUrl());
+            collectionDto.setQuantity(bookDocuments.size());
             content.add(collectionDto);
+        }
+        if (sortBy.equals("name")) {
+            content.sort((o1, o2) -> o2.getName().compareTo(o1.getName()));
+            return new PageImpl<>(content, collectionDocuments.getPageable(), collectionDocuments.getTotalElements());
+        }
+        if (sortBy.equals("numOfBooks")) {
+            content.sort((o1, o2) -> o2.getQuantity().compareTo(o1.getQuantity()));
         }
         return new PageImpl<>(content, collectionDocuments.getPageable(), collectionDocuments.getTotalElements());
     }

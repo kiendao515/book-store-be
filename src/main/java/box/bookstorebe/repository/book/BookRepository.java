@@ -10,4 +10,7 @@ import java.util.List;
 public interface BookRepository extends MongoRepository<BookDocument, String>, BookExRepository {
     @Query("{ 'relatedPeople': { $elemMatch: { 'type': 'AUTHOR', 'relatedPersonId': ?0 } } }")
     List<BookDocument> findBooksByAuthorId(String authorId);
+
+    List<BookDocument> findAllByCategoryIdIn(List<String> categoryIds);
+    List<BookDocument> findAllByCollectionIdIn(List<String> collectionIds);
 }

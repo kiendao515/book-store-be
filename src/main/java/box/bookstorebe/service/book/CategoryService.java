@@ -1,18 +1,25 @@
 package box.bookstorebe.service.book;
 
+import box.bookstorebe.common.Const;
+import box.bookstorebe.document.book.BookDocument;
 import box.bookstorebe.document.book.CategoryDocument;
 import box.bookstorebe.dto.book.CategoryDto;
 import box.bookstorebe.exception.BizException;
 import box.bookstorebe.mapper.book.CategoryMapper;
 import box.bookstorebe.model.book.category.CreateCategoryModel;
 import box.bookstorebe.model.book.category.UpdateCategoryModel;
+import box.bookstorebe.repository.book.BookRepository;
 import box.bookstorebe.repository.book.CategoryRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Service;
 
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 @AllArgsConstructor
 @Service
@@ -20,8 +27,13 @@ import java.time.ZonedDateTime;
 public class CategoryService {
     private final CategoryRepository categoryRepository;
 
-    public Page<CategoryDto> getCategories(String name, Integer page, Integer size) {
-        return categoryRepository.getCategories(name, page, size);
+    public Page<CategoryDto> getCategories(String name, String sortBy, Const.SortDirection orderBy, Integer page, Integer size) {
+        Page<CategoryDto> categoryDtos = categoryRepository.getCategories(name, sortBy, orderBy, page, size);
+        List<CategoryDto> content = new ArrayList<>(categoryDtos.getContent());
+        if (sortBy.equals("numOfBooks")) {
+            content.sort(Comparator.comparing(CategoryDto::getNumOfBooks).reversed());
+        }
+        return new PageImpl<>(content, categoryDtos.getPageable(), categoryDtos.getTotalElements());
     }
 
     public CategoryDto findById(String id) throws BizException {
@@ -47,7 +59,7 @@ public class CategoryService {
     }
 
     public void deleteCategory(String id) throws BizException {
-        CategoryDocument c= categoryRepository.findById(id).orElseThrow(() -> new BizException("Invalid category id"));
+        CategoryDocument c = categoryRepository.findById(id).orElseThrow(() -> new BizException("Invalid category id"));
         c.setDeletedAt(ZonedDateTime.now());
         categoryRepository.save(c);
     }

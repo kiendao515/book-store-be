@@ -21,10 +21,13 @@ public class CollectionController {
     @GetMapping()
     public BasePagingResponse<CollectionDto> getCollections(
             @RequestParam(name = "name", required = false) String name,
+            @RequestParam(name = "sort_by", defaultValue = "_id") String sortBy,
+            @RequestParam(name = "order_by", defaultValue = "DESC") Const.SortDirection orderBy,
+            @RequestParam(name = "show_quantity", defaultValue = "0") Integer showQuantity,
             @RequestParam(name = "page", required = false) Integer page,
             @RequestParam(name = "size", required = false) Integer size
     ) {
-        return new BasePagingResponse<>(collectionService.getCollections(name, page, size));
+        return new BasePagingResponse<>(collectionService.getCollections(name, showQuantity, sortBy, orderBy, page, size));
     }
 
     @GetMapping("{id}")

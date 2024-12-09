@@ -5,11 +5,13 @@ import box.bookstorebe.repository.order.ex.OrderExRepository;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 
 public interface OrderRepository extends MongoRepository<OrderDocument, String>, OrderExRepository {
     OrderDocument findByOrderCode(String orderId);
     List<OrderDocument> findAllByStatus(String status);
     List<OrderDocument> findAllByAccountIdInAndStatus(List<String> accountIds, String status);
+    List<OrderDocument> findAllByCreatedAtBetweenAndStatusIs(ZonedDateTime startAt, ZonedDateTime endAt, String status);
 
 }

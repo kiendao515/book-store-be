@@ -37,6 +37,12 @@ public class CustomerDocument {
     @Field(name = "address")
     private List<String> address;
 
+    @Field(name = "point")
+    private Float point = 0.0f;
+
+    @Field(name = "received_award")
+    private Integer receivedAward = 0;
+
     @Field(name = "deleted_at")
     private ZonedDateTime deletedAd;
 

@@ -48,11 +48,13 @@ public class BookService extends BaseService {
     private final BookFavoriteRepository bookFavoriteRepository;
     private final OrderItemRepository orderItemRepository;
     private final OrderRepository orderRepository;
+    private final CollectionRepository collectionRepository;
 
     public Page<BookDto> getBooks(
             String name,
             String categoryId,
             String storeId,
+            String collectionId,
             String createdAt,
             String updatedAt,
             String bookSearchIds,
@@ -70,7 +72,7 @@ public class BookService extends BaseService {
             bookSearchIdsArr = List.of(bookSearchIds.split(","));
         }
 
-        Page<BookDocument> bookDocuments = bookRepository.getBooks(name, categoryId, storeId, created, updated, bookSearchIdsArr, page, size);
+        Page<BookDocument> bookDocuments = bookRepository.getBooks(name, categoryId, storeId, collectionId, created, updated, bookSearchIdsArr, page, size);
 
         List<String> resultCategoryIds = new ArrayList<>();
         List<String> bookIds = new ArrayList<>();

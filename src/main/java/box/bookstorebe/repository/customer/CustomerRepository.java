@@ -10,4 +10,5 @@ import java.util.List;
 public interface CustomerRepository extends MongoRepository<CustomerDocument, String>, CustomerExRepository {
     List<CustomerDocument> findAllByAccountIdIn(List<String> accountIds);
     CustomerDocument findByAccountId(String accountId);
+    List<CustomerDocument> findAllByReceivedAwardIsNotNullAndPhoneNumberIsNotNullAndAccountIdIn(List<String> accountIds);
 }

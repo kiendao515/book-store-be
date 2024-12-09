@@ -24,7 +24,7 @@ public class BookExRepositoryImpl implements BookExRepository {
     private final MongoTemplate mongoTemplate;
 
     @Override
-    public Page<BookDocument> getBooks(String name, String categoryId, String storeId, ZonedDateTime startAt, ZonedDateTime endAt, List<String> bookSearchIds, Integer page, Integer size) {
+    public Page<BookDocument> getBooks(String name, String categoryId, String storeId, String collectionId, ZonedDateTime startAt, ZonedDateTime endAt, List<String> bookSearchIds, Integer page, Integer size) {
         PageRequest pageRequest;
 
         Criteria criteria = new Criteria();
@@ -38,6 +38,9 @@ public class BookExRepositoryImpl implements BookExRepository {
 
         if (storeId != null) {
             criteria = criteria.and("store_id").is(storeId);
+        }
+        if (collectionId != null) {
+            criteria = criteria.and("collection_id").is(collectionId);
         }
 
         if (startAt != null || endAt != null) {

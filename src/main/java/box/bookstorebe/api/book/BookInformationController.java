@@ -53,13 +53,14 @@ public class BookInformationController {
             @RequestParam(name = "q", required = false) String q,
             @RequestParam(name = "category_id", required = false) String categoryId,
             @RequestParam(name = "store_id", required = false) String storeId,
+            @RequestParam(name = "collection_id", required = false) String collectionId,
             @RequestParam(name = "start_at", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) String startAt,
             @RequestParam(name = "end_at", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) String endAt,
             @RequestParam(name = "book_search_ids", required = false) String bookSearchIds,
             @RequestParam(name = "page", required = false) Integer page,
             @RequestParam(name = "size", required = false) Integer size
     ) {
-        return new BasePagingResponse<>(bookService.getBooks(q, categoryId, storeId, startAt, endAt, bookSearchIds, page, size));
+        return new BasePagingResponse<>(bookService.getBooks(q, categoryId, storeId, collectionId, startAt, endAt, bookSearchIds, page, size));
     }
 
     @GetMapping("{id}")

@@ -122,10 +122,14 @@ public final class Const {
         }
     }
 
-    public static  class SystemConfig {
+    public static class SystemConfig {
         public static final String AUTHOR_NATIONALITY = "create_book.author.nationality";
         public static final String CREATE_BOOK_CATEGORY = "create_book.book.category";
         public static final String CREATE_BOOK_STORE = "create_book.book_store";
+        public static final String AMOUNT_FREE_SHIP = "create_order.amount_free_ship";
+        public static final String AMOUNT_SHIPPING_FEE = "create_order.amount_shipping_fee";
+        public static final String PAYMENT_HARD_TOKEN = "payment.hard_token";
+        public static final String CANCEL_ORDER_DURATION = "order.cancel_order_duration";
 
     }
     public static final BigDecimal AMOUNT_CAN_FREESHIP = new BigDecimal(500000);
@@ -133,4 +137,8 @@ public final class Const {
     public static final String ADMIN_PASS = "123456";
     public static final String PICK_ADDRESS_CITY = "thành phố hà nội";
     public static final String PICK_ADDRESS_DISTRICT = "quận tây hồ";
+    public enum SortDirection {
+        ASC,
+        DESC
+    }
 }

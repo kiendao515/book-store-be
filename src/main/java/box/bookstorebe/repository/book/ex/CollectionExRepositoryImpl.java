@@ -1,7 +1,10 @@
 package box.bookstorebe.repository.book.ex;
 
+import box.bookstorebe.common.Const;
+import box.bookstorebe.document.book.BookDocument;
 import box.bookstorebe.document.book.CategoryDocument;
 import box.bookstorebe.document.book.CollectionDocument;
+import box.bookstorebe.repository.book.BookRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -13,6 +16,9 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
 
@@ -22,7 +28,7 @@ public class CollectionExRepositoryImpl implements CollectionExRepository {
     private final MongoTemplate mongoTemplate;
 
     @Override
-    public Page<CollectionDocument> getCollections(String name, Integer page, Integer size) {
+    public Page<CollectionDocument> getCollections(String name, Integer showQuantity, String sortBy, Const.SortDirection orderBy, Integer page, Integer size) {
         PageRequest pageRequest;
         Criteria criteria = new Criteria();
         if (name != null) {

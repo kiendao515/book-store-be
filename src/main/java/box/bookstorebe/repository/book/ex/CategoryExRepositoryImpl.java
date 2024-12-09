@@ -18,6 +18,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
@@ -28,7 +29,7 @@ public class CategoryExRepositoryImpl implements CategoryExRepository {
     private final MongoTemplate mongoTemplate;
 
     @Override
-    public Page<CategoryDto> getCategories(String name, Integer page, Integer size) {
+    public Page<CategoryDto> getCategories(String name,String sortBy, Const.SortDirection orderBy, Integer page, Integer size) {
         PageRequest pageRequest;
         Criteria criteria = new Criteria();
         criteria = criteria.and("deleted_at").isNull();
@@ -71,7 +72,7 @@ public class CategoryExRepositoryImpl implements CategoryExRepository {
                 .and("created_at").as("createdAt")
                 .and("updated_at").as("updatedAt");
 
-        SortOperation sortOperation = Aggregation.sort(Sort.by(Sort.Order.desc("_id")));
+        SortOperation sortOperation = Aggregation.sort(Sort.by(Objects.equals(orderBy, Const.SortDirection.ASC) ? Sort.Direction.ASC : Sort.Direction.DESC, sortBy));
         SkipOperation skipOperation = Aggregation.skip(pageRequest.getOffset());
         LimitOperation limitOperation = Aggregation.limit(pageRequest.getPageSize());
 
