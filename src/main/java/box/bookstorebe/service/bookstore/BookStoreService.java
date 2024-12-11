@@ -57,6 +57,7 @@ public class BookStoreService {
         bookStoreDocument.setAddress(bookStoreModel.getAddress());
         bookStoreDocument.setPhoneNumber(bookStoreModel.getPhoneNumber());
         bookStoreDocument.setDescription(bookStoreModel.getDescription());
+        bookStoreDocument.setCommissionPercentage(bookStoreModel.getCommissionPercentage());
         bookStoreDocument.setCreatedAt(ZonedDateTime.now());
         bookStoreDocument.setUpdatedAt(ZonedDateTime.now());
         bookStoreRepository.save(bookStoreDocument);
@@ -81,6 +82,7 @@ public class BookStoreService {
         bookStoreDocument.setAddress(bookStoreModel.getAddress());
         bookStoreDocument.setPhoneNumber(bookStoreModel.getPhone());
         bookStoreDocument.setDescription(bookStoreModel.getDescription());
+        bookStoreDocument.setCommissionPercentage(bookStoreModel.getCommissionPercentage());
         bookStoreDocument.setCreatedAt(ZonedDateTime.now());
         bookStoreDocument.setUpdatedAt(ZonedDateTime.now());
         return bookStoreDocument;
@@ -106,6 +108,7 @@ public class BookStoreService {
             bookStoreDocument.setAddress(updateBookStoreModel.getAddress());
             bookStoreDocument.setPhoneNumber(updateBookStoreModel.getPhone());
             bookStoreDocument.setDescription(updateBookStoreModel.getDescription());
+            bookStoreDocument.setCommissionPercentage(updateBookStoreModel.getCommissionPercentage());
             bookStoreDocument.setUpdatedAt(ZonedDateTime.now());
         }
         bookStoreRepository.save(bookStoreDocument);

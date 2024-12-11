@@ -16,4 +16,5 @@ public class CreateBookStoreModel {
     private String address;
     private String phoneNumber;
     private String description;
+    private Float commissionPercentage;
 }

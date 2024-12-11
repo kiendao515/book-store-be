@@ -35,4 +35,6 @@ public class AccountDto {
     private Long ordersCompleted;
     @Field("total_amount")
     private BigDecimal totalAmount;
+    @Field("commission_percentage")
+    private Float commissionPercentage;
 }

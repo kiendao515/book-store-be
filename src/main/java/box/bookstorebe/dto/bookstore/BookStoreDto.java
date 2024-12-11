@@ -19,6 +19,7 @@ public class BookStoreDto {
     private String thumbnail;
     private String address;
     private String phoneNumber;
+    private Float commissionPercentage;
     private ZonedDateTime createdAt;
     private ZonedDateTime updatedAt;
 }

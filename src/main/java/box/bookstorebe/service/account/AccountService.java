@@ -105,6 +105,7 @@ public class AccountService {
                     account.setPhone(customer.getPhoneNumber());
                     account.setAddress(customer.getAddress());
                     account.setDescription(customer.getDescription());
+                    account.setCommissionPercentage(customer.getCommissionPercentage());
                 }
             });
         }

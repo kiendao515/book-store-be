@@ -17,4 +17,5 @@ public class UpdateBookStoreModel {
     private String phone;
     private String description;
     private String enabled;
+    private Float commissionPercentage;
 }

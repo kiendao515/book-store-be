@@ -32,6 +32,9 @@ public class StoreDocument {
     @Field(name = "address")
     private String address;
 
+    @Field(name = "commission_percentage")
+    private Float commissionPercentage;
+
     @Field(name = "thumbnail")
     private String thumbnail;
 
