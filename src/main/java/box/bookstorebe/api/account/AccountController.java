@@ -37,9 +37,16 @@ public class AccountController {
     }
 
     @PostMapping()
-//    @PreAuthorize("hasAnyAuthority('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     public BaseResponse<String> createNewUser(@RequestBody @Valid UserModel userModel) throws BizException {
         userService.createAccount(userModel, Role.USER,1);
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, "Create new user successfully");
+    }
+
+    @PostMapping("pass/reset/{id}")
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
+    public BaseResponse<String> resetPass(@PathVariable String id, @RequestBody @Valid UserModel userModel) throws BizException {
+        userService.resetPass(id, userModel);
         return new BaseResponse<>(Const.ResultCode.SUCCESS, "Create new user successfully");
     }
 

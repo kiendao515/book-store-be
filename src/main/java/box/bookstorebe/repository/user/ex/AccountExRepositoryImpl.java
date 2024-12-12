@@ -54,7 +54,8 @@ public class AccountExRepositoryImpl implements AccountExRepository {
                 .and("last_name").as("last_name")
                 .and("email").as("email")
                 .and("role").as("role")
-                .and("enabled").as("enabled");
+                .and("enabled").as("enabled")
+                .and("created_at").as("created_at");
 
         Aggregation aggregation = newAggregation(
                 matchOperations,

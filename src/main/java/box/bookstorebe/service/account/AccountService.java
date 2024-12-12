@@ -106,6 +106,7 @@ public class AccountService {
                     account.setAddress(customer.getAddress());
                     account.setDescription(customer.getDescription());
                     account.setCommissionPercentage(customer.getCommissionPercentage());
+                    account.setCreatedAt(account.getCreatedAt());
                 }
             });
         }
@@ -132,7 +133,17 @@ public class AccountService {
         newUser.setRole(role);
         newUser.setEnabled(isEnable);
         newUser.setExpiryDate(calculateExpiryDate(60 * 24));
+        newUser.setCreatedAt(ZonedDateTime.now());
         return accountRepository.save(newUser);
+    }
+    public AccountDocument resetPass(String id, UserModel userModel) throws BizException {
+        AccountDocument user = accountRepository.findById(id).orElseThrow(()-> new BizException("invalid id"));
+        String salt = generateSalt();
+        String combinedPasswordSalt = salt + userModel.getPassword();
+        user.setPassword(passwordEncoder.encode(combinedPasswordSalt));
+        user.setSalt(salt);
+        user.setUpdatedAt(ZonedDateTime.now());
+        return accountRepository.save(user);
     }
 
     private ZonedDateTime calculateExpiryDate(int expiryTimeInMinutes) {
@@ -154,6 +165,7 @@ public class AccountService {
         String combinedPasswordSalt = user.getSalt() + userModel.getPassword();
         updatedUser.setPassword(passwordEncoder.encode(combinedPasswordSalt));
         updatedUser.setRole(Role.USER);
+        updatedUser.setUpdatedAt(ZonedDateTime.now());
         accountRepository.save(updatedUser);
     }
 

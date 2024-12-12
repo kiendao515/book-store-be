@@ -18,4 +18,5 @@ public class CreateBookstoreAndAccount {
     private String description;
     private String email;
     private String password;
+    private Float commissionPercentage;
 }

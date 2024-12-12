@@ -69,6 +69,7 @@ public class BookStoreService {
         bookStoreDocument.setAddress(bookStoreModel.getAddress());
         bookStoreDocument.setPhoneNumber(bookStoreModel.getPhone());
         bookStoreDocument.setDescription(bookStoreModel.getDescription());
+        bookStoreDocument.setCommissionPercentage(bookStoreDocument.getCommissionPercentage());
         bookStoreDocument.setCreatedAt(ZonedDateTime.now());
         bookStoreDocument.setUpdatedAt(ZonedDateTime.now());
         AccountDocument acc= accountService.createAccount(new UserModel(bookStoreModel.getEmail(), bookStoreModel.getPassword()), Role.STORE,1);
