@@ -141,4 +141,8 @@ public final class Const {
         ASC,
         DESC
     }
+    public enum SettlementStatus{
+        PENDING,
+        DONE
+    }
 }

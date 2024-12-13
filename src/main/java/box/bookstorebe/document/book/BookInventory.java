@@ -1,5 +1,6 @@
 package box.bookstorebe.document.book;
 
+import box.bookstorebe.common.Const;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -43,6 +44,9 @@ public class BookInventory {
 
     @Field("cover_image")
     private String coverImage;
+
+    @Field("settlement_status")
+    private Const.SettlementStatus settlementStatus;
 
     @Field("created_at")
     private ZonedDateTime createdAt;
