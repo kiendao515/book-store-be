@@ -29,7 +29,7 @@ public class HandleOrderStateSchedule {
     private final BookInventoryRepository bookInventoryRepository;
     private final SystemConfigRepository systemConfigRepository;
 
-    @Scheduled(fixedDelay = 60 * 1000L) // Chạy mỗi phút
+    @Scheduled(fixedDelay = 60 * 1000L)
     @SchedulerLock(name = "handleOrderState", lockAtLeastFor = "1M", lockAtMostFor = "10M")
     @Transactional
     public void handleOrderState() {
@@ -37,8 +37,6 @@ public class HandleOrderStateSchedule {
         try {
             int cancelOrderDuration = getCancelOrderDuration();
             ZonedDateTime now = ZonedDateTime.now();
-
-            // Lấy danh sách đơn hàng cần hủy
             List<OrderDocument> orders = orderRepository.findAllByCreatedAtBetweenAndStatusIs(
                     now.minusHours(cancelOrderDuration + 24),
                     now.minusHours(cancelOrderDuration),
@@ -72,7 +70,6 @@ public class HandleOrderStateSchedule {
 
     private void updateOrderAndInventory(List<OrderDocument> orders) {
         for (OrderDocument order : orders) {
-            // Lấy các item liên quan đến đơn hàng
             List<OrderItemDocument> orderItems = orderItemRepository.findAllByOrderId(order.getId());
 
             for (OrderItemDocument orderItem : orderItems) {

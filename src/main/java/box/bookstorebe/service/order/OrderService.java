@@ -372,6 +372,7 @@ public class OrderService extends BaseService {
                     break;
                 case Const.OrderStatus.DONE:
                     handleOrderStatus(orderDocument, Const.OrderStatus.SHIPPING, order.getStatus(), "can't change order status to done now!");
+                    saveSettleDetail(orderDocument);
                     break;
                 default:
                     throw new BizException("Can't update order status!");
@@ -387,6 +388,13 @@ public class OrderService extends BaseService {
         } else {
             throw new BizException(errorMessage);
         }
+    }
+    private void saveSettleDetail(OrderDocument orderDocument){
+        List<OrderItemDocument> listOrderItems = orderItemRepository.findAllByOrderId(orderDocument.getId());
+        listOrderItems.forEach(orderItem -> {
+            orderItem.setSettledStatus(0);
+        });
+        orderItemRepository.saveAll(listOrderItems);
     }
 
 }
