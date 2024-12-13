@@ -45,6 +45,9 @@ public class BookInventory {
     @Field("cover_image")
     private String coverImage;
 
+    @Field("barcode")
+    private String barcode;
+
     @Field("settlement_status")
     private Const.SettlementStatus settlementStatus;
 

@@ -24,6 +24,7 @@ import box.bookstorebe.repository.order.OrderItemRepository;
 import box.bookstorebe.repository.order.OrderRepository;
 import box.bookstorebe.repository.user.AccountRepository;
 import box.bookstorebe.service.BaseService;
+import box.bookstorebe.util.GenerateDataUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -48,7 +49,6 @@ public class BookService extends BaseService {
     private final BookFavoriteRepository bookFavoriteRepository;
     private final OrderItemRepository orderItemRepository;
     private final OrderRepository orderRepository;
-    private final CollectionRepository collectionRepository;
 
     public Page<BookDto> getBooks(
             String name,
@@ -254,6 +254,7 @@ public class BookService extends BaseService {
             bookReality.setUpdatedAt(ZonedDateTime.now());
             bookReality.setQuantity(bookReality.getQuantity());
             bookReality.setStoreId(bookRealityModel.getStoreId());
+            bookReality.setBarcode(GenerateDataUtils.generateUniqueString(String.format("%s_%s", bookReality.getBookId(), bookReality.getType())));
             bookRealityRepository.save(bookReality);
         }
     }
