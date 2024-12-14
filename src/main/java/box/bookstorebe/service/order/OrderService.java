@@ -115,11 +115,12 @@ public class OrderService extends BaseService {
                 relatedInventories.add(0, inventory);
             }
 
-            int totalAvailableQuantity = relatedInventories.size() != 0 ? relatedInventories.stream()
+            int totalAvailableQuantityForAnotherStore = !relatedInventories.isEmpty() ? relatedInventories.stream()
                     .mapToInt(BookInventory::getQuantity)
                     .sum() : inventory.getQuantity();
+            int totalAvailable = totalAvailableQuantityForAnotherStore+ inventory.getQuantity();
 
-            if (totalAvailableQuantity < orderItem.getQuantity()) {
+            if (totalAvailable < orderItem.getQuantity()) {
                 throw new BizException("Not enough quantity for book inventory ID " + orderItem.getBookInventoryId());
             }
         }
@@ -178,16 +179,14 @@ public class OrderService extends BaseService {
                     remainingQuantity -= quantityToSubtract;
 
                     bookInventoryRepository.save(relatedInventory);
+                    OrderItemDocument orderItemDocument = new OrderItemDocument();
+                    orderItemDocument.setOrderId(savedOrder.getId());
+                    orderItemDocument.setBookInventoryId(relatedInventory.getId());
+                    orderItemDocument.setQuantity(quantityToSubtract);
+                    orderItemDocuments.add(orderItemDocument);
+                    totalAmount = totalAmount.add(relatedInventory.getPrice().multiply(BigDecimal.valueOf(quantityToSubtract)));
                 }
             }
-
-            totalAmount = totalAmount.add(inventory.getPrice().multiply(BigDecimal.valueOf(orderItem.getQuantity())));
-
-            OrderItemDocument orderItemDocument = new OrderItemDocument();
-            orderItemDocument.setOrderId(savedOrder.getId());
-            orderItemDocument.setBookInventoryId(inventory.getId());
-            orderItemDocument.setQuantity(orderItem.getQuantity());
-            orderItemDocuments.add(orderItemDocument);
         }
 
 
@@ -244,7 +243,7 @@ public class OrderService extends BaseService {
                     orderDto.setUpdatedAt(order.getUpdatedAt());
                     orderDto.setStatus(order.getStatus());
                     orderDto.setOrderCode(order.getOrderCode());
-                    orderDto.setPaid(order.getTransactionId() != null ? true : false);
+                    orderDto.setPaid(order.getTransactionId() != null);
                     try {
                         orderDto.setAccount(accountService.getAccountDetail(order.getAccountId()));
                     } catch (BizException e) {
@@ -372,6 +371,7 @@ public class OrderService extends BaseService {
                     break;
                 case Const.OrderStatus.DONE:
                     handleOrderStatus(orderDocument, Const.OrderStatus.SHIPPING, order.getStatus(), "can't change order status to done now!");
+                    saveSettleDetail(orderDocument);
                     break;
                 default:
                     throw new BizException("Can't update order status!");
@@ -387,6 +387,13 @@ public class OrderService extends BaseService {
         } else {
             throw new BizException(errorMessage);
         }
+    }
+    private void saveSettleDetail(OrderDocument orderDocument){
+        List<OrderItemDocument> listOrderItems = orderItemRepository.findAllByOrderId(orderDocument.getId());
+        listOrderItems.forEach(orderItem -> {
+            orderItem.setSettledStatus(0);
+        });
+        orderItemRepository.saveAll(listOrderItems);
     }
 
 }

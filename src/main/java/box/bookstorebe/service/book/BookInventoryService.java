@@ -66,11 +66,13 @@ public class BookInventoryService {
         Optional<AccountDocument> acc = accountRepository.findByEmail(Const.ADMIN_EMAIL);
         BookDocument bookDocument = bookRepository.findById(bookRealityModel.getBookId()).orElseThrow(() -> new BizException("Invalid book id"));
         StoreDocument store = storeRepository.findById(bookRealityModel.getStoreId()).orElseThrow(() -> new BizException("invalid store id"));
-        if (!acc.isPresent()) throw new BizException("có lỗi xảy ra");
+        if (acc.isEmpty()) throw new BizException("có lỗi xảy ra");
         StoreDocument storeDocument = storeRepository.findByAccountId(acc.get().getId());
         BookInventory bookInventory1 = bookInventoryRepository.findByBookIdAndStoreIdAndType(bookDocument.getId(), storeDocument.getId(), bookRealityModel.getType());
         if (bookInventory1 != null) {
-            bookInventory.setRelatedBookId(bookInventory1.getId());
+            if (!bookInventory1.getId().equals(bookInventory.getId())) {
+                bookInventory.setRelatedBookId(bookInventory1.getId());
+            }
         }
         bookInventory.setBookId(bookDocument.getId());
         bookInventory.setType(bookRealityModel.getType());

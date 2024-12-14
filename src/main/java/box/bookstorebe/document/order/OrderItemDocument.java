@@ -7,6 +7,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.time.ZonedDateTime;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -23,4 +25,7 @@ public class OrderItemDocument {
 
     @Field(name = "quantity")
     private Integer quantity;
+
+    @Field("status")
+    private Integer settledStatus; // 0 là chưa chốt, 1 là đã chốt
 }

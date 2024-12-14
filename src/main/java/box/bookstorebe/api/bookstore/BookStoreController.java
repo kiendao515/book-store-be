@@ -3,6 +3,7 @@ package box.bookstorebe.api.bookstore;
 import box.bookstorebe.common.Const;
 import box.bookstorebe.dto.account.DeleteAccountDto;
 import box.bookstorebe.dto.bookstore.BookStoreDto;
+import box.bookstorebe.dto.bookstore.StoreRevenueDto;
 import box.bookstorebe.dto.common.BasePagingResponse;
 import box.bookstorebe.dto.common.BaseResponse;
 import box.bookstorebe.exception.BizException;
@@ -14,6 +15,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/book-stores")
@@ -33,6 +36,15 @@ public class BookStoreController {
     @GetMapping("{id}")
     public BaseResponse<BookStoreDto> getBookStoreDetail(@PathVariable String id) throws BizException {
         return new BaseResponse<>(Const.ResultCode.SUCCESS, bookStoreService.findById(id));
+    }
+
+    @GetMapping("/statistic")
+    public BaseResponse<List<StoreRevenueDto>> getBookStoreStatistic(
+            @RequestParam(name = "from", required = false) String from,
+            @RequestParam(name = "to", required = false) String to,
+            @RequestParam(name = "store_id", required = false) String storeId
+    ) throws BizException {
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, bookStoreService.getStoreRevenue(storeId));
     }
 
 //    @PostMapping

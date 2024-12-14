@@ -128,14 +128,15 @@ public class MailService {
             BookDocument bookInfo = bookRepository.findById(bookInventory.getBookId())
                     .orElseThrow(() -> new BizException("Không tìm thấy thông tin sách trong hệ thống."));
 
-            String key = bookInfo.getName() + "-" + bookInventory.getType() + "-" + bookInventory.getPrice();
+            String formattedPrice = bookInventory.getPrice().stripTrailingZeros().toPlainString();
+            String key = bookInfo.getName() + ";" + bookInventory.getType() + ";" + formattedPrice;
             bookCountMap.put(key, bookCountMap.getOrDefault(key, 0) + item.getQuantity());
 
             totalPay = totalPay.add(bookInventory.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
         }
 
         for (Map.Entry<String, Integer> entry : bookCountMap.entrySet()) {
-            String[] parts = entry.getKey().split("-");
+            String[] parts = entry.getKey().split(";");
             String name = parts[0];
             String condition = parts[1];
             BigDecimal price = new BigDecimal(parts[2]);
@@ -151,7 +152,7 @@ public class MailService {
 
         builder.append("</table>")
                 .append("<p>Phí giao hàng: ")
-                .append(totalPay.compareTo(Const.AMOUNT_CAN_FREESHIP) < 0 ? Const.SHIPPING_FEE : 0).append("</p>")
+                .append(order.getShippingFee()).append("</p>")
                 .append("<p>Tổng tiền: ")
                 .append(totalPay.add(totalPay.compareTo(Const.AMOUNT_CAN_FREESHIP) < 0 ? Const.SHIPPING_FEE : BigDecimal.ZERO))
                 .append("</p>")

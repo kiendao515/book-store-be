@@ -3,16 +3,23 @@ package box.bookstorebe.service.bookstore;
 import box.bookstorebe.document.account.AccountDocument;
 import box.bookstorebe.document.account.CustomerDocument;
 import box.bookstorebe.document.account.Role;
+import box.bookstorebe.document.book.BookDocument;
+import box.bookstorebe.document.book.BookInventory;
 import box.bookstorebe.document.bookstore.StoreDocument;
+import box.bookstorebe.document.order.OrderItemDocument;
 import box.bookstorebe.dto.account.DeleteAccountDto;
 import box.bookstorebe.dto.bookstore.BookStoreDto;
+import box.bookstorebe.dto.bookstore.StoreRevenueDto;
 import box.bookstorebe.exception.BizException;
 import box.bookstorebe.mapper.bookstore.BookStoreMapper;
 import box.bookstorebe.model.bookstore.CreateBookStoreModel;
 import box.bookstorebe.model.bookstore.CreateBookstoreAndAccount;
 import box.bookstorebe.model.bookstore.UpdateBookStoreModel;
 import box.bookstorebe.model.user.UserModel;
+import box.bookstorebe.repository.book.BookInventoryRepository;
+import box.bookstorebe.repository.book.BookRepository;
 import box.bookstorebe.repository.bookstore.BookStoreRepository;
+import box.bookstorebe.repository.order.OrderItemRepository;
 import box.bookstorebe.repository.user.AccountRepository;
 import box.bookstorebe.service.account.AccountService;
 import lombok.AllArgsConstructor;
@@ -24,6 +31,8 @@ import org.springframework.stereotype.Service;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @Service
@@ -32,6 +41,9 @@ public class BookStoreService {
     private final BookStoreRepository bookStoreRepository;
     private final AccountService accountService;
     private final AccountRepository accountRepository;
+    private final BookInventoryRepository bookInventoryRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final BookRepository bookRepository;
 
     // route này cho admin thêm sửa xóa bkstore
     public Page<BookStoreDto> getBookStores(String name, Integer page, Integer size) {
@@ -127,4 +139,72 @@ public class BookStoreService {
             }
         }
     }
+
+    public List<StoreRevenueDto> getStoreRevenue(String id) throws BizException {
+        StoreDocument storeDocument = bookStoreRepository.findById(id)
+                .orElseThrow(() -> new BizException("Invalid store id"));
+
+        List<BookInventory> bookInventories = bookInventoryRepository.findAllByStoreId(id);
+
+        if (bookInventories.isEmpty()) {
+            throw new BizException("No books found for the store id: " + id);
+        }
+
+        List<String> bookIds = bookInventories.stream()
+                .map(BookInventory::getBookId)
+                .distinct()
+                .toList();
+
+        Map<String, BookDocument> bookMap = bookRepository.findAllById(bookIds).stream()
+                .collect(Collectors.toMap(BookDocument::getId, book -> book));
+        List<String> bookInventoryIds = bookInventories.stream()
+                .map(BookInventory::getId)
+                .toList();
+
+        List<OrderItemDocument> orderItems = orderItemRepository.findAllByBookInventoryIdIn(bookInventoryIds);
+        Map<String, List<OrderItemDocument>> orderItemsGroupedByInventory = orderItems.stream()
+                .collect(Collectors.groupingBy(OrderItemDocument::getBookInventoryId));
+        Map<String, List<BookInventory>> inventoriesGroupedByBookId = bookInventories.stream()
+                .collect(Collectors.groupingBy(BookInventory::getBookId));
+        List<StoreRevenueDto> revenueDtos = new ArrayList<>();
+
+        for (Map.Entry<String, List<BookInventory>> entry : inventoriesGroupedByBookId.entrySet()) {
+            String bookId = entry.getKey();
+            List<BookInventory> inventoriesForBook = entry.getValue();
+            int totalInventory = inventoriesForBook.stream().mapToInt(BookInventory::getQuantity).sum();
+            int totalSold = 0;
+            int totalSettled = 0;
+
+            for (BookInventory inventory : inventoriesForBook) {
+                List<OrderItemDocument> itemsForInventory = orderItemsGroupedByInventory.getOrDefault(inventory.getId(), List.of());
+                int sold = itemsForInventory.stream().mapToInt(OrderItemDocument::getQuantity).sum();
+                int settled = itemsForInventory.stream()
+                        .filter(orderItem -> orderItem.getSettledStatus() == 1)
+                        .mapToInt(OrderItemDocument::getQuantity)
+                        .sum();
+                totalSold += sold;
+                totalSettled += settled;
+            }
+
+            int notSettled = totalSold - totalSettled;
+            BookDocument book = bookMap.get(bookId);
+            if (book == null) {
+                throw new BizException("Book not found for id: " + bookId);
+            }
+            float commissionRate = storeDocument.getCommissionPercentage();
+            StoreRevenueDto dto = new StoreRevenueDto(
+                    bookId,
+                    book,
+                    totalInventory,
+                    totalSold,
+                    totalSettled,
+                    notSettled,
+                    commissionRate
+            );
+            revenueDtos.add(dto);
+        }
+
+        return revenueDtos;
+    }
+
 }
