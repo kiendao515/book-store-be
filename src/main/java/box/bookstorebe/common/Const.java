@@ -39,7 +39,8 @@ public final class Const {
             "/api/v1/wards",
             "/api/v1/shipping-addresses/**",
             "/socket/**",
-            "/api/v1/reports/**"
+            "/api/v1/reports/**",
+            "/api/v1/offline-orders/**",
     };
 
 

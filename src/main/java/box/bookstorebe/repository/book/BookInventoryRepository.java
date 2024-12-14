@@ -21,4 +21,8 @@ public interface BookInventoryRepository extends MongoRepository<BookInventory, 
     List<BookInventory> findAllByRelatedBookId(String relatedId);
 
     List<BookInventory> findAllByIdIn(List<String> bookIds);
+
+    List<BookInventory> findAllByBarcodeIn(List<String> barcodes);
+
+    BookInventory findByBarcode(String barcode);
 }
