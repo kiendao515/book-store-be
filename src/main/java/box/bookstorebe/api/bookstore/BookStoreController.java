@@ -38,9 +38,13 @@ public class BookStoreController {
         return new BaseResponse<>(Const.ResultCode.SUCCESS, bookStoreService.findById(id));
     }
 
-    @GetMapping("/statistic/{id}")
-    public BaseResponse<List<StoreRevenueDto>> getBookStoreStatistic(@PathVariable String id) throws BizException {
-        return new BaseResponse<>(Const.ResultCode.SUCCESS, bookStoreService.getStoreRevenue(id));
+    @GetMapping("/statistic")
+    public BaseResponse<List<StoreRevenueDto>> getBookStoreStatistic(
+            @RequestParam(name = "from", required = false) String from,
+            @RequestParam(name = "to", required = false) String to,
+            @RequestParam(name = "store_id", required = false) String storeId
+    ) throws BizException {
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, bookStoreService.getStoreRevenue(storeId));
     }
 
 //    @PostMapping

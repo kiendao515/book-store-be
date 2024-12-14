@@ -36,14 +36,14 @@ public class BookInventoryService {
     private final BookService bookService;
     private final AccountRepository accountRepository;
 
-    public List<BookInventory> getDetailBookInventory(String bookId,String storeId) throws BizException {
-        if(bookId.isBlank() || storeId.isBlank()) throw new BizException("invalid params");
+    public List<BookInventory> getDetailBookInventory(String bookId, String storeId) throws BizException {
+        if (bookId.isBlank() || storeId.isBlank()) throw new BizException("invalid params");
         return bookInventoryRepository.findAllByBookIdAndStoreId(bookId, storeId);
     }
 
     public void createBookInventory(CreateBookRealityModel bookRealityModel) throws BizException {
         BookDocument bookDocument = bookRepository.findById(bookRealityModel.getBookId()).orElseThrow(() -> new BizException("Invalid book id"));
-        StoreDocument storeDocument = storeRepository.findById(bookRealityModel.getStoreId()).orElseThrow(()-> new BizException("invalid store id"));
+        StoreDocument storeDocument = storeRepository.findById(bookRealityModel.getStoreId()).orElseThrow(() -> new BizException("invalid store id"));
         BookInventory bookInventory = new BookInventory();
         bookInventory.setBookId(bookDocument.getId());
         bookInventory.setType(bookRealityModel.getType());
@@ -60,20 +60,22 @@ public class BookInventoryService {
         // kiểm tra xem có inventory id k, nếu có thì là update còn k có thì là thêm mới
         Optional<BookInventory> bookInventoryOptional = bookInventoryRepository.findById(bookRealityModel.getId());
         BookInventory bookInventory;
-        if(bookRealityModel.getId() == null || !bookInventoryOptional.isPresent()){
+        if (bookRealityModel.getId() == null || !bookInventoryOptional.isPresent()) {
             bookInventory = new BookInventory();
             bookInventory.setCreatedAt(ZonedDateTime.now());
-        }else{
-            bookInventory= bookInventoryOptional.get();
+        } else {
+            bookInventory = bookInventoryOptional.get();
         }
         Optional<AccountDocument> acc = accountRepository.findByEmail(Const.ADMIN_EMAIL);
         BookDocument bookDocument = bookRepository.findById(bookRealityModel.getBookId()).orElseThrow(() -> new BizException("Invalid book id"));
-        StoreDocument store = storeRepository.findById(bookRealityModel.getStoreId()).orElseThrow(()-> new BizException("invalid store id"));
-        if(!acc.isPresent()) throw new BizException("có lỗi xảy ra");
+        StoreDocument store = storeRepository.findById(bookRealityModel.getStoreId()).orElseThrow(() -> new BizException("invalid store id"));
+        if (acc.isEmpty()) throw new BizException("có lỗi xảy ra");
         StoreDocument storeDocument = storeRepository.findByAccountId(acc.get().getId());
-        BookInventory bookInventory1 = bookInventoryRepository.findByBookIdAndStoreIdAndType(bookDocument.getId(),storeDocument.getId(), bookRealityModel.getType());
-        if(bookInventory1 != null){
-            bookInventory.setRelatedBookId(bookInventory1.getId());
+        BookInventory bookInventory1 = bookInventoryRepository.findByBookIdAndStoreIdAndType(bookDocument.getId(), storeDocument.getId(), bookRealityModel.getType());
+        if (bookInventory1 != null) {
+            if (!bookInventory1.getId().equals(bookInventory.getId())) {
+                bookInventory.setRelatedBookId(bookInventory1.getId());
+            }
         }
         bookInventory.setBookId(bookDocument.getId());
         bookInventory.setType(bookRealityModel.getType());
@@ -108,9 +110,9 @@ public class BookInventoryService {
         bookDocument.setCategoryId(createBookAndInventory.getCategoryId());
         bookDocument.setCreatedAt(ZonedDateTime.now());
         bookDocument.setUpdatedAt(ZonedDateTime.now());
-        BookDocument bookDocument1= bookRepository.save(bookDocument);
-        StoreDocument storeDocument = storeRepository.findById(createBookAndInventory.getStoreId()).orElseThrow(()-> new BizException("invalid store id"));
-        for(CreateBookAndInventory.BookInventory bookInventory: createBookAndInventory.getBookInventory()){
+        BookDocument bookDocument1 = bookRepository.save(bookDocument);
+        StoreDocument storeDocument = storeRepository.findById(createBookAndInventory.getStoreId()).orElseThrow(() -> new BizException("invalid store id"));
+        for (CreateBookAndInventory.BookInventory bookInventory : createBookAndInventory.getBookInventory()) {
             BookInventory newBookInventory = new BookInventory();
             newBookInventory.setBookId(bookDocument1.getId());
             newBookInventory.setType(bookInventory.getType());
@@ -126,7 +128,7 @@ public class BookInventoryService {
     }
 
     public void deleteBookReality(String id) throws BizException {
-        BookInventory bookInventory= bookInventoryRepository.findById(id).orElseThrow(() -> new BizException("Invalid book reality id"));
+        BookInventory bookInventory = bookInventoryRepository.findById(id).orElseThrow(() -> new BizException("Invalid book reality id"));
         bookInventory.setDeletedAt(ZonedDateTime.now());
         bookInventoryRepository.save(bookInventory);
     }

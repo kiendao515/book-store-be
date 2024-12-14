@@ -36,9 +36,13 @@ public class CommonClient {
     private String webGhtkUrl;
     @Value("${app.ghtk.webToken}")
     private String webGhtkToken;
+    @Value("${app.ghtk.urlProd}")
+    private String ghtkUrlProd;
+    @Value("${app.ghtk.tokenProd}")
+    private String ghtkTokenProd;
 
     public BigDecimal calculateShippingFee(ShippingFeeRequest request) {
-        String url = ghtkUrl + "/services/shipment/fee?" +
+        String url = ghtkUrlProd + "/services/shipment/fee?" +
                 "address=" + request.getAddress() +
                 "&province=" + request.getProvince() +
                 "&district=" + request.getDistrict() +
@@ -51,7 +55,7 @@ public class CommonClient {
         RestTemplate restTemplate = new RestTemplate();
         var headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add("Token", ghtkToken);
+        headers.add("Token", ghtkTokenProd);
         try {
             HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(null, headers);
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, requestEntity, String.class);

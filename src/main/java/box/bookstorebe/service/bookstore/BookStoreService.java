@@ -141,13 +141,22 @@ public class BookStoreService {
     }
 
     public List<StoreRevenueDto> getStoreRevenue(String id) throws BizException {
-        StoreDocument storeDocument = bookStoreRepository.findById(id).orElseThrow(()-> new BizException("Invalid store id"));
+        StoreDocument storeDocument = bookStoreRepository.findById(id)
+                .orElseThrow(() -> new BizException("Invalid store id"));
+
         List<BookInventory> bookInventories = bookInventoryRepository.findAllByStoreId(id);
 
         if (bookInventories.isEmpty()) {
             throw new BizException("No books found for the store id: " + id);
         }
-        List<StoreRevenueDto> revenueDtos = new ArrayList<>();
+
+        List<String> bookIds = bookInventories.stream()
+                .map(BookInventory::getBookId)
+                .distinct()
+                .toList();
+
+        Map<String, BookDocument> bookMap = bookRepository.findAllById(bookIds).stream()
+                .collect(Collectors.toMap(BookDocument::getId, book -> book));
         List<String> bookInventoryIds = bookInventories.stream()
                 .map(BookInventory::getId)
                 .toList();
@@ -155,32 +164,47 @@ public class BookStoreService {
         List<OrderItemDocument> orderItems = orderItemRepository.findAllByBookInventoryIdIn(bookInventoryIds);
         Map<String, List<OrderItemDocument>> orderItemsGroupedByInventory = orderItems.stream()
                 .collect(Collectors.groupingBy(OrderItemDocument::getBookInventoryId));
+        Map<String, List<BookInventory>> inventoriesGroupedByBookId = bookInventories.stream()
+                .collect(Collectors.groupingBy(BookInventory::getBookId));
+        List<StoreRevenueDto> revenueDtos = new ArrayList<>();
 
-        for (BookInventory inventory : bookInventories) {
-            List<OrderItemDocument> itemsForInventory = orderItemsGroupedByInventory.getOrDefault(inventory.getId(), List.of());
+        for (Map.Entry<String, List<BookInventory>> entry : inventoriesGroupedByBookId.entrySet()) {
+            String bookId = entry.getKey();
+            List<BookInventory> inventoriesForBook = entry.getValue();
+            int totalInventory = inventoriesForBook.stream().mapToInt(BookInventory::getQuantity).sum();
+            int totalSold = 0;
+            int totalSettled = 0;
 
-            int sold = itemsForInventory.stream().mapToInt(OrderItemDocument::getQuantity).sum();
-            int settled = itemsForInventory.stream()
-                    .filter(orderItem -> orderItem.getSettledStatus() == 1)
-                    .mapToInt(OrderItemDocument::getQuantity)
-                    .sum();
-            int notSettled = sold - settled;
+            for (BookInventory inventory : inventoriesForBook) {
+                List<OrderItemDocument> itemsForInventory = orderItemsGroupedByInventory.getOrDefault(inventory.getId(), List.of());
+                int sold = itemsForInventory.stream().mapToInt(OrderItemDocument::getQuantity).sum();
+                int settled = itemsForInventory.stream()
+                        .filter(orderItem -> orderItem.getSettledStatus() == 1)
+                        .mapToInt(OrderItemDocument::getQuantity)
+                        .sum();
+                totalSold += sold;
+                totalSettled += settled;
+            }
 
-            BookDocument book = bookRepository.findById(inventory.getBookId())
-                    .orElseThrow(() -> new BizException("Book not found for id: " + inventory.getBookId()));
+            int notSettled = totalSold - totalSettled;
+            BookDocument book = bookMap.get(bookId);
+            if (book == null) {
+                throw new BizException("Book not found for id: " + bookId);
+            }
             float commissionRate = storeDocument.getCommissionPercentage();
-            float commissionPercentage = commissionRate * 100;
             StoreRevenueDto dto = new StoreRevenueDto(
-                    inventory.getId(),
+                    bookId,
                     book,
-                    inventory.getQuantity(),
-                    sold,
-                    settled,
+                    totalInventory,
+                    totalSold,
+                    totalSettled,
                     notSettled,
-                    commissionPercentage
+                    commissionRate
             );
             revenueDtos.add(dto);
         }
+
         return revenueDtos;
     }
+
 }
