@@ -44,14 +44,7 @@ public class ShipService {
     }
     public static Map<String, String> parseAddress(String inputAddress) throws BizException {
         Map<String, String> addressComponents = new HashMap<>();
-        String[] parts = inputAddress.split("-");
-        if (parts.length < 3) {
-            throw new BizException("Thông tin không đầy đủ. Cần số điện thoại, tên và địa chỉ.");
-        }
-        String phoneNumber = parts[0].trim();
-        String name = parts[1].trim();
-        String address = parts[2].trim();
-        String[] addressParts = address.split(",");
+        String[] addressParts = inputAddress.split(",");
         if (addressParts.length < 4) {
             throw new BizException("Địa chỉ không đầy đủ thông tin.");
         }
@@ -59,10 +52,6 @@ public class ShipService {
         String ward = addressParts[1].trim();
         String district = addressParts[2].trim();
         String city = addressParts[3].trim();
-
-        // Lưu thông tin vào map
-        addressComponents.put("phone_number", phoneNumber);
-        addressComponents.put("name", name);
         addressComponents.put("street", streetAndNumber);
         addressComponents.put("ward", ward);
         addressComponents.put("district", district);
@@ -77,7 +66,7 @@ public class ShipService {
 
         for (CreateOrder orderDto : orders) {
             futures.add(executorService.submit(() -> {
-                return createGhtkOrder(orderDto);  // Gọi hàm createGhtkOrder cho từng đơn hàng
+                return createGhtkOrder(orderDto);
             }));
         }
 
@@ -103,16 +92,16 @@ public class ShipService {
         GhtkOrderRequest.Order order = new GhtkOrderRequest.Order();
         order.setId(orderDocument.getOrderCode());
         order.setPick_address(orderDto.getPickAddress());
-        Map<String,String > pickAddress = parseAddress(orderDto.getPickAddress());
+        List<PickAddressDto.PickupData> pickupData = commonClient.getPickAddress();
+        Map<String,String > pickAddress = parseAddress(pickupData.get(0).getAddress());
 
         // thông tin lấy hàng
-        order.setPick_name(pickAddress.get("name"));
-        order.setPick_tel(pickAddress.get("tel"));
+        order.setPick_name(pickupData.get(0).getPickName());
         order.setPick_address(pickAddress.get("street"));
         order.setPick_province(pickAddress.get("city"));
         order.setPick_district(pickAddress.get("district"));
         order.setPick_ward(pickAddress.get("ward"));
-        order.setPick_tel(pickAddress.get("phone_number"));
+        order.setPick_tel(pickupData.get(0).getPickTel());
 
         // thông tin nhận hàng
         order.setTel(orderDocument.getReceiverPhone());
@@ -143,6 +132,7 @@ public class ShipService {
         GhtkOrderDto.OrderResult orderResult = commonClient.createOrder(ghtkOrderRequest);
         if(orderResult != null){
             orderDocument.setStatus(Const.OrderStatus.READY_TO_SHIP);
+            orderDocument.setWeight(orderDto.getWeight());
             orderDocument.setShippingCode(orderResult.getLabel());
             orderRepository.save(orderDocument);
         }

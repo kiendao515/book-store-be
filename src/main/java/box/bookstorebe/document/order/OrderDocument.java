@@ -75,6 +75,9 @@ public class OrderDocument {
     @Field(name = "note")
     private String note;
 
+    @Field(name = "weight")
+    private Float weight;
+
     @Field(name = "created_at")
     private ZonedDateTime createdAt;
 
