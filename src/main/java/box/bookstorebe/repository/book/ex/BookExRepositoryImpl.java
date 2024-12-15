@@ -1,6 +1,7 @@
 package box.bookstorebe.repository.book.ex;
 
 import box.bookstorebe.document.book.BookDocument;
+import ch.qos.logback.core.util.StringUtil;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -11,6 +12,7 @@ import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.StringUtils;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -28,18 +30,18 @@ public class BookExRepositoryImpl implements BookExRepository {
         PageRequest pageRequest;
 
         Criteria criteria = new Criteria();
-        if (name != null) {
+        if (!name.isEmpty()) {
             criteria = criteria.and("name").regex(".*" + name + ".*");
         }
 
-        if (categoryId != null && categoryId != "") {
+        if (!categoryId.isEmpty()) {
             criteria = criteria.and("category_id").is(categoryId);
         }
 
-        if (storeId != null) {
+        if (!storeId.isEmpty()) {
             criteria = criteria.and("store_id").is(storeId);
         }
-        if (collectionId != null) {
+        if (!StringUtil.isNullOrEmpty(collectionId)) {
             criteria = criteria.and("collection_id").is(collectionId);
         }
 

@@ -88,11 +88,11 @@ public class CommonClient {
     }
 
     public List<PickAddressDto.PickupData> getPickAddress() {
-        String url = ghtkUrl + "/services/shipment/list_pick_add";
+        String url = ghtkUrlProd + "/services/shipment/list_pick_add";
         RestTemplate restTemplate = new RestTemplate();
         var headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add("Token", ghtkToken);
+        headers.add("Token", ghtkTokenProd);
         try {
             HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(null, headers);
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, requestEntity, String.class);

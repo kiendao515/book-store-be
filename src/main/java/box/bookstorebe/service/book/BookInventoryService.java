@@ -109,20 +109,22 @@ public class BookInventoryService {
         bookDocument.setCreatedAt(ZonedDateTime.now());
         bookDocument.setUpdatedAt(ZonedDateTime.now());
         BookDocument bookDocument1 = bookRepository.save(bookDocument);
-        StoreDocument storeDocument = storeRepository.findById(createBookAndInventory.getStoreId()).orElseThrow(() -> new BizException("invalid store id"));
-        for (CreateBookAndInventory.BookInventory bookInventory : createBookAndInventory.getBookInventory()) {
-            BookInventory newBookInventory = new BookInventory();
-            newBookInventory.setBookId(bookDocument1.getId());
-            newBookInventory.setType(bookInventory.getType());
-            newBookInventory.setBarcode(GenerateDataUtils.generateUniqueString(String.format("%s_%s", bookDocument1.getId(), bookInventory.getType())));
-            newBookInventory.setPrice(bookInventory.getPrice());
-            newBookInventory.setCoverImage(bookInventory.getCoverImage());
-            newBookInventory.setQuantity(bookInventory.getQuantity());
-            newBookInventory.setLocation(bookInventory.getLocation());
-            newBookInventory.setStoreId(storeDocument.getId());
-            newBookInventory.setCreatedAt(ZonedDateTime.now());
-            newBookInventory.setUpdatedAt(ZonedDateTime.now());
-            bookInventoryRepository.save(newBookInventory);
+        if(!createBookAndInventory.getStoreId().isBlank()){
+            StoreDocument storeDocument = storeRepository.findById(createBookAndInventory.getStoreId()).orElseThrow(() -> new BizException("invalid store id"));
+            for (CreateBookAndInventory.BookInventory bookInventory : createBookAndInventory.getBookInventory()) {
+                BookInventory newBookInventory = new BookInventory();
+                newBookInventory.setBookId(bookDocument1.getId());
+                newBookInventory.setType(bookInventory.getType());
+                newBookInventory.setBarcode(GenerateDataUtils.generateUniqueString(String.format("%s_%s", bookDocument1.getId(), bookInventory.getType())));
+                newBookInventory.setPrice(bookInventory.getPrice());
+                newBookInventory.setCoverImage(bookInventory.getCoverImage());
+                newBookInventory.setQuantity(bookInventory.getQuantity());
+                newBookInventory.setLocation(bookInventory.getLocation());
+                newBookInventory.setStoreId(storeDocument.getId());
+                newBookInventory.setCreatedAt(ZonedDateTime.now());
+                newBookInventory.setUpdatedAt(ZonedDateTime.now());
+                bookInventoryRepository.save(newBookInventory);
+            }
         }
     }
 
