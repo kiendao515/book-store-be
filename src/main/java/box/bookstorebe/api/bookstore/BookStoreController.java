@@ -3,6 +3,7 @@ package box.bookstorebe.api.bookstore;
 import box.bookstorebe.common.Const;
 import box.bookstorebe.dto.account.DeleteAccountDto;
 import box.bookstorebe.dto.bookstore.BookStoreDto;
+import box.bookstorebe.dto.bookstore.DetailBookRevenue;
 import box.bookstorebe.dto.bookstore.StoreRevenueDto;
 import box.bookstorebe.dto.common.BasePagingResponse;
 import box.bookstorebe.dto.common.BaseResponse;
@@ -13,6 +14,7 @@ import box.bookstorebe.model.bookstore.UpdateBookStoreModel;
 import box.bookstorebe.service.bookstore.BookStoreService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -45,6 +47,13 @@ public class BookStoreController {
             @RequestParam(name = "store_id", required = false) String storeId
     ) throws BizException {
         return new BaseResponse<>(Const.ResultCode.SUCCESS, bookStoreService.getStoreRevenue(storeId));
+    }
+
+    @GetMapping("/statistic/detail")
+    public BaseResponse<DetailBookRevenue> getDetailBookRevenue(
+            @RequestParam(name = "store_id", required = false) String storeId,
+            @RequestParam(name = "book_id", required = false) String bookId) throws BizException {
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, bookStoreService.getDetailBookRevenue(bookId, storeId));
     }
 
 //    @PostMapping

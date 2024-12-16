@@ -1,15 +1,17 @@
 package box.bookstorebe.dto.order;
 
 import box.bookstorebe.document.book.BookType;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import lombok.*;
 
 import java.math.BigDecimal;
 
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder
-@Getter
-@Setter
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class OrderItemDto {
     private String bookName;
     private int quantity;

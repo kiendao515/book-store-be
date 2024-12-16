@@ -1,6 +1,7 @@
 package box.bookstorebe.dto.book;
 
 import box.bookstorebe.common.Const;
+import box.bookstorebe.document.book.BookDocument;
 import box.bookstorebe.document.book.BookType;
 import box.bookstorebe.document.common.ImageDocument;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
@@ -22,6 +23,7 @@ import java.util.List;
 public class BookInventoryDto {
     private String id;
     private String bookId;
+    private BookDocument book;
     private BigDecimal price;
     private String location; // vị trí sách ở Hộp
     private Integer quantity;

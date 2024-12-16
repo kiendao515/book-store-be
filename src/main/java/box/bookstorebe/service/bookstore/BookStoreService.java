@@ -8,13 +8,17 @@ import box.bookstorebe.document.book.BookInventory;
 import box.bookstorebe.document.bookstore.StoreDocument;
 import box.bookstorebe.document.order.OrderItemDocument;
 import box.bookstorebe.dto.account.DeleteAccountDto;
+import box.bookstorebe.dto.book.BookInventoryDto;
 import box.bookstorebe.dto.bookstore.BookStoreDto;
+import box.bookstorebe.dto.bookstore.DetailBookRevenue;
 import box.bookstorebe.dto.bookstore.StoreRevenueDto;
+import box.bookstorebe.dto.order.OrderItemDto;
 import box.bookstorebe.exception.BizException;
 import box.bookstorebe.mapper.bookstore.BookStoreMapper;
 import box.bookstorebe.model.bookstore.CreateBookStoreModel;
 import box.bookstorebe.model.bookstore.CreateBookstoreAndAccount;
 import box.bookstorebe.model.bookstore.UpdateBookStoreModel;
+import box.bookstorebe.model.order.OrderItem;
 import box.bookstorebe.model.user.UserModel;
 import box.bookstorebe.repository.book.BookInventoryRepository;
 import box.bookstorebe.repository.book.BookRepository;
@@ -28,6 +32,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -162,11 +167,9 @@ public class BookStoreService {
                 .toList();
 
         List<OrderItemDocument> orderItems = orderItemRepository.findAllByBookInventoryIdIn(bookInventoryIds);
-        Map<String, List<OrderItemDocument>> orderItemsGroupedByInventory = orderItems.stream()
-                .collect(Collectors.groupingBy(OrderItemDocument::getBookInventoryId));
+        List<StoreRevenueDto> revenueDtos = new ArrayList<>();
         Map<String, List<BookInventory>> inventoriesGroupedByBookId = bookInventories.stream()
                 .collect(Collectors.groupingBy(BookInventory::getBookId));
-        List<StoreRevenueDto> revenueDtos = new ArrayList<>();
 
         for (Map.Entry<String, List<BookInventory>> entry : inventoriesGroupedByBookId.entrySet()) {
             String bookId = entry.getKey();
@@ -174,14 +177,21 @@ public class BookStoreService {
             int totalInventory = inventoriesForBook.stream().mapToInt(BookInventory::getQuantity).sum();
             int totalSold = 0;
             int totalSettled = 0;
+            BigDecimal totalSettledAmount = BigDecimal.ZERO;
+            BigDecimal totalNotSettledAmount = BigDecimal.ZERO;
 
             for (BookInventory inventory : inventoriesForBook) {
-                List<OrderItemDocument> itemsForInventory = orderItemsGroupedByInventory.getOrDefault(inventory.getId(), List.of());
+                List<OrderItemDocument> itemsForInventory = orderItems.stream()
+                        .filter(order -> order.getBookInventoryId().equals(inventory.getId()))
+                        .toList();
                 int sold = itemsForInventory.stream().mapToInt(OrderItemDocument::getQuantity).sum();
                 int settled = itemsForInventory.stream()
                         .filter(orderItem -> orderItem.getSettledStatus() == 1)
                         .mapToInt(OrderItemDocument::getQuantity)
                         .sum();
+                BigDecimal price = inventory.getPrice();
+                totalSettledAmount = totalSettledAmount.add(price.multiply(BigDecimal.valueOf(settled)));
+                totalNotSettledAmount = totalNotSettledAmount.add(price.multiply(BigDecimal.valueOf(sold - settled)));
                 totalSold += sold;
                 totalSettled += settled;
             }
@@ -191,7 +201,6 @@ public class BookStoreService {
             if (book == null) {
                 throw new BizException("Book not found for id: " + bookId);
             }
-            float commissionRate = storeDocument.getCommissionPercentage();
             StoreRevenueDto dto = new StoreRevenueDto(
                     bookId,
                     book,
@@ -199,12 +208,82 @@ public class BookStoreService {
                     totalSold,
                     totalSettled,
                     notSettled,
-                    commissionRate
+                    totalSettledAmount,
+                    totalNotSettledAmount,
+                    storeDocument.getCommissionPercentage()
             );
             revenueDtos.add(dto);
         }
 
         return revenueDtos;
     }
+
+    public DetailBookRevenue getDetailBookRevenue(String bookId, String storeId) throws BizException {
+        BookDocument book= bookRepository.findById(bookId).orElseThrow(()-> new BizException("invalid bookid"));
+        DetailBookRevenue detailBookRevenue = new DetailBookRevenue();
+        List<BookInventory> inventories = bookInventoryRepository.findAllByBookIdAndStoreId(bookId,storeId);
+        if (inventories.isEmpty()) {
+            throw new BizException("No inventory found for the given bookId: " + bookId + " and storeId: " + storeId);
+        }
+
+        List<BookInventoryDto> inventoryDtos = new ArrayList<>();
+        BigDecimal totalAmountInventory = BigDecimal.ZERO;
+
+        for (BookInventory inventory : inventories) {
+            BookInventoryDto dto = new BookInventoryDto();
+            dto.setId(inventory.getId());
+            dto.setBook(book);
+            dto.setBookId(inventory.getBookId());
+            dto.setPrice(inventory.getPrice());
+            dto.setLocation(inventory.getLocation());
+            dto.setQuantity(inventory.getQuantity());
+            dto.setType(inventory.getType());
+            dto.setStoreId(inventory.getStoreId());
+            dto.setCreatedAt(inventory.getCreatedAt());
+            dto.setUpdatedAt(inventory.getUpdatedAt());
+
+            inventoryDtos.add(dto);
+            totalAmountInventory = totalAmountInventory.add(
+                    inventory.getPrice().multiply(BigDecimal.valueOf(inventory.getQuantity()))
+            );
+        }
+
+        List<String> bookInventoryIds = inventories.stream().map(BookInventory::getId).toList();
+        List<OrderItemDocument> orderItems = orderItemRepository.findAllByBookInventoryIdIn(bookInventoryIds);
+
+        List<OrderItemDto> orderItemDtos = new ArrayList<>();
+        BigDecimal totalAmountSold = BigDecimal.ZERO;
+
+        for (OrderItemDocument item : orderItems) {
+
+            BookInventory matchedInventory = inventories.stream()
+                    .filter(inv -> inv.getId().equals(item.getBookInventoryId()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (matchedInventory != null) {
+                OrderItemDto dto = new OrderItemDto();
+                dto.setBookName(book.getName());
+                dto.setQuantity(item.getQuantity());
+                dto.setPrice(matchedInventory.getPrice());
+                dto.setType(matchedInventory.getType());
+
+                orderItemDtos.add(dto);
+                totalAmountSold = totalAmountSold.add(
+                        matchedInventory.getPrice().multiply(BigDecimal.valueOf(item.getQuantity()))
+                );
+            }
+        }
+
+        detailBookRevenue.setInventory(inventoryDtos);
+        detailBookRevenue.setOrderItems(orderItemDtos);
+        detailBookRevenue.setTotalAmountInventory(totalAmountInventory);
+        detailBookRevenue.setTotalAmountSold(totalAmountSold);
+
+        return detailBookRevenue;
+    }
+
+
+
 
 }

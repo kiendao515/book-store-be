@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 
 @Data
@@ -20,5 +21,7 @@ public class StoreRevenueDto {
     private Integer sold;
     private Integer settle; // số quyển đã chốt
     private Integer notSettle; // số quyển chưa chốt
+    private BigDecimal settleAmount;// số tiền đã chốt
+    private BigDecimal notSettleAmount;
     private Float commissionPercentage;
 }
