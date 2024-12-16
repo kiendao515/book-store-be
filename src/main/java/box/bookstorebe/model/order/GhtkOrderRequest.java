@@ -47,8 +47,8 @@ public class GhtkOrderRequest {
         private BigDecimal value;
         private String transport;
         private String pick_option;
-        private String deliver_option;
-        private int pick_session;
+//        private String deliver_option;
+//        private int pick_session;
     }
 }
 

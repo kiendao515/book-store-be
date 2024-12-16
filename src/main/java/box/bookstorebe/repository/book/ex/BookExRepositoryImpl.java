@@ -30,15 +30,15 @@ public class BookExRepositoryImpl implements BookExRepository {
         PageRequest pageRequest;
 
         Criteria criteria = new Criteria();
-        if (!name.isEmpty()) {
+        if (!StringUtil.isNullOrEmpty(name)) {
             criteria = criteria.and("name").regex(".*" + name + ".*");
         }
 
-        if (!categoryId.isEmpty()) {
+        if (!StringUtil.isNullOrEmpty(categoryId)) {
             criteria = criteria.and("category_id").is(categoryId);
         }
 
-        if (!storeId.isEmpty()) {
+        if (!StringUtil.isNullOrEmpty(storeId)) {
             criteria = criteria.and("store_id").is(storeId);
         }
         if (!StringUtil.isNullOrEmpty(collectionId)) {

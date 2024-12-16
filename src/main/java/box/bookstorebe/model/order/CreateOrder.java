@@ -16,5 +16,8 @@ public class CreateOrder {
     private String pickName;
     private String pickTel;
     private String pickAddress;
-    private float weight;
+    private String weight;
+    private String address;
+    private String customerName;
+    private String customerPhone;
 }

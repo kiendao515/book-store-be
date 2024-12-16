@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -48,10 +49,10 @@ public class ShipService {
         if (addressParts.length < 4) {
             throw new BizException("Địa chỉ không đầy đủ thông tin.");
         }
-        String streetAndNumber = addressParts[0].trim();
-        String ward = addressParts[1].trim();
-        String district = addressParts[2].trim();
-        String city = addressParts[3].trim();
+        String streetAndNumber = addressParts[1].trim();
+        String ward = addressParts[2].trim();
+        String district = addressParts[3].trim();
+        String city = addressParts[4].trim();
         addressComponents.put("street", streetAndNumber);
         addressComponents.put("ward", ward);
         addressComponents.put("district", district);
@@ -104,15 +105,18 @@ public class ShipService {
         order.setPick_tel(pickupData.get(0).getPickTel());
 
         // thông tin nhận hàng
-        order.setTel(orderDocument.getReceiverPhone());
-        order.setName(orderDocument.getReceiverName());
+        order.setTel(orderDto.getCustomerPhone());
+        order.setName(orderDto.getCustomerName());
         order.setAddress(orderDocument.getStreet());
         order.setProvince(orderDocument.getProvince().getFullName());
         order.setDistrict(orderDocument.getDistrict().getFullName());
         order.setWard(orderDocument.getWard().getFullName());
         order.setHamlet("Khác");
         order.setIs_freeship("1");
-        order.setPick_date(String.valueOf(ZonedDateTime.now()));
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        order.setPick_date(ZonedDateTime.now().format(formatter));
+        order.setPick_option("cod");
+        order.setTransport("road");
         if(!orderDocument.isPaymentType()){
             order.setPick_money(orderDocument.getTotalAmount());
         } else {
@@ -125,14 +129,14 @@ public class ShipService {
         List<GhtkOrderRequest.Product> product = new ArrayList<>();
         GhtkOrderRequest.Product product1 = new GhtkOrderRequest.Product();
         product1.setName("sách");
-        product1.setWeight(orderDto.getWeight());
+        product1.setWeight(Float.parseFloat(orderDto.getWeight()));
         product.add(product1);
         ghtkOrderRequest.setProducts(product);
 
         GhtkOrderDto.OrderResult orderResult = commonClient.createOrder(ghtkOrderRequest);
         if(orderResult != null){
             orderDocument.setStatus(Const.OrderStatus.READY_TO_SHIP);
-            orderDocument.setWeight(orderDto.getWeight());
+            orderDocument.setWeight(Float.parseFloat(orderDto.getWeight()));
             orderDocument.setShippingCode(orderResult.getLabel());
             orderRepository.save(orderDocument);
         }
