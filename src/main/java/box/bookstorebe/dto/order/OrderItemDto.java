@@ -17,4 +17,5 @@ public class OrderItemDto {
     private int quantity;
     private BigDecimal price;
     private BookType type;
+    private Integer settledStatus;
 }

@@ -267,6 +267,7 @@ public class BookStoreService {
                 dto.setQuantity(item.getQuantity());
                 dto.setPrice(matchedInventory.getPrice());
                 dto.setType(matchedInventory.getType());
+                dto.setSettledStatus(item.getSettledStatus());
 
                 orderItemDtos.add(dto);
                 totalAmountSold = totalAmountSold.add(
