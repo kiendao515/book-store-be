@@ -91,4 +91,10 @@ public class BookInformationController {
         bookService.deleteBook(id);
         return new BaseResponse<>(Const.ResultCode.SUCCESS, "Delete book successfully");
     }
+
+    @GetMapping("/crawl")
+    public BaseResponse<String> crawl() throws BizException {
+        bookService.crawlBookInfo();
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, "Delete book successfully");
+    }
 }

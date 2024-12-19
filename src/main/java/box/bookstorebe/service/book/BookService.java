@@ -10,15 +10,13 @@ import box.bookstorebe.document.order.OrderItemDocument;
 import box.bookstorebe.dto.book.BookDto;
 import box.bookstorebe.dto.book.BookFavoriteDto;
 import box.bookstorebe.dto.book.BookSettingDto;
+import box.bookstorebe.dto.book.CrawlResponse;
 import box.bookstorebe.exception.BizException;
 import box.bookstorebe.model.book.book.CreateBookModel;
 import box.bookstorebe.model.book.book.UpdateBookModel;
 import box.bookstorebe.model.book.book.UpdateMultipleBookRealityModel;
 import box.bookstorebe.model.book.common.BookSettingModel;
 import box.bookstorebe.repository.book.*;
-import box.bookstorebe.repository.bookstore.BookStoreRepository;
-import box.bookstorebe.repository.common.image.ImageRepository;
-import box.bookstorebe.repository.common.person.PersonRepository;
 import box.bookstorebe.repository.common.systemconfig.SystemConfigRepository;
 import box.bookstorebe.repository.order.OrderItemRepository;
 import box.bookstorebe.repository.order.OrderRepository;
@@ -27,13 +25,19 @@ import box.bookstorebe.service.BaseService;
 import box.bookstorebe.util.GenerateDataUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -321,5 +325,44 @@ public class BookService extends BaseService {
         bookStore.setValue(model.getBookStoreId());
         systemConfigRepository.save(bookStore);
 
+    }
+    public void crawlBookInfo() {
+        int i = 0;
+        List<BookDocument> bookDocuments = bookRepository.findAll();
+        String apiEndpoint = "http://localhost:3000/api/book?name=";
+
+        RestTemplate restTemplate = new RestTemplate();
+        List<BookDocument> randomBooks = bookDocuments.stream()
+                .sorted((a, b) -> Math.random() > 0.5 ? 1 : -1)
+                .limit(200)
+                .collect(Collectors.toList());
+
+        for (BookDocument book : randomBooks) {
+            try {
+                if (shouldCrawl(book)) {
+                    i++;
+                    log.info("Start to crawl data for book: {}, Total count: {}", book.getName(), i);
+                    String url = apiEndpoint + book.getName();
+                    ResponseEntity<CrawlResponse> response = restTemplate.getForEntity(url, CrawlResponse.class);
+
+                    if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                        String description = response.getBody().getDescription();
+                        String author = response.getBody().getAuthor();
+                        book.setDescription(description);
+                        book.setAuthorName(author);
+                        bookRepository.save(book);
+
+                        log.info("Updated description for book: {}", book.getName());
+                    }
+                }
+            } catch (Exception e) {
+                log.error("Failed to crawl description for book: {}", book.getName(), e);
+            }
+        }
+    }
+    private boolean shouldCrawl(BookDocument book) {
+        return StringUtils.isBlank(book.getDescription()) ||
+                "Không có mô tả có sẵn.".equals(book.getDescription()) ||
+                "-".equals(book.getDescription());
     }
 }
