@@ -79,10 +79,11 @@ public class BookInventoryService {
         bookInventory.setCoverImage(bookRealityModel.getCoverImage());
         bookInventory.setQuantity(bookRealityModel.getQuantity());
         bookInventory.setPrice(bookRealityModel.getPrice());
-        bookInventory.setBarcode(GenerateDataUtils.generateUniqueString(String.format("%s_%s", bookDocument.getId(), bookInventory.getType())));
         bookInventory.setStoreId(store.getId());
         bookInventory.setLocation(bookRealityModel.getLocation());
         bookInventory.setUpdatedAt(ZonedDateTime.now());
+        bookInventory = bookInventoryRepository.save(bookInventory);
+        bookInventory.setBarcode(GenerateDataUtils.generateUniqueString(bookInventory.getId()));
         bookInventoryRepository.save(bookInventory);
     }
 

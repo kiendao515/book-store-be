@@ -23,9 +23,10 @@ import box.bookstorebe.repository.order.OrderRepository;
 import box.bookstorebe.repository.user.AccountRepository;
 import box.bookstorebe.service.BaseService;
 import box.bookstorebe.util.GenerateDataUtils;
-import io.micrometer.common.util.StringUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.ResponseEntity;
@@ -33,8 +34,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -326,34 +326,43 @@ public class BookService extends BaseService {
         systemConfigRepository.save(bookStore);
 
     }
-    public void crawlDescription() {
-        AtomicInteger i = new AtomicInteger();
-        String apiEndpoint = "http://localhost:3000/api/book?name=";
-        RestTemplate restTemplate = new RestTemplate();
+    public void crawlBookInfo() {
+        int i = 0;
         List<BookDocument> bookDocuments = bookRepository.findAll();
-        bookDocuments.forEach(book -> {
+        String apiEndpoint = "http://localhost:3000/api/book?name=";
+
+        RestTemplate restTemplate = new RestTemplate();
+        List<BookDocument> randomBooks = bookDocuments.stream()
+                .sorted((a, b) -> Math.random() > 0.5 ? 1 : -1)
+                .limit(200)
+                .collect(Collectors.toList());
+
+        for (BookDocument book : randomBooks) {
             try {
                 if (shouldCrawl(book)) {
-                    i.getAndIncrement();
+                    i++;
                     log.info("Start to crawl data for book: {}, Total count: {}", book.getName(), i);
                     String url = apiEndpoint + book.getName();
-
                     ResponseEntity<CrawlResponse> response = restTemplate.getForEntity(url, CrawlResponse.class);
+
                     if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                         String description = response.getBody().getDescription();
+                        String author = response.getBody().getAuthor();
                         book.setDescription(description);
+                        book.setAuthorName(author);
                         bookRepository.save(book);
+
                         log.info("Updated description for book: {}", book.getName());
                     }
                 }
             } catch (Exception e) {
                 log.error("Failed to crawl description for book: {}", book.getName(), e);
             }
-        });
+        }
     }
-
     private boolean shouldCrawl(BookDocument book) {
         return StringUtils.isBlank(book.getDescription()) ||
-                "Không có mô tả có sẵn.".equals(book.getDescription());
+                "Không có mô tả có sẵn.".equals(book.getDescription()) ||
+                "-".equals(book.getDescription());
     }
 }

@@ -93,8 +93,8 @@ public class BookInformationController {
     }
 
     @GetMapping("/crawl")
-    public BaseResponse<String> crawlDescription() throws BizException {
-        bookService.crawlDescription();
+    public BaseResponse<String> crawl() throws BizException {
+        bookService.crawlBookInfo();
         return new BaseResponse<>(Const.ResultCode.SUCCESS, "Delete book successfully");
     }
 }
