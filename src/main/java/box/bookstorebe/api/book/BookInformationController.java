@@ -97,4 +97,9 @@ public class BookInformationController {
         bookService.crawlBookInfo();
         return new BaseResponse<>(Const.ResultCode.SUCCESS, "Delete book successfully");
     }
+    @GetMapping("/random")
+    public BaseResponse<String> randomInventory(@RequestParam String id) throws BizException {
+        bookService.randomBookInventory(id);
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, "random book successfully");
+    }
 }

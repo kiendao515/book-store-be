@@ -53,6 +53,7 @@ public class BookService extends BaseService {
     private final BookFavoriteRepository bookFavoriteRepository;
     private final OrderItemRepository orderItemRepository;
     private final OrderRepository orderRepository;
+    private final BookInventoryRepository bookInventoryRepository;
 
     public Page<BookDto> getBooks(
             String name,
@@ -326,6 +327,39 @@ public class BookService extends BaseService {
         systemConfigRepository.save(bookStore);
 
     }
+
+    public void randomBookInventory(String storeId) {
+        List<BookDocument> bookDocuments = bookRepository.findAll();
+        List<BookDocument> randomBooks = bookDocuments.stream()
+                .sorted((a, b) -> Math.random() > 0.5 ? 1 : -1)
+                .limit(500)
+                .toList();
+
+        for (BookDocument randomBook : randomBooks) {
+            List<BookInventory> bookInventories = bookInventoryRepository.findAllByBookIdAndStoreId(randomBook.getId(), storeId);
+            if (bookInventories.isEmpty()) {
+                BookInventory bookInventory = new BookInventory();
+                bookInventory.setBookId(randomBook.getId());
+                bookInventory.setStoreId(storeId);
+                bookInventory.setQuantity(1);
+                BookType[] bookTypes = {BookType.NEW, BookType.OLD, BookType.GOOD};
+                BookType randomType = bookTypes[new Random().nextInt(bookTypes.length)];
+                bookInventory.setType(randomType);
+
+                int minPrice = 100;
+                int maxPrice = 1200;
+                int randomPrice = minPrice + new Random().nextInt(maxPrice - minPrice + 1);
+                BigDecimal finalPrice = BigDecimal.valueOf(randomPrice).multiply(BigDecimal.valueOf(1000));
+                bookInventory.setPrice(finalPrice);
+
+                bookInventoryRepository.save(bookInventory);
+                bookInventory.setBarcode(GenerateDataUtils.generateUniqueString(bookInventory.getId()));
+                bookInventoryRepository.save(bookInventory);
+            }
+        }
+    }
+
+
     public void crawlBookInfo() {
         int i = 0;
         List<BookDocument> bookDocuments = bookRepository.findAll();
@@ -335,7 +369,7 @@ public class BookService extends BaseService {
         List<BookDocument> randomBooks = bookDocuments.stream()
                 .sorted((a, b) -> Math.random() > 0.5 ? 1 : -1)
                 .limit(200)
-                .collect(Collectors.toList());
+                .toList();
 
         for (BookDocument book : randomBooks) {
             try {
@@ -360,6 +394,7 @@ public class BookService extends BaseService {
             }
         }
     }
+
     private boolean shouldCrawl(BookDocument book) {
         return StringUtils.isBlank(book.getDescription()) ||
                 "Không có mô tả có sẵn.".equals(book.getDescription()) ||
