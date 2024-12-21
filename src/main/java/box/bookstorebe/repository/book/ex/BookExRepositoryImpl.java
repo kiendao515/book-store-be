@@ -26,12 +26,16 @@ public class BookExRepositoryImpl implements BookExRepository {
     private final MongoTemplate mongoTemplate;
 
     @Override
-    public Page<BookDocument> getBooks(String name, String categoryId, String storeId, String collectionId, ZonedDateTime startAt, ZonedDateTime endAt, List<String> bookSearchIds, Integer page, Integer size) {
+    public Page<BookDocument> getBooks(String name, String authorName, String categoryId, String storeId, String collectionId, ZonedDateTime startAt, ZonedDateTime endAt, List<String> bookSearchIds, Integer page, Integer size) {
         PageRequest pageRequest;
 
         Criteria criteria = new Criteria();
         if (!StringUtil.isNullOrEmpty(name)) {
-            criteria = criteria.and("name").regex(".*" + name + ".*");
+            criteria = criteria.and("name").regex(".*" + name + ".*", "i");
+        }
+
+        if(!StringUtil.isNullOrEmpty(authorName)) {
+            criteria = criteria.and("author_name").regex(".*" + authorName + ".*", "i");
         }
 
         if (!StringUtil.isNullOrEmpty(categoryId)) {

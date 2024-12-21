@@ -23,7 +23,7 @@ public class BookFavoriteDocument {
     private String bookId;
 
     @Field("account_id")
-    private String userId;
+    private String accountId;
 
     @Field("created_at")
     private ZonedDateTime createdAt;

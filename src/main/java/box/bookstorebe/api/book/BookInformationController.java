@@ -50,7 +50,8 @@ public class BookInformationController {
 
     @GetMapping()
     public BasePagingResponse<BookDto> getBooks(
-            @RequestParam(name = "q", required = false) String q,
+            @RequestParam(name = "q", required = false) String name,
+            @RequestParam(name = "author_name", required = false) String authorName,
             @RequestParam(name = "category_id", required = false) String categoryId,
             @RequestParam(name = "store_id", required = false) String storeId,
             @RequestParam(name = "collection_id", required = false) String collectionId,
@@ -60,7 +61,7 @@ public class BookInformationController {
             @RequestParam(name = "page", required = false) Integer page,
             @RequestParam(name = "size", required = false) Integer size
     ) {
-        return new BasePagingResponse<>(bookService.getBooks(q, categoryId, storeId, collectionId, startAt, endAt, bookSearchIds, page, size));
+        return new BasePagingResponse<>(bookService.getBooks(name, authorName, categoryId, storeId, collectionId, startAt, endAt, bookSearchIds, page, size));
     }
 
     @GetMapping("{id}")
@@ -97,6 +98,7 @@ public class BookInformationController {
         bookService.crawlBookInfo();
         return new BaseResponse<>(Const.ResultCode.SUCCESS, "Delete book successfully");
     }
+
     @GetMapping("/random")
     public BaseResponse<String> randomInventory(@RequestParam String id) throws BizException {
         bookService.randomBookInventory(id);
