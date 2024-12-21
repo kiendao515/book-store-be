@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.ZonedDateTime;
 
 @Data
 @AllArgsConstructor
@@ -18,4 +19,6 @@ public class OrderItemDto {
     private BigDecimal price;
     private BookType type;
     private Integer settledStatus;
+    private String orderId;
+    private ZonedDateTime createdAt;
 }

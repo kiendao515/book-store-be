@@ -18,6 +18,7 @@ import lombok.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @RestController
@@ -46,7 +47,13 @@ public class BookStoreController {
             @RequestParam(name = "to", required = false) String to,
             @RequestParam(name = "store_id", required = false) String storeId
     ) throws BizException {
-        return new BaseResponse<>(Const.ResultCode.SUCCESS, bookStoreService.getStoreRevenue(storeId));
+        ZonedDateTime fromDate = null;
+        ZonedDateTime toDate =null;
+        if (!from.isEmpty() && !to.isEmpty()) {
+            fromDate = ZonedDateTime.parse(from);
+            toDate = ZonedDateTime.parse(to);
+        }
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, bookStoreService.getStoreRevenue(storeId, fromDate, toDate));
     }
 
     @GetMapping("/statistic/detail")
@@ -54,6 +61,14 @@ public class BookStoreController {
             @RequestParam(name = "store_id", required = false) String storeId,
             @RequestParam(name = "book_id", required = false) String bookId) throws BizException {
         return new BaseResponse<>(Const.ResultCode.SUCCESS, bookStoreService.getDetailBookRevenue(bookId, storeId));
+    }
+
+    @PostMapping("/statistic/confirm")
+    public BaseResponse<String> confirmBookRevenue(
+            @RequestParam(name = "store_id", required = false) String storeId,
+            @RequestBody List<String> ids) throws BizException {
+        bookStoreService.confirmBookRevenue(ids ,storeId);
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, "Thanh cong");
     }
 
 //    @PostMapping

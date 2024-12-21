@@ -252,7 +252,7 @@ public class BookService extends BaseService {
         if (bookRealityModel.getQuantity() < 0) throw new BizException("Số lượng quyển sách phải lớn hơn 0");
         if (bookRealityModel.getPrice().equals(BigDecimal.valueOf(0)))
             throw new BizException("Giá trị quyển sách phải lớn hơn 0");
-        List<BookInventory> bookInventories = bookRealityRepository.findAllByBookIdAndStoreIdAndType(bookRealityModel.getStoreId(), id, bookRealityModel.getType().name());
+        List<BookInventory> bookInventories = bookRealityRepository.findAllByBookIdAndStoreIdAndType(id, bookRealityModel.getStoreId(), bookRealityModel.getType());
         for (BookInventory bookReality : bookInventories) {
             bookReality.setPrice(bookRealityModel.getPrice());
             bookReality.setCoverImage(bookRealityModel.getCoverImage());

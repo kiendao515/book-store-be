@@ -4,6 +4,7 @@ import box.bookstorebe.document.book.BookInventory;
 import box.bookstorebe.document.book.BookType;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 
 public interface BookInventoryRepository extends MongoRepository<BookInventory, String> {
@@ -12,8 +13,9 @@ public interface BookInventoryRepository extends MongoRepository<BookInventory, 
     List<BookInventory> findAllByBookId(String bookId);
 
     List<BookInventory> findAllByBookIdAndStoreId(String bookId, String storeId);
+    List<BookInventory> findAllByBookIdInAndStoreId(List<String> bookId, String storeId);
 
-    List<BookInventory> findAllByBookIdAndStoreIdAndType(String storeId, String bookId, String type);
+    List<BookInventory> findAllByBookIdAndStoreIdAndType(String bookId, String storeId, BookType type);
 
     List<BookInventory> findAllByBookIdIn(List<String> bookIds);
 
@@ -21,7 +23,7 @@ public interface BookInventoryRepository extends MongoRepository<BookInventory, 
     List<BookInventory> findAllByRelatedBookId(String relatedId);
 
     List<BookInventory> findAllByIdIn(List<String> bookIds);
-    List<BookInventory> findAllByStoreId(String storeId);
+    List<BookInventory> findAllByStoreIdAndCreatedAtBetween(String storeId, ZonedDateTime start, ZonedDateTime end);
 
     List<BookInventory> findAllByBarcodeIn(List<String> barcodes);
 

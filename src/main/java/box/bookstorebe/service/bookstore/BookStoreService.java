@@ -6,6 +6,7 @@ import box.bookstorebe.document.account.Role;
 import box.bookstorebe.document.book.BookDocument;
 import box.bookstorebe.document.book.BookInventory;
 import box.bookstorebe.document.bookstore.StoreDocument;
+import box.bookstorebe.document.order.OrderDocument;
 import box.bookstorebe.document.order.OrderItemDocument;
 import box.bookstorebe.dto.account.DeleteAccountDto;
 import box.bookstorebe.dto.book.BookInventoryDto;
@@ -24,6 +25,7 @@ import box.bookstorebe.repository.book.BookInventoryRepository;
 import box.bookstorebe.repository.book.BookRepository;
 import box.bookstorebe.repository.bookstore.BookStoreRepository;
 import box.bookstorebe.repository.order.OrderItemRepository;
+import box.bookstorebe.repository.order.OrderRepository;
 import box.bookstorebe.repository.user.AccountRepository;
 import box.bookstorebe.service.account.AccountService;
 import lombok.AllArgsConstructor;
@@ -49,6 +51,7 @@ public class BookStoreService {
     private final BookInventoryRepository bookInventoryRepository;
     private final OrderItemRepository orderItemRepository;
     private final BookRepository bookRepository;
+    private final OrderRepository orderRepository;
 
     // route này cho admin thêm sửa xóa bkstore
     public Page<BookStoreDto> getBookStores(String name, Integer page, Integer size) {
@@ -79,6 +82,7 @@ public class BookStoreService {
         bookStoreDocument.setUpdatedAt(ZonedDateTime.now());
         bookStoreRepository.save(bookStoreDocument);
     }
+
     public void createNewBookStoreAndAccount(CreateBookstoreAndAccount bookStoreModel) throws BizException {
         StoreDocument bookStoreDocument = new StoreDocument();
         bookStoreDocument.setThumbnail(bookStoreModel.getThumbnail());
@@ -89,11 +93,12 @@ public class BookStoreService {
         bookStoreDocument.setCommissionPercentage(bookStoreDocument.getCommissionPercentage());
         bookStoreDocument.setCreatedAt(ZonedDateTime.now());
         bookStoreDocument.setUpdatedAt(ZonedDateTime.now());
-        AccountDocument acc= accountService.createAccount(new UserModel(bookStoreModel.getEmail(), bookStoreModel.getPassword()), Role.STORE,1);
+        AccountDocument acc = accountService.createAccount(new UserModel(bookStoreModel.getEmail(), bookStoreModel.getPassword()), Role.STORE, 1);
         bookStoreDocument.setAccountId(acc.getId());
         bookStoreRepository.save(bookStoreDocument);
     }
-    public StoreDocument createStoreInfo(UpdateBookStoreModel bookStoreModel){
+
+    public StoreDocument createStoreInfo(UpdateBookStoreModel bookStoreModel) {
         StoreDocument bookStoreDocument = new StoreDocument();
         bookStoreDocument.setThumbnail(bookStoreModel.getAvatar());
         bookStoreDocument.setName(bookStoreModel.getName());
@@ -110,17 +115,17 @@ public class BookStoreService {
     public void updateBookStore(String accountId, UpdateBookStoreModel updateBookStoreModel) throws BizException {
         AccountDocument accountDocument = accountRepository.findById(accountId).orElseThrow(() -> new BizException("Invalid account id"));
         StoreDocument bookStoreDocument = bookStoreRepository.findByAccountId(accountId);
-        if(updateBookStoreModel.getEnabled() != null){
-            if(!updateBookStoreModel.getEnabled().equals("0") && !updateBookStoreModel.getEnabled().equals("1")){
+        if (updateBookStoreModel.getEnabled() != null) {
+            if (!updateBookStoreModel.getEnabled().equals("0") && !updateBookStoreModel.getEnabled().equals("1")) {
                 throw new BizException("invalid enabled param");
             }
             accountDocument.setEnabled(Integer.parseInt(updateBookStoreModel.getEnabled()));
             accountRepository.save(accountDocument);
         }
-        if(bookStoreDocument == null){
+        if (bookStoreDocument == null) {
             bookStoreDocument = createStoreInfo(updateBookStoreModel);
             bookStoreRepository.save(bookStoreDocument);
-        }else{
+        } else {
             bookStoreDocument.setThumbnail(updateBookStoreModel.getAvatar());
             bookStoreDocument.setName(updateBookStoreModel.getName());
             bookStoreDocument.setAddress(updateBookStoreModel.getAddress());
@@ -133,23 +138,23 @@ public class BookStoreService {
     }
 
     public void deleteBookStore(DeleteAccountDto deleteAccountDto) throws BizException {
-        for(String id : deleteAccountDto.getAccountIds()){
+        for (String id : deleteAccountDto.getAccountIds()) {
             AccountDocument accountDocument = accountRepository.findById(id).orElseThrow(() -> new BizException("Invalid account id"));
             accountDocument.setDeletedAt(ZonedDateTime.now());
             accountRepository.save(accountDocument);
             StoreDocument store = bookStoreRepository.findByAccountId(id);
-            if(store != null){
+            if (store != null) {
                 store.setDeletedAt(ZonedDateTime.now());
                 bookStoreRepository.save(store);
             }
         }
     }
 
-    public List<StoreRevenueDto> getStoreRevenue(String id) throws BizException {
+    public List<StoreRevenueDto> getStoreRevenue(String id, ZonedDateTime from, ZonedDateTime to) throws BizException {
         StoreDocument storeDocument = bookStoreRepository.findById(id)
                 .orElseThrow(() -> new BizException("Invalid store id"));
 
-        List<BookInventory> bookInventories = bookInventoryRepository.findAllByStoreId(id);
+        List<BookInventory> bookInventories = bookInventoryRepository.findAllByStoreIdAndCreatedAtBetween(id, from, to);
 
         if (bookInventories.isEmpty()) {
             throw new BizException("No books found for the store id: " + id);
@@ -219,9 +224,9 @@ public class BookStoreService {
     }
 
     public DetailBookRevenue getDetailBookRevenue(String bookId, String storeId) throws BizException {
-        BookDocument book= bookRepository.findById(bookId).orElseThrow(()-> new BizException("invalid bookid"));
+        BookDocument book = bookRepository.findById(bookId).orElseThrow(() -> new BizException("invalid bookid"));
         DetailBookRevenue detailBookRevenue = new DetailBookRevenue();
-        List<BookInventory> inventories = bookInventoryRepository.findAllByBookIdAndStoreId(bookId,storeId);
+        List<BookInventory> inventories = bookInventoryRepository.findAllByBookIdAndStoreId(bookId, storeId);
         if (inventories.isEmpty()) {
             throw new BizException("No inventory found for the given bookId: " + bookId + " and storeId: " + storeId);
         }
@@ -268,7 +273,9 @@ public class BookStoreService {
                 dto.setPrice(matchedInventory.getPrice());
                 dto.setType(matchedInventory.getType());
                 dto.setSettledStatus(item.getSettledStatus());
-
+                OrderDocument orderDocument = orderRepository.findById(item.getOrderId()).orElseThrow(() -> new BizException("invalid orderid"));
+                dto.setCreatedAt(orderDocument.getCreatedAt());
+                dto.setOrderId(orderDocument.getOrderCode());
                 orderItemDtos.add(dto);
                 totalAmountSold = totalAmountSold.add(
                         matchedInventory.getPrice().multiply(BigDecimal.valueOf(item.getQuantity()))
@@ -284,7 +291,21 @@ public class BookStoreService {
         return detailBookRevenue;
     }
 
-
+    public void confirmBookRevenue(List<String> ids, String storeId) throws BizException {
+        StoreDocument storeDocument = bookStoreRepository.findById(storeId).orElseThrow(() -> new BizException("Invalid store id"));
+        List<BookInventory> inventories = bookInventoryRepository.findAllByBookIdInAndStoreId(ids, storeDocument.getId());
+        if (inventories.isEmpty()) {
+            throw new BizException("No inventory found for the given bookId: " + ids + " and storeId: " + storeId);
+        }
+        List<String> bookInventoryIds = inventories.stream().map(BookInventory::getId).toList();
+        List<OrderItemDocument> orderItems = orderItemRepository.findAllByBookInventoryIdIn(bookInventoryIds);
+        for (OrderItemDocument orderItem : orderItems) {
+            if (orderItem.getSettledStatus() == 0) {
+                orderItem.setSettledStatus(1);
+                orderItemRepository.save(orderItem);
+            }
+        }
+    }
 
 
 }
