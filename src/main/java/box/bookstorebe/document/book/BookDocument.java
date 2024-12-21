@@ -61,6 +61,9 @@ public class BookDocument {
     @Field("demo_url")
     private String demoUrl;
 
+    @Field("vector")
+    private String vector;
+
     @Field("created_at")
     private ZonedDateTime createdAt;
 
