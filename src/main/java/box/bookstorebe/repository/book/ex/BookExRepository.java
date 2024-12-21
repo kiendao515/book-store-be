@@ -7,5 +7,5 @@ import java.time.ZonedDateTime;
 import java.util.List;
 
 public interface BookExRepository {
-    Page<BookDocument> getBooks(String name, String categoryId, String storeId, String collectionId, ZonedDateTime startAt, ZonedDateTime endAt, List<String> bookSearchIds, Integer page, Integer size);
+    Page<BookDocument> getBooks(String name, String authorName, String categoryId, String storeId, String collectionId, ZonedDateTime startAt, ZonedDateTime endAt, List<String> bookSearchIds, Integer page, Integer size);
 }

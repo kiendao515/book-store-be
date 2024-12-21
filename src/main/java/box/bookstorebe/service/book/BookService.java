@@ -57,6 +57,7 @@ public class BookService extends BaseService {
 
     public Page<BookDto> getBooks(
             String name,
+            String authorName,
             String categoryId,
             String storeId,
             String collectionId,
@@ -77,7 +78,7 @@ public class BookService extends BaseService {
             bookSearchIdsArr = List.of(bookSearchIds.split(","));
         }
 
-        Page<BookDocument> bookDocuments = bookRepository.getBooks(name, categoryId, storeId, collectionId, created, updated, bookSearchIdsArr, page, size);
+        Page<BookDocument> bookDocuments = bookRepository.getBooks(name, authorName, categoryId, storeId, collectionId, created, updated, bookSearchIdsArr, page, size);
 
         List<String> resultCategoryIds = new ArrayList<>();
         List<String> bookIds = new ArrayList<>();
@@ -286,12 +287,12 @@ public class BookService extends BaseService {
         if (currentUser == null || currentUser.getAccountId() == null) {
             throw new BizException("Invalid token");
         }
-        AccountDocument user = accountRepository.findById(currentUser.getAccountId()).orElseThrow(() -> new BizException("Invalid user"));
-        List<BookFavoriteDocument> bookFavorites = bookFavoriteRepository.findAllByUserId(user.getId());
+        AccountDocument account = accountRepository.findById(currentUser.getAccountId()).orElseThrow(() -> new BizException("Invalid user"));
+        List<BookFavoriteDocument> bookFavorites = bookFavoriteRepository.findAllByAccountId(account.getId());
         List<String> bookIds = bookFavorites.stream().map(BookFavoriteDocument::getBookId).collect(Collectors.toList());
         BookFavoriteDto bookFavoriteDto = new BookFavoriteDto();
         bookFavoriteDto.setBookIds(bookIds);
-        bookFavoriteDto.setUserId(user.getId());
+        bookFavoriteDto.setAccountId(account.getId());
         return bookFavoriteDto;
     }
 
@@ -300,13 +301,13 @@ public class BookService extends BaseService {
         if (currentUser == null) {
             throw new BizException("Invalid token");
         }
-        AccountDocument user = accountRepository.findById(currentUser.getAccountId()).orElseThrow(() -> new BizException("Invalid user"));
-        BookFavoriteDocument bookFavoriteDocument = bookFavoriteRepository.findByUserIdAndBookId(user.getId(), bookId);
+        AccountDocument account = accountRepository.findById(currentUser.getAccountId()).orElseThrow(() -> new BizException("Invalid user"));
+        BookFavoriteDocument bookFavoriteDocument = bookFavoriteRepository.findByAccountIdAndBookId(account.getId(), bookId);
         if (bookFavoriteDocument == null) {
             bookRepository.findById(bookId).orElseThrow(() -> new BizException("Invalid book id"));
             BookFavoriteDocument newBookFavoriteDocument = new BookFavoriteDocument();
             newBookFavoriteDocument.setBookId(bookId);
-            newBookFavoriteDocument.setUserId(user.getId());
+            newBookFavoriteDocument.setAccountId(account.getId());
             bookFavoriteRepository.save(newBookFavoriteDocument);
         } else {
             bookFavoriteRepository.delete(bookFavoriteDocument);

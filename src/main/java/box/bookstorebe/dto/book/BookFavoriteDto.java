@@ -13,6 +13,6 @@ import java.util.List;
 @Builder
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class BookFavoriteDto {
-    private String userId;
+    private String accountId;
     private List<String> bookIds;
 }
