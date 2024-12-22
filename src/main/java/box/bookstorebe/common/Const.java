@@ -146,4 +146,8 @@ public final class Const {
         PENDING,
         DONE
     }
+    public enum WebContentProperty {
+        IMAGE,
+        TEXT
+    }
 }
