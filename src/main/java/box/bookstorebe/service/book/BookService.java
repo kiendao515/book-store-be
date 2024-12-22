@@ -369,7 +369,7 @@ public class BookService extends BaseService {
         RestTemplate restTemplate = new RestTemplate();
         List<BookDocument> randomBooks = bookDocuments.stream()
                 .sorted((a, b) -> Math.random() > 0.5 ? 1 : -1)
-                .limit(200)
+                .limit(500)
                 .toList();
 
         for (BookDocument book : randomBooks) {
@@ -377,7 +377,17 @@ public class BookService extends BaseService {
                 if (shouldCrawl(book)) {
                     i++;
                     log.info("Start to crawl data for book: {}, Total count: {}", book.getName(), i);
-                    String url = apiEndpoint + book.getName();
+                    String newName;
+                    if(book.getName().contains("NHL -")){
+                        newName = book.getName().replace("NHL -","");
+                    }else if(book.getName().contains("NQV -")){
+                        newName = book.getName().replace("NQV -","");
+                    }else if(book.getName().contains("THL -")){
+                        newName = book.getName().replace("THL -","");
+                    }else{
+                        newName = book.getName();
+                    }
+                    String url = apiEndpoint + newName;
                     ResponseEntity<CrawlResponse> response = restTemplate.getForEntity(url, CrawlResponse.class);
 
                     if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
@@ -385,6 +395,7 @@ public class BookService extends BaseService {
                         String author = response.getBody().getAuthor();
                         book.setDescription(description);
                         book.setAuthorName(author);
+                        book.setName(newName);
                         bookRepository.save(book);
 
                         log.info("Updated description for book: {}", book.getName());
