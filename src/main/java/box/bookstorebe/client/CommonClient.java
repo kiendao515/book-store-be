@@ -1,10 +1,7 @@
 package box.bookstorebe.client;
 
 import box.bookstorebe.common.Const;
-import box.bookstorebe.dto.ghtk.GhtkDto;
-import box.bookstorebe.dto.ghtk.GhtkOrderDto;
-import box.bookstorebe.dto.ghtk.OrderDetail;
-import box.bookstorebe.dto.ghtk.PickAddressDto;
+import box.bookstorebe.dto.ghtk.*;
 import box.bookstorebe.model.order.GhtkOrderRequest;
 import box.bookstorebe.model.order.ShippingFeeRequest;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -142,6 +139,25 @@ public class CommonClient {
                 return response.getBody();
             }
 
+        } catch (Exception e) {
+            log.error("Error occurred: " + e.getMessage(), e);
+        }
+        return null;
+    }
+
+    public GhtkOrderDetailDto getOrderStatus(String label){
+        try {
+            String url = ghtkUrl + "/services/shipment/v2/" + label;
+            RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(null, headers);
+            headers.add("Token", ghtkToken);
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
+            log.info(response.toString());
+            ObjectMapper objectMapper = new ObjectMapper();
+            GhtkOrderDetailDto ghtkDto = objectMapper.readValue(response.getBody(), GhtkOrderDetailDto.class);
+            return ghtkDto;
         } catch (Exception e) {
             log.error("Error occurred: " + e.getMessage(), e);
         }

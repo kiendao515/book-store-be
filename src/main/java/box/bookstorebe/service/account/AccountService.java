@@ -61,7 +61,7 @@ public class AccountService {
                     account.setAvatar(customer.getAvatar());
                     account.setName(customer.getName());
                     account.setPhone(customer.getPhoneNumber());
-                    account.setCreatedAt(account.getCreatedAt());
+                    account.setCreatedAt(customer.getCreatedAt());
                 }
             });
             List<String> accountIds = accounts.stream()
@@ -106,7 +106,7 @@ public class AccountService {
                     account.setAddress(customer.getAddress());
                     account.setDescription(customer.getDescription());
                     account.setCommissionPercentage(customer.getCommissionPercentage());
-                    account.setCreatedAt(account.getCreatedAt());
+                    account.setCreatedAt(customer.getCreatedAt());
                 }
             });
         }

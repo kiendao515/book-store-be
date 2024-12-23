@@ -1,10 +1,12 @@
 package box.bookstorebe.scheduler;
 
+import box.bookstorebe.client.CommonClient;
 import box.bookstorebe.common.Const;
 import box.bookstorebe.document.book.BookInventory;
 import box.bookstorebe.document.common.SystemConfigDocument;
 import box.bookstorebe.document.order.OrderDocument;
 import box.bookstorebe.document.order.OrderItemDocument;
+import box.bookstorebe.dto.ghtk.GhtkOrderDetailDto;
 import box.bookstorebe.repository.book.BookInventoryRepository;
 import box.bookstorebe.repository.common.systemconfig.SystemConfigRepository;
 import box.bookstorebe.repository.order.OrderItemRepository;
@@ -18,6 +20,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Semaphore;
 
 @Component
 @AllArgsConstructor
@@ -28,6 +33,9 @@ public class HandleOrderStateSchedule {
     private final OrderItemRepository orderItemRepository;
     private final BookInventoryRepository bookInventoryRepository;
     private final SystemConfigRepository systemConfigRepository;
+    private static final int MAX_CONCURRENT_REQUESTS = 10; // Giới hạn số yêu cầu đồng thời
+    private final Semaphore semaphore = new Semaphore(MAX_CONCURRENT_REQUESTS);
+    private final CommonClient commonClient;
 
     @Scheduled(fixedDelay = 60 * 1000L)
     @SchedulerLock(name = "handleOrderState", lockAtLeastFor = "1M", lockAtMostFor = "10M")
@@ -82,6 +90,66 @@ public class HandleOrderStateSchedule {
             order.setStatus(Const.OrderStatus.CANCEL);
             orderRepository.save(order);
         }
+    }
+    @Scheduled(fixedRate = 30 * 60 * 1000L)
+    @SchedulerLock(name = "updateShippingStatus", lockAtLeastFor = "1M", lockAtMostFor = "10M")
+    @Transactional
+    public void updateShippingStatus() {
+        log.info("[Update Shipping Status] Job running ...");
+        List<OrderDocument> orders = orderRepository.findAllByStatusIn(List.of(
+                Const.OrderStatus.READY_TO_SHIP,
+                Const.OrderStatus.SHIPPING
+        ));
+
+        if (orders.isEmpty()) {
+            log.info("[Update Shipping Status] No orders to process.");
+            return;
+        }
+
+        orders.forEach(order -> {
+            try {
+                semaphore.acquire();
+                CompletableFuture.runAsync(() -> processOrder(order))
+                        .whenComplete((result, error) -> semaphore.release());
+            } catch (InterruptedException e) {
+                log.error("Failed to acquire semaphore for order '{}': {}", order.getId(), e.getMessage());
+            }
+        });
+
+        log.info("[Update Shipping Status] Job done");
+    }
+
+    private void processOrder(OrderDocument order) {
+        try {
+            GhtkOrderDetailDto orderDetailDto = commonClient.getOrderStatus(order.getShippingCode());
+            if (orderDetailDto!= null) {
+                updateOrderStatus(order, orderDetailDto.getOrder().getStatus());
+            } else {
+                log.warn("Failed to get status for order '{}'", order.getId());
+            }
+        } catch (Exception e) {
+            log.error("Error while updating order '{}' status: {}", order.getId(), e.getMessage());
+        }
+    }
+
+    private void updateOrderStatus(OrderDocument order, Integer newStatus) {
+        switch (newStatus) {
+            case -1:
+                order.setStatus(Const.OrderStatus.CANCEL);
+                break;
+            case 1:
+                order.setStatus(Const.OrderStatus.READY_TO_SHIP);
+                break;
+            case 2,3:
+                order.setStatus(Const.OrderStatus.SHIPPING);
+                break;
+            case 5,6,11:
+                order.setStatus(Const.OrderStatus.DONE);
+                break;
+            default:
+                log.warn("Unknown status '{}' for order '{}'", newStatus, order.getId());
+        }
+        orderRepository.save(order);
     }
 }
 

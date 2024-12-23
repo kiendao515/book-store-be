@@ -13,5 +13,6 @@ public interface OrderRepository extends MongoRepository<OrderDocument, String>,
     List<OrderDocument> findAllByStatus(String status);
     List<OrderDocument> findAllByAccountIdInAndStatus(List<String> accountIds, String status);
     List<OrderDocument> findAllByCreatedAtBetweenAndStatusIs(ZonedDateTime startAt, ZonedDateTime endAt, String status);
+    List<OrderDocument> findAllByStatusIn(List<String> status);
 
 }
