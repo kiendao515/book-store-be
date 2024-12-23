@@ -7,6 +7,6 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import java.util.List;
 
 public interface BookStoreRepository extends MongoRepository<StoreDocument, String>, BookStoreExRepository {
-    List<StoreDocument> findAllByAccountIdIn(List<String> accountIds);
+    List<StoreDocument> findAllByAccountIdInAndDeletedAtIsNotNull(List<String> accountIds);
     StoreDocument findByAccountId(String accountId);
 }

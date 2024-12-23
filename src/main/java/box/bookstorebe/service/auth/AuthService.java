@@ -170,6 +170,12 @@ public class AuthService extends BaseService {
             }
             userProfileDto.setRole(user.getRole().name());
             return userProfileDto;
+        } else if (currentUser.getRole().equals(Role.ADMIN)) {
+            UserProfileDto userProfileDto = new UserProfileDto();
+            userProfileDto.setId(user.getId());
+            userProfileDto.setEmail(user.getEmail());
+            userProfileDto.setRole(user.getRole().name());
+            return userProfileDto;
         }
         return null;
     }

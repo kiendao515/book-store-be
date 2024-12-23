@@ -41,6 +41,7 @@ public final class Const {
             "/socket/**",
             "/api/v1/reports/**",
             "/api/v1/offline-orders/**",
+            "/api/v1/web-contents/**"
     };
 
 

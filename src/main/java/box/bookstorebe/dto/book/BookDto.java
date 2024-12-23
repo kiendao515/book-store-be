@@ -34,5 +34,6 @@ public class BookDto {
     private ZonedDateTime updatedAt;
     private Integer numberOfBooks;
     private Integer soldQuantity;
+    private Integer lovedQuantity;
     private List<BookInventory> bookInventories;
 }

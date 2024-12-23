@@ -152,6 +152,7 @@ public class BookService extends BaseService {
         CategoryDocument categoryDocument = categoryRepository.findById(bookDocument.getCategoryId())
                 .orElseThrow(() -> new BizException("Invalid category"));
 
+        List<BookFavoriteDocument> bookFavoriteDocuments = bookFavoriteRepository.findAllByBookId(bookDocument.getId());
         List<BookInventory> bookRealityDocuments = bookRealityRepository.findAllByBookId(bookDocument.getId());
 
         List<OrderItemDocument> orderItems = orderItemRepository.findAllByBookInventoryIdIn(
@@ -195,6 +196,7 @@ public class BookService extends BaseService {
                 .category(categoryDocument)
                 .numberOfBooks(totalBook)
                 .soldQuantity(bookSell)
+                .lovedQuantity(bookFavoriteDocuments.size())
                 .bookInventories(bookRealityDocuments)
                 .createdAt(bookDocument.getCreatedAt())
                 .updatedAt(bookDocument.getUpdatedAt())
