@@ -94,7 +94,7 @@ public class AccountService {
             });
         }
         if ("STORE".equals(role)) {
-            List<StoreDocument> storeDocuments = storeRepository.findAllByAccountIdInAndDeletedAtIsNotNull(listAccountId);
+            List<StoreDocument> storeDocuments = storeRepository.findAllByAccountIdInAndDeletedAtIsNull(listAccountId);
             Map<String, StoreDocument> storeDocumentMap = storeDocuments.stream()
                     .collect(Collectors.toMap(StoreDocument::getAccountId, store -> store));
             accounts.forEach(account -> {

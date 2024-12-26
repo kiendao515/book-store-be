@@ -150,7 +150,7 @@ public class OfflineOrderService extends BaseService {
         AccountDocument accountDocument = accountRepository.findById(offlineOrderDocument.getAccountId()).orElseThrow(() -> new BizException("Invalid params"));
         OfflineOrderDetailDto.Seller seller = new OfflineOrderDetailDto.Seller();
         seller.setId(accountDocument.getId());
-        seller.setName(accountDocument.getEmail());
+        seller.setName(accountDocument.getEmail()); 
         seller.setRole(accountDocument.getRole().toString());
 
         OfflineOrderDetailDto offlineOrderDto = new OfflineOrderDetailDto();

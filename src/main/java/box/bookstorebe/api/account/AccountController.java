@@ -21,7 +21,7 @@ public class AccountController {
     // route này cho admin crud account khách hàng
 
     @GetMapping()
-//    @PreAuthorize("hasAnyAuthority('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     public BasePagingResponse<AccountDto> getAllUsers(
             @RequestParam(name = "role", required = false) String role,
             @RequestParam(name = "email", required = false) String email,
