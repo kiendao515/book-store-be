@@ -1,9 +1,11 @@
 package box.bookstorebe.client;
 
 import box.bookstorebe.common.Const;
+import box.bookstorebe.document.common.SystemConfigDocument;
 import box.bookstorebe.dto.ghtk.*;
 import box.bookstorebe.model.order.GhtkOrderRequest;
 import box.bookstorebe.model.order.ShippingFeeRequest;
+import box.bookstorebe.repository.common.systemconfig.SystemConfigRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -21,10 +23,7 @@ import java.util.Map;
 @Slf4j
 @Component
 public class CommonClient {
-    @Value("${app.client.url}")
-    private String clientUrl;
-    @Value("${app.domain.url}")
-    private String serverUrl;
+    private final SystemConfigRepository systemConfigRepository;
     @Value("${app.ghtk.url}")
     private String ghtkUrl;
     @Value("${app.ghtk.token}")
@@ -38,8 +37,13 @@ public class CommonClient {
     @Value("${app.ghtk.tokenProd}")
     private String ghtkTokenProd;
 
+    public CommonClient(SystemConfigRepository systemConfigRepository) {
+        this.systemConfigRepository = systemConfigRepository;
+    }
+
     public BigDecimal calculateShippingFee(ShippingFeeRequest request) {
-        String url = ghtkUrlProd + "/services/shipment/fee?" +
+        SystemConfigDocument systemConfigDocument = systemConfigRepository.findByKey(Const.GHTK.GHTK_URL_PROD.toString());
+        String url = systemConfigDocument.getValue() + "/services/shipment/fee?" +
                 "address=" + request.getAddress() +
                 "&province=" + request.getProvince() +
                 "&district=" + request.getDistrict() +

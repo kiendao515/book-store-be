@@ -151,4 +151,7 @@ public final class Const {
         IMAGE,
         TEXT
     }
+    public enum GHTK{
+        GHTK_URL, GHTK_TOKEN, GHTK_URL_PROD, GHTK_TOKEN_PROD, WEB_GHTK_URL, WEB_GHTK_TOKEN
+    }
 }
