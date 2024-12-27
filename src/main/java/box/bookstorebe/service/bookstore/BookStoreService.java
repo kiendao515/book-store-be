@@ -28,6 +28,8 @@ import box.bookstorebe.repository.order.OrderItemRepository;
 import box.bookstorebe.repository.order.OrderRepository;
 import box.bookstorebe.repository.user.AccountRepository;
 import box.bookstorebe.service.account.AccountService;
+import box.bookstorebe.service.common.MailService;
+import jakarta.mail.MessagingException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -52,16 +54,32 @@ public class BookStoreService {
     private final OrderItemRepository orderItemRepository;
     private final BookRepository bookRepository;
     private final OrderRepository orderRepository;
+    private final MailService mailService;
 
     // route này cho admin thêm sửa xóa bkstore
     public Page<BookStoreDto> getBookStores(String name, Integer page, Integer size) {
         Page<StoreDocument> bookStoreDocuments = bookStoreRepository.getBookStores(name, page, size);
+        List<String> accountIds = bookStoreDocuments.getContent()
+                .stream()
+                .map(StoreDocument::getAccountId)
+                .collect(Collectors.toList());
 
-        List<BookStoreDto> content = new ArrayList<>();
-        for (StoreDocument bookStoreDocument : bookStoreDocuments.getContent()) {
-            BookStoreDto bookStoreDto = BookStoreMapper.INSTANCE.entityToDto(bookStoreDocument);
-            content.add(bookStoreDto);
-        }
+        Map<String, AccountDocument> accountMap = accountRepository.findAllById(accountIds)
+                .stream()
+                .collect(Collectors.toMap(AccountDocument::getId, account -> account));
+
+        List<BookStoreDto> content = bookStoreDocuments.getContent()
+                .stream()
+                .map(storeDocument -> {
+                    BookStoreDto bookStoreDto = BookStoreMapper.INSTANCE.entityToDto(storeDocument);
+                    AccountDocument accountDocument = accountMap.get(storeDocument.getAccountId());
+                    if (accountDocument != null) {
+                        bookStoreDto.setAccountId(accountDocument.getId());
+                    }
+                    return bookStoreDto;
+                })
+                .collect(Collectors.toList());
+
         return new PageImpl<>(content, bookStoreDocuments.getPageable(), bookStoreDocuments.getTotalElements());
     }
 
@@ -83,7 +101,7 @@ public class BookStoreService {
         bookStoreRepository.save(bookStoreDocument);
     }
 
-    public void createNewBookStoreAndAccount(CreateBookstoreAndAccount bookStoreModel) throws BizException {
+    public void createNewBookStoreAndAccount(CreateBookstoreAndAccount bookStoreModel) throws BizException, MessagingException {
         StoreDocument bookStoreDocument = new StoreDocument();
         bookStoreDocument.setThumbnail(bookStoreModel.getThumbnail());
         bookStoreDocument.setName(bookStoreModel.getName());
@@ -96,6 +114,7 @@ public class BookStoreService {
         AccountDocument acc = accountService.createAccount(new UserModel(bookStoreModel.getEmail(), bookStoreModel.getPassword()), Role.STORE, 1);
         bookStoreDocument.setAccountId(acc.getId());
         bookStoreRepository.save(bookStoreDocument);
+        mailService.sendMailStoreInfo(bookStoreModel.getEmail(), bookStoreModel.getPassword(), bookStoreDocument);
     }
 
     public StoreDocument createStoreInfo(UpdateBookStoreModel bookStoreModel) {

@@ -20,6 +20,7 @@ public class BookStoreDto {
     private String address;
     private String phoneNumber;
     private Float commissionPercentage;
+    private String accountId;
     private ZonedDateTime createdAt;
     private ZonedDateTime updatedAt;
 }

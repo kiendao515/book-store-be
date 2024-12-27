@@ -44,7 +44,7 @@ public class CustomerDocument {
     private Integer receivedAward = 0;
 
     @Field(name = "deleted_at")
-    private ZonedDateTime deletedAd;
+    private ZonedDateTime deletedAt;
 
     @Field(name = "created_at")
     private ZonedDateTime createdAt;

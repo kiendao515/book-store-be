@@ -125,7 +125,7 @@ public class CustomerService {
 
     public void deleteAccount(String id) throws BizException {
         CustomerDocument customer = customerRepository.findById(id).orElseThrow(() -> new BizException("Invalid id"));
-        customer.setDeletedAd(ZonedDateTime.now());
+        customer.setDeletedAt(ZonedDateTime.now());
         customerRepository.save(customer);
     }
 
@@ -136,7 +136,7 @@ public class CustomerService {
             accountRepository.save(accountDocument);
             CustomerDocument customer = customerRepository.findByAccountId(id);
             if(customer != null){
-                customer.setDeletedAd(ZonedDateTime.now());
+                customer.setDeletedAt(ZonedDateTime.now());
                 customerRepository.save(customer);
             }
         }

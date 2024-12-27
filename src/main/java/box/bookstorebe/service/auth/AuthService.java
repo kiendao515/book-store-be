@@ -170,7 +170,7 @@ public class AuthService extends BaseService {
             }
             userProfileDto.setRole(user.getRole().name());
             return userProfileDto;
-        } else if (currentUser.getRole().equals(Role.ADMIN)) {
+        } else if (currentUser.getRole().equals(Role.ADMIN) || currentUser.getRole().equals(Role.STORE)) {
             UserProfileDto userProfileDto = new UserProfileDto();
             userProfileDto.setId(user.getId());
             userProfileDto.setEmail(user.getEmail());

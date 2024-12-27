@@ -4,6 +4,7 @@ import box.bookstorebe.common.Const;
 import box.bookstorebe.document.account.AccountDocument;
 import box.bookstorebe.document.book.BookDocument;
 import box.bookstorebe.document.book.BookInventory;
+import box.bookstorebe.document.bookstore.StoreDocument;
 import box.bookstorebe.document.order.OrderDocument;
 import box.bookstorebe.document.order.OrderItemDocument;
 import box.bookstorebe.document.payment.PaymentDocument;
@@ -71,15 +72,27 @@ public class MailService {
         email.setText(message);
         return email;
     }
+
+    public void sendMailStoreInfo(String to, String pass, StoreDocument storeDocument) throws MessagingException {
+        MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+        helper.setTo(to);
+        helper.setSubject("[Mở hộp] Thông tin tài khoản nhà bán của bạn");
+        String content = formatStoreDetail(pass, storeDocument);
+        helper.setText(content, true);
+        javaMailSender.send(mimeMessage);
+    }
+
     public void sendEmailOrderDetail(String to, OrderDocument orderDocument, List<OrderItemDocument> orderItemDocuments) throws MessagingException, BizException {
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
         helper.setTo(to);
-        helper.setSubject("[Mở hộp] Đơn sách chi tiết ngày " +orderDocument.getCreatedAt().getDayOfMonth()+"/"+
-                orderDocument.getCreatedAt().getMonthValue()+ "/"+orderDocument.getCreatedAt().getYear());
+        helper.setSubject("[Mở hộp] Đơn sách chi tiết ngày " + orderDocument.getCreatedAt().getDayOfMonth() + "/" +
+                orderDocument.getCreatedAt().getMonthValue() + "/" + orderDocument.getCreatedAt().getYear());
         helper.setText(formatOrderDetail(orderDocument, orderItemDocuments), true); // Set to true to send HTML content
         javaMailSender.send(mimeMessage);
     }
+
     public String formatOrderDetail(OrderDocument order, List<OrderItemDocument> orderItemDocuments) throws BizException {
         StringBuilder builder = new StringBuilder();
         ZonedDateTime dateCreated = order.getCreatedAt();
@@ -176,6 +189,63 @@ public class MailService {
                 .append("</html>");
 
         return builder.toString();
+    }
+
+    private String formatStoreDetail(String password, StoreDocument storeDocument) {
+        return """
+                <html>
+                    <head>
+                        <style>
+                            .store-thumbnail {
+                                display: block;
+                                margin: 20px auto;
+                                width: 200px;
+                                height: auto;
+                                border-radius: 10px;
+                                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                            }
+                            .store-info {
+                                font-family: Arial, sans-serif;
+                                line-height: 1.6;
+                                color: #333;
+                                max-width: 600px;
+                                margin: auto;
+                                padding: 20px;
+                                background-color: #f9f9f9;
+                                border-radius: 10px;
+                                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                            }
+                            .store-info h2 {
+                                text-align: center;
+                                color: #2c3e50;
+                            }
+                            .store-info p {
+                                margin: 10px 0;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="store-info">
+                            <h2>Thông tin tài khoản nhà bán của bạn</h2>
+                            <p><strong>Mật khẩu:</strong> %s</p>
+                            <p><strong>Tên nhà bán:</strong> %s</p>
+                            <p><strong>Mô tả:</strong> %s</p>
+                            <p><strong>Số điện thoại:</strong> %s</p>
+                            <p><strong>Địa chỉ:</strong> %s</p>
+                            <p><strong>Tỷ lệ hoa hồng:</strong> %.2f%%</p>
+                            <img src="%s" alt="Store Thumbnail" class="store-thumbnail">
+                        </div>
+                    </body>
+                </html>
+                """.formatted(
+                password,
+                storeDocument.getName(),
+                storeDocument.getDescription(),
+                storeDocument.getPhoneNumber(),
+                storeDocument.getAddress(),
+                storeDocument.getCommissionPercentage(),
+                storeDocument.getThumbnail()
+        );
     }
 
 

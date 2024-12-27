@@ -12,6 +12,7 @@ import box.bookstorebe.model.bookstore.CreateBookStoreModel;
 import box.bookstorebe.model.bookstore.CreateBookstoreAndAccount;
 import box.bookstorebe.model.bookstore.UpdateBookStoreModel;
 import box.bookstorebe.service.bookstore.BookStoreService;
+import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
@@ -79,7 +80,7 @@ public class BookStoreController {
 
     @PostMapping()
 //    @PreAuthorize("hasAnyAuthority('ADMIN')")
-    public BaseResponse<String> createNewBookStoreAndAccount(@RequestBody @Valid CreateBookstoreAndAccount bookStoreModel) throws BizException {
+    public BaseResponse<String> createNewBookStoreAndAccount(@RequestBody @Valid CreateBookstoreAndAccount bookStoreModel) throws BizException, MessagingException {
         bookStoreService.createNewBookStoreAndAccount(bookStoreModel);
         return new BaseResponse<>(Const.ResultCode.SUCCESS, "Create new book store and account successfully");
     }

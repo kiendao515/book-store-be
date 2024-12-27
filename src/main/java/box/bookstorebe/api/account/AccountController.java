@@ -57,7 +57,7 @@ public class AccountController {
     }
 
     @DeleteMapping("{id}")
-//    @PreAuthorize("hasAnyAuthority('ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     public BaseResponse<String> deleteUser(@PathVariable String id) throws BizException {
         userService.deleteAccount(id);
         return new BaseResponse<>(Const.ResultCode.SUCCESS, "Delete user successfully");
