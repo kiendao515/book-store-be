@@ -2,11 +2,11 @@ package box.bookstorebe.client;
 
 import box.bookstorebe.common.Const;
 import box.bookstorebe.document.common.SystemConfigDocument;
+import box.bookstorebe.document.common.WebContentDocument;
 import box.bookstorebe.dto.ghtk.*;
 import box.bookstorebe.model.order.GhtkOrderRequest;
 import box.bookstorebe.model.order.ShippingFeeRequest;
-import box.bookstorebe.repository.common.systemconfig.SystemConfigRepository;
-import com.fasterxml.jackson.databind.JsonNode;
+import box.bookstorebe.repository.common.webcontent.WebContentRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,7 +23,7 @@ import java.util.Map;
 @Slf4j
 @Component
 public class CommonClient {
-    private final SystemConfigRepository systemConfigRepository;
+    private final WebContentRepository systemConfigRepository;
     @Value("${app.ghtk.url}")
     private String ghtkUrl;
     @Value("${app.ghtk.token}")
@@ -37,12 +37,13 @@ public class CommonClient {
     @Value("${app.ghtk.tokenProd}")
     private String ghtkTokenProd;
 
-    public CommonClient(SystemConfigRepository systemConfigRepository) {
+    public CommonClient(WebContentRepository systemConfigRepository) {
         this.systemConfigRepository = systemConfigRepository;
     }
 
+
     public BigDecimal calculateShippingFee(ShippingFeeRequest request) {
-        SystemConfigDocument systemConfigDocument = systemConfigRepository.findByKey(Const.GHTK.GHTK_URL_PROD.toString());
+        WebContentDocument systemConfigDocument = systemConfigRepository.findByKey(Const.GHTK.GHTK_URL_PROD.toString());
         String url = systemConfigDocument.getValue() + "/services/shipment/fee?" +
                 "address=" + request.getAddress() +
                 "&province=" + request.getProvince() +
@@ -71,11 +72,13 @@ public class CommonClient {
     }
 
     public OrderDetail getOrderDetail(String id) {
-        String url = webGhtkUrl + "/api/v1/package/package-detail?alias=" + id;
+        WebContentDocument systemConfigDocument = systemConfigRepository.findByKey(Const.GHTK.WEB_GHTK_URL.toString());
+        WebContentDocument  token = systemConfigRepository.findByKey(Const.GHTK.WEB_GHTK_TOKEN.toString());
+        String url = systemConfigDocument.getValue() + "/api/v1/package/package-detail?alias=" + id;
         RestTemplate restTemplate = new RestTemplate();
         var headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add("Authorization", "Bearer " + webGhtkToken);
+        headers.add("Authorization", "Bearer " + token.getValue());
         try {
             HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(null, headers);
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, requestEntity, String.class);
@@ -129,12 +132,14 @@ public class CommonClient {
 
     public byte[] printOrder(String label) {
         try {
-            String url = ghtkUrl + "/services/label/" + label;
+            WebContentDocument systemConfigDocument = systemConfigRepository.findByKey(Const.GHTK.GHTK_URL.toString());
+            WebContentDocument  token = systemConfigRepository.findByKey(Const.GHTK.GHTK_TOKEN.toString());
+            String url = systemConfigDocument.getValue() + "/services/label/" + label;
             RestTemplate restTemplate = new RestTemplate();
             restTemplate.getMessageConverters().add(new ByteArrayHttpMessageConverter()); // Thêm ByteArrayHttpMessageConverter
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_PDF);
-            headers.add("Token", ghtkToken);
+            headers.add("Token", token.getValue());
             HttpEntity<Void> httpRequest = new HttpEntity<>(null, headers);
             ResponseEntity<byte[]> response = restTemplate.exchange(url, HttpMethod.GET, httpRequest, byte[].class);
             log.info(response.toString());

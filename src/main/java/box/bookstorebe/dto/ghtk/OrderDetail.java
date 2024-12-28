@@ -17,12 +17,15 @@ public class OrderDetail {
     private DataDTO data;
 
     @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class DataDTO {
         private PackageDTO Package;
         private List<CreateLogDTO> CreateLog;
         private Object OrderCashAdvance;
         private List<Object> ImageFrage;
+        @JsonProperty("PickLog")
         private List<PickLogDTO> PickLog;
+        @JsonProperty("DeliverLog")
         private List<DeliverLogDTO> DeliverLog;
         private List<ReturnLogDTO> ReturnLog;
         private List<Object> AuditLog;
@@ -32,6 +35,7 @@ public class OrderDetail {
     }
 
     @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class PackageDTO {
         private String alias;
         private String customer_tel;
@@ -150,6 +154,7 @@ public class OrderDetail {
     }
 
     @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class PickOptionDTO {
         private long id;
         private String package_id;
@@ -166,6 +171,7 @@ public class OrderDetail {
     }
 
     @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class ProductDTO {
         private long package_order;
         private String product_name;
@@ -180,6 +186,7 @@ public class OrderDetail {
     }
 
     @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class PackageValueDTO {
         private String short_expiry_date;
         private boolean count_down_expiry_date;
@@ -189,6 +196,7 @@ public class OrderDetail {
     }
 
     @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class PackageAddressReturnDTO {
         private long id;
         private long package_order;
@@ -212,6 +220,7 @@ public class OrderDetail {
     }
 
     @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class LogDTO {
         private int id;
         private String package_id;
@@ -230,21 +239,26 @@ public class OrderDetail {
     }
 
     @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class CreateLogDTO {
         private String desc;
         private String created;
     }
 
     @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class PickLogDTO {
         private String created;
         private String desc;
         private long order;
         private Object pkg_id;
         private String action;
+        private String image;
+        private String pickImage;
     }
 
     @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class DeliverLogDTO {
         private String created;
         private String desc;
@@ -254,6 +268,7 @@ public class OrderDetail {
     }
 
     @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class ReturnLogDTO {
         private String created;
         private String desc;
@@ -263,6 +278,7 @@ public class OrderDetail {
     }
 
     @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class PrintLogDTO {
         private long id;
         private long pkg_order;
@@ -276,6 +292,7 @@ public class OrderDetail {
     }
 
     @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class OtherLogDTO {
         private int id;
         private String package_id;
