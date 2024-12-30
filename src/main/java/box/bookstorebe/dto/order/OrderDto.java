@@ -42,4 +42,5 @@ public class OrderDto {
     private BigDecimal totalAmount;
     private AccountDto account;
     private String transactionId;
+    private BigDecimal discountPoint;
 }

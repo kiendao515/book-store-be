@@ -50,6 +50,9 @@ public class OrderDocument {
     @Field(name = "payment_type")
     private boolean paymentType; // 0 for cod, 1 for pay by wallet
 
+    @Field(name = "discount_point")
+    private BigDecimal discountPoint;
+
     @Field(name = "shipping_fee")
     private BigDecimal shippingFee;
 

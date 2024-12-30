@@ -31,10 +31,8 @@ public class CartService extends BaseService {
     private final AccountRepository accountRepository;
     private final BookInventoryRepository bookRealityRepository;
     private final BookRepository bookRepository;
-    private final BookService bookService;
-    private final BookInventoryService bookRealityService;
 
-    public void saveCart(CreateCartModel cartModel) throws BizException{
+    public void saveCart(CreateCartModel cartModel) throws BizException {
         RequestScope currentUser = this.getCurrentUserInfo();
         if (currentUser == null) {
             throw new BizException("Invalid token");
@@ -42,12 +40,14 @@ public class CartService extends BaseService {
         AccountDocument user = accountRepository.findById(currentUser.getAccountId()).orElseThrow(() -> new BizException("Invalid account id"));
         BookInventory bookInventory = bookRealityRepository.findById(cartModel.getBookInventoryId()).orElseThrow(() -> new BizException("Invalid book inventory id"));
         CartDocument cartDocument = cartRepository.findByAccountIdAndBookInventoryId(user.getId(), bookInventory.getId());
-        if(cartDocument == null) {throw new BizException("Invalid cart");}
-        if(cartModel.isDelete()){
+        if (cartDocument == null) {
+            throw new BizException("Invalid cart");
+        }
+        if (cartModel.isDelete()) {
             cartRepository.delete(cartDocument);
             return;
         }
-        if(bookInventory.getQuantity() < (cartDocument.getQuantity() + cartModel.getQuantity())) {
+        if (bookInventory.getQuantity() < (cartDocument.getQuantity() + cartModel.getQuantity())) {
             throw new BizException("Số lượng vượt quá tồn kho");
         }
         cartDocument.setQuantity(cartDocument.getQuantity() + cartModel.getQuantity());
@@ -122,6 +122,16 @@ public class CartService extends BaseService {
         });
 
         return cartDtoList;
+    }
+
+    public void clearCart() throws BizException {
+        RequestScope currentUser = this.getCurrentUserInfo();
+        if (currentUser == null) {
+            throw new BizException("Invalid token");
+        }
+
+        AccountDocument user = accountRepository.findById(currentUser.getAccountId()).orElseThrow(() -> new BizException("Invalid account id"));
+        cartRepository.deleteAllByAccountId(user.getId());
     }
 
 }

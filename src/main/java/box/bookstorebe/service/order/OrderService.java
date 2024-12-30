@@ -5,6 +5,7 @@ import box.bookstorebe.common.Const;
 import box.bookstorebe.configuration.security.RequestScope;
 
 import box.bookstorebe.document.account.AccountDocument;
+import box.bookstorebe.document.account.CustomerDocument;
 import box.bookstorebe.document.book.BookDocument;
 import box.bookstorebe.document.book.BookInventory;
 import box.bookstorebe.document.order.OrderDocument;
@@ -20,6 +21,7 @@ import box.bookstorebe.model.order.ShippingFeeRequest;
 import box.bookstorebe.model.order.UpdateOrderModel;
 import box.bookstorebe.repository.book.BookInventoryRepository;
 import box.bookstorebe.repository.book.BookRepository;
+import box.bookstorebe.repository.customer.CustomerRepository;
 import box.bookstorebe.repository.order.OrderItemRepository;
 import box.bookstorebe.repository.order.OrderRepository;
 import box.bookstorebe.repository.user.AccountRepository;
@@ -61,17 +63,14 @@ public class OrderService extends BaseService {
     private final OrderRepository orderRepository;
     private final BookInventoryRepository bookInventoryRepository;
     private final BookRepository bookRepository;
-    private final BookService bookService;
-    private final BookInventoryService bookInventoryService;
     private final PaymentService paymentService;
-    private static final AtomicLong counter = new AtomicLong();
-    private final MongoTemplate mongoTemplate;
     private final MailService mailService;
     private final OrderItemRepository orderItemRepository;
     private final AddressService addressService;
     private final CommonClient commonClient;
     private final AccountService accountService;
     private final AccountRepository accountRepository;
+    private final CustomerRepository customerRepository;
     private SimpMessagingTemplate messagingTemplate;
 
     protected String getSaltString() {
@@ -88,10 +87,19 @@ public class OrderService extends BaseService {
 
     @Transactional
     public Object createOrder(HttpServletRequest request, CreateOrderModel order, String returnUrl) throws BizException, MessagingException {
-
         RequestScope currentUser = this.getCurrentUserInfo();
         if (currentUser == null) {
             throw new BizException("Invalid token");
+        }
+
+        AccountDocument user = accountRepository.findById(currentUser.getAccountId()).orElseThrow(() -> new BizException("Invalid account id"));
+        CustomerDocument customer = customerRepository.findByAccountId(user.getId());
+        if (customer == null) {
+            throw new BizException("Invalid customer");
+        }
+
+        if (order.getDiscountPoint() == null || order.getDiscountPoint().compareTo(BigDecimal.valueOf(customer.getPoint())) > 0) {
+            throw new BizException("Invalid discount point");
         }
 
         BigDecimal totalAmount = new BigDecimal(0);
@@ -118,7 +126,7 @@ public class OrderService extends BaseService {
             int totalAvailableQuantityForAnotherStore = !relatedInventories.isEmpty() ? relatedInventories.stream()
                     .mapToInt(BookInventory::getQuantity)
                     .sum() : inventory.getQuantity();
-            int totalAvailable = totalAvailableQuantityForAnotherStore+ inventory.getQuantity();
+            int totalAvailable = totalAvailableQuantityForAnotherStore + inventory.getQuantity();
 
             if (totalAvailable < orderItem.getQuantity()) {
                 throw new BizException("Not enough quantity for book inventory ID " + orderItem.getBookInventoryId());
@@ -141,6 +149,7 @@ public class OrderService extends BaseService {
             orderDocument.setShippingFee(fee);
             totalAmount = totalAmount.add(fee);
         }
+
         orderDocument.setCreatedAt(ZonedDateTime.now());
         orderDocument.setStreet(order.getStreet());
         orderDocument.setReceiverName(order.getCustomerName());
@@ -189,6 +198,12 @@ public class OrderService extends BaseService {
             }
         }
 
+        if (order.getDiscountPoint() != null) {
+            totalAmount = totalAmount.subtract(order.getDiscountPoint());
+            savedOrder.setDiscountPoint(order.getDiscountPoint());
+            customer.setPoint(customer.getPoint() - order.getDiscountPoint().intValue());
+            customerRepository.save(customer);
+        }
 
         savedOrder.setTotalAmount(totalAmount);
         orderRepository.save(savedOrder);
@@ -243,6 +258,7 @@ public class OrderService extends BaseService {
                     orderDto.setUpdatedAt(order.getUpdatedAt());
                     orderDto.setStatus(order.getStatus());
                     orderDto.setOrderCode(order.getOrderCode());
+                    orderDto.setDiscountPoint(order.getDiscountPoint());
                     orderDto.setPaid(order.getTransactionId() != null);
                     try {
                         orderDto.setAccount(accountService.getAccountDetail(order.getAccountId()));
@@ -323,6 +339,7 @@ public class OrderService extends BaseService {
                 .totalAmount(orderDocument.getTotalAmount())
                 .shippingFee(orderDocument.getShippingFee())
                 .shippingCode(orderDocument.getShippingCode())
+                .discountPoint(orderDocument.getDiscountPoint())
                 .shippingCompany(orderDocument.getShippingCompany())
                 .build();
     }
@@ -341,7 +358,7 @@ public class OrderService extends BaseService {
                 .address(orderDocument.getStreet() + "," + orderDocument.getWard().getFullName() + "," + orderDocument.getDistrict().getFullName() + "," + orderDocument.getProvince().getFullName())
                 .status(orderDocument.getStatus())
                 .createdAt(orderDocument.getCreatedAt())
-//                .orderItems(orderItemDocuments)
+                .discountPoint(orderDocument.getDiscountPoint())
                 .isPaid(isPaid)
                 .paymentType(orderDocument.isPaymentType())
                 .note(orderDocument.getNote())
@@ -388,7 +405,8 @@ public class OrderService extends BaseService {
             throw new BizException(errorMessage);
         }
     }
-    private void saveSettleDetail(OrderDocument orderDocument){
+
+    private void saveSettleDetail(OrderDocument orderDocument) {
         List<OrderItemDocument> listOrderItems = orderItemRepository.findAllByOrderId(orderDocument.getId());
         listOrderItems.forEach(orderItem -> {
             orderItem.setSettledStatus(0);

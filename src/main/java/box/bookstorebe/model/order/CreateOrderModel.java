@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.List;
 
@@ -24,4 +25,5 @@ public class CreateOrderModel {
     private String districtCode;
     private String wardCode;
     private String street;
+    private BigDecimal discountPoint;
 }

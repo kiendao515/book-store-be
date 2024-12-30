@@ -21,5 +21,6 @@ public class UserProfileDto {
     private String fullName;
     private String phoneNumber;
     private ZonedDateTime dateOfBirth;
+    private float point;
     private String role;
 }

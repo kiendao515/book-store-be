@@ -85,6 +85,14 @@ public class AuthService extends BaseService {
         userDto.setId(user.getId());
         userDto.setEmail(user.getEmail());
         userDto.setRole(user.getRole());
+        userDto.setEmail(user.getEmail());
+        if (user.getRole() == Role.USER) {
+            CustomerDocument customer = customerRepository.findByAccountId(user.getId());
+            userDto.setPoint(customer.getPoint());
+            userDto.setName(customer.getName());
+            userDto.setPhone(customer.getPhoneNumber());
+            userDto.setAvatar(customer.getAvatar());
+        }
 
         return new AuthResponseDto(jwtToken, userDto);
     }
@@ -167,6 +175,7 @@ public class AuthService extends BaseService {
                 userProfileDto.setDateOfBirth(customerDocument.getDateOfBirth());
                 userProfileDto.setPhoneNumber(customerDocument.getPhoneNumber());
                 userProfileDto.setFullName(customerDocument.getName());
+                userProfileDto.setPoint(customerDocument.getPoint());
             }
             userProfileDto.setRole(user.getRole().name());
             return userProfileDto;

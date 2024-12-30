@@ -21,6 +21,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CartController {
     private final CartService cartService;
+
     @PostMapping
     public BaseResponse<String> addToCart(@RequestBody @Valid CreateCartModel cartModel) throws BizException, MessagingException {
         cartService.addToCart(cartModel);
@@ -37,5 +38,11 @@ public class CartController {
     public BaseResponse<String> saveCart(@RequestBody @Valid CreateCartModel cartModel) throws BizException, MessagingException {
         cartService.saveCart(cartModel);
         return new BaseResponse<>(Const.ResultCode.SUCCESS, "Lưu giỏ hàng thành công!");
+    }
+
+    @DeleteMapping
+    public BaseResponse<String> clearCart() throws BizException {
+        cartService.clearCart();
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, "Xóa giỏ hàng thành công!");
     }
 }
