@@ -26,4 +26,8 @@ public class CreateOrderModel {
     private String wardCode;
     private String street;
     private BigDecimal discountPoint;
+    private Integer combinedOrder; // 1 la cho, 2 la da gom xong, 3 la don le
+    private String relatedOrderId;
+    private BigDecimal shippingFee;
+
 }

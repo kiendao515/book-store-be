@@ -103,6 +103,7 @@ public final class Const {
         public static final String CREATED = "CREATED";
         public static final String CANCEL = "CANCEL";
         public static final String READY_TO_PACKAGE = "READY_TO_PACKAGE";
+        public static final String COMBINED_ORDER = "COMBINED_ORDER";
         public static final String READY_TO_SHIP = "READY_TO_SHIP";
         public static final String SHIPPING = "SHIPPING";
         public static final String DONE = "DONE";

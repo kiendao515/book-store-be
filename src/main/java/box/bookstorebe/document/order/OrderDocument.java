@@ -41,6 +41,12 @@ public class OrderDocument {
     @Field(name = "street")
     private String street;
 
+    @Field(name = "related_order_id")
+    private String relatedOrderId;
+
+    @Field(name = "shipping_status")
+    private Integer shippingStatus; // 1 la gom don va doi , 2 la da gom xong va giao, 3 la don le
+
 //    @Field(name = "address")
 //    private String address;
 

@@ -1,4 +1,5 @@
 package box.bookstorebe.service.order;
+
 import box.bookstorebe.common.Const;
 import box.bookstorebe.configuration.payment.PaymentConfig;
 import box.bookstorebe.document.account.AccountDocument;
@@ -45,7 +46,7 @@ public class PaymentService {
     private final OrderItemRepository orderItemRepository;
     private final AccountRepository accountRepository;
 
-    public String createOrder(HttpServletRequest request, BigDecimal total, String orderInfor, String urlReturn){
+    public String createOrder(HttpServletRequest request, BigDecimal total, String orderInfor, String urlReturn) {
         String vnp_Version = "2.1.0";
         String vnp_Command = "pay";
         String vnp_TxnRef = PaymentConfig.getRandomNumber(8);
@@ -115,9 +116,9 @@ public class PaymentService {
         return paymentUrl;
     }
 
-    public int orderReturn(HttpServletRequest request){
+    public int orderReturn(HttpServletRequest request) {
         Map fields = new HashMap();
-        for (Enumeration params = request.getParameterNames(); params.hasMoreElements();) {
+        for (Enumeration params = request.getParameterNames(); params.hasMoreElements(); ) {
             String fieldName = null;
             String fieldValue = null;
             try {
@@ -149,19 +150,31 @@ public class PaymentService {
             return -1;
         }
     }
-    public void createPayment(String orderId,String transactionId) throws BizException, MessagingException {
-        OrderDocument orderDocument= orderRepository.findByOrderCode(orderId);
+
+    public void createPayment(String orderId, String transactionId) throws BizException, MessagingException {
+        OrderDocument orderDocument = orderRepository.findByOrderCode(orderId);
         if (orderDocument == null) {
             return;
         }
         List<OrderItemDocument> orderItems = orderItemRepository.findAllByOrderId(orderId);
-        AccountDocument accountDocument = accountRepository.findById(orderDocument.getAccountId()).orElseThrow(()-> new BizException("account id k hop le"));
+        AccountDocument accountDocument = accountRepository.findById(orderDocument.getAccountId()).orElseThrow(() -> new BizException("account id k hop le"));
         orderDocument.setTransactionId(transactionId);
-        orderDocument.setStatus(Const.OrderStatus.READY_TO_PACKAGE);
+        if (orderDocument.getShippingStatus() == 2) {
+            List<OrderDocument> orderDocuments = orderRepository.findAllByRelatedOrderId(orderDocument.getRelatedOrderId());
+            for (OrderDocument orderDoc : orderDocuments) {
+                orderDoc.setStatus(Const.OrderStatus.READY_TO_PACKAGE);
+            }
+            orderRepository.saveAll(orderDocuments);
+        } else if (orderDocument.getShippingStatus() == 1) {
+            orderDocument.setStatus(Const.OrderStatus.COMBINED_ORDER);
+        } else if (orderDocument.getShippingStatus() == 3) {
+            orderDocument.setStatus(Const.OrderStatus.READY_TO_PACKAGE);
+        }
         orderRepository.save(orderDocument);
-        mailService.sendEmailOrderDetail(accountDocument.getEmail(),orderDocument, orderItems);
+        mailService.sendEmailOrderDetail(accountDocument.getEmail(), orderDocument, orderItems);
     }
-    public PaymentDocument getPaymentByOrderId(String orderId) throws BizException{
+
+    public PaymentDocument getPaymentByOrderId(String orderId) throws BizException {
         return mongoTemplate.findOne(new Query(Criteria.where("order._id").is(orderId)), PaymentDocument.class);
     }
 }

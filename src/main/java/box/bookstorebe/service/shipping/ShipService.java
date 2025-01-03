@@ -86,6 +86,21 @@ public class ShipService {
         return orderResults;
     }
 
+    public GhtkOrderDto.OrderResult createCombinedOrder(CreateOrder createOrder) throws BizException {
+        GhtkOrderDto.OrderResult orderResult = createGhtkOrder(createOrder);
+        if(orderResult != null){
+            List<OrderDocument> orderDocuments = orderRepository.findAllByRelatedOrderId(createOrder.getOrderCode());
+            for(OrderDocument orderDocument : orderDocuments){
+                orderDocument.setShippingCompany("GIAO HANG TIET KIEM");
+                orderDocument.setShippingCode(orderResult.getLabel());
+                orderDocument.setStatus(Const.OrderStatus.READY_TO_SHIP);
+                orderDocument.setWeight(Float.valueOf(createOrder.getWeight()));
+            }
+            orderRepository.saveAll(orderDocuments);
+        }
+        return orderResult;
+    }
+
     private GhtkOrderDto.OrderResult createGhtkOrder(CreateOrder orderDto) throws BizException {
         // Logic xử lý cho một đơn hàng, như đã có trong mã của bạn
         OrderDocument orderDocument = orderRepository.findByOrderCode(orderDto.getOrderCode());

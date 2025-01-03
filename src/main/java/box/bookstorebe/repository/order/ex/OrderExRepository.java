@@ -7,6 +7,6 @@ import java.time.ZonedDateTime;
 
 
 public interface OrderExRepository {
-    Page<OrderDocument> getOrders(String customerPhone, String id, String paymentType, String status, ZonedDateTime startAt,
+    Page<OrderDocument> getOrders(Integer type, String accountId,String customerPhone, String id, String paymentType, String status, ZonedDateTime startAt,
                                   ZonedDateTime endAt,Integer page, Integer size);
 }

@@ -6,6 +6,7 @@ import box.bookstorebe.dto.auth.AuthResponseDto;
 import box.bookstorebe.dto.book.BookDto;
 import box.bookstorebe.dto.common.BasePagingResponse;
 import box.bookstorebe.dto.common.BaseResponse;
+import box.bookstorebe.dto.order.CombinedOrderDto;
 import box.bookstorebe.dto.order.OrderDto;
 import box.bookstorebe.exception.BizException;
 import box.bookstorebe.model.auth.LoginRequestModel;
@@ -45,8 +46,24 @@ public class OrderController {
 
     @PostMapping
     public BaseResponse<?> createOrder(@RequestBody @Valid CreateOrderModel orderModel, HttpServletRequest request) throws BizException, MessagingException {
-       Object result = orderService.createOrder(request,orderModel,serverUrl);
+        Object result = orderService.createOrder(request, orderModel, serverUrl);
         return new BaseResponse<>(Const.ResultCode.SUCCESS, result);
+    }
+
+    @PostMapping("/combine")
+    public BaseResponse<?> createOrderV2(@RequestBody @Valid CreateOrderModel orderModel, HttpServletRequest request) throws BizException, MessagingException {
+        Object result = orderService.createOrderV2(request, orderModel, serverUrl);
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, result);
+    }
+
+    @GetMapping("/combine")
+    public BaseResponse<List<CombinedOrderDto>> getListCombinedOder() throws BizException {
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, orderService.getListCombinedOrder());
+    }
+
+    @PostMapping("/combine/fee")
+    public BaseResponse<BigDecimal> calculateCombinedOrderFee(@RequestBody @Valid CreateOrderModel orderModel) throws BizException {
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, orderService.calculateCombinedOrderFee(orderModel));
     }
 
     @GetMapping()
@@ -57,10 +74,11 @@ public class OrderController {
             @RequestParam(name = "status", required = false) String status,
             @RequestParam(name = "start_at", required = false) String startAt,
             @RequestParam(name = "end_at", required = false) String endAt,
+            @RequestParam(name = "type", required = false) Integer type,
             @RequestParam(name = "page", required = false) Integer page,
             @RequestParam(name = "size", required = false) Integer size
     ) throws BizException {
-        return new BasePagingResponse<>(orderService.getOrders(customerPhone,id,paymentType,status,startAt,endAt,page, size));
+        return new BasePagingResponse<>(orderService.getOrders(type, customerPhone, id, paymentType, status, startAt, endAt, page, size));
     }
 
     @GetMapping("{id}")
@@ -75,9 +93,9 @@ public class OrderController {
 
 
     @GetMapping("/repayment/{id}")
-    public BaseResponse<String> retryPayment(@PathVariable String id,HttpServletRequest request) throws BizException, MessagingException {
-        String url = orderService.retryPayment(id,serverUrl,request);
-        return new BaseResponse<>(Const.ResultCode.SUCCESS,url);
+    public BaseResponse<String> retryPayment(@PathVariable String id, HttpServletRequest request) throws BizException, MessagingException {
+        String url = orderService.retryPayment(id, serverUrl, request);
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, url);
     }
 
     @PutMapping("{id}")
@@ -88,23 +106,23 @@ public class OrderController {
 
     @PostMapping("/payment")
     public String createPayment(@RequestParam("amount") int orderTotal,
-                              @RequestParam("orderInfo") String orderInfo,
-                              HttpServletRequest request){
+                                @RequestParam("orderInfo") String orderInfo,
+                                HttpServletRequest request) {
         String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
-        String vnpayUrl = paymentService.createOrder(request,new BigDecimal(orderTotal), orderInfo, baseUrl);
+        String vnpayUrl = paymentService.createOrder(request, new BigDecimal(orderTotal), orderInfo, baseUrl);
         return "redirect:" + vnpayUrl;
     }
 
     @GetMapping("/payment")
     public RedirectView getPayment(HttpServletRequest request, Model model) throws BizException, MessagingException {
-        int paymentStatus =paymentService.orderReturn(request);
+        int paymentStatus = paymentService.orderReturn(request);
         String orderInfo = request.getParameter("vnp_OrderInfo");
         String transactionId = request.getParameter("vnp_TransactionNo");
 //        String totalPrice = request.getParameter("vnp_Amount");
-        if(paymentStatus == 1){
-            paymentService.createPayment(orderInfo,transactionId);
+        if (paymentStatus == 1) {
+            paymentService.createPayment(orderInfo, transactionId);
         }
-        return new RedirectView(checkoutUrl+"/order-result?orderId="+orderInfo);
+        return new RedirectView(checkoutUrl + "/order-result?orderId=" + orderInfo);
     }
 
 }

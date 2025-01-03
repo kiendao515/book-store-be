@@ -18,32 +18,40 @@ import java.util.List;
 
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.match;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
+
 @Repository
 @AllArgsConstructor
-public class OrderExRepositoryImpl implements OrderExRepository{
+public class OrderExRepositoryImpl implements OrderExRepository {
     private MongoTemplate mongoTemplate;
+
     @Override
-    public Page<OrderDocument> getOrders(String customerPhone, String id, String paymentType, String status, ZonedDateTime startAt, ZonedDateTime endAt,
+    public Page<OrderDocument> getOrders(Integer type, String accountId, String customerPhone, String id, String paymentType, String status, ZonedDateTime startAt, ZonedDateTime endAt,
                                          Integer page, Integer size) {
         PageRequest pageRequest;
         Criteria criteria = new Criteria();
         if (customerPhone != null) {
             criteria = criteria.and("customer_phone").regex(".*" + customerPhone + ".*");
         }
+        if (accountId != null) {
+            criteria = criteria.and("account_id").is(accountId);
+        }
 
         if (id != null) {
             criteria = criteria.and("_id").is(id);
         }
+        if (type != null && type == 2) {
+            criteria = criteria.and("related_order_id").ne(null);
+        }
 
         if (paymentType != null) {
-            if(paymentType.equals("COD")){
+            if (paymentType.equals("COD")) {
                 criteria = criteria.and("payment_type").is(false);
-            }else if(paymentType.equals("CK")){
+            } else if (paymentType.equals("CK")) {
                 criteria = criteria.and("payment_type").is(true);
             }
         }
 
-        if (status!=null && !status.isEmpty()) {
+        if (status != null && !status.isEmpty()) {
             criteria = criteria.and("status").is(status);
         }
 

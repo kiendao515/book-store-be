@@ -6,12 +6,14 @@ import box.bookstorebe.configuration.security.RequestScope;
 
 import box.bookstorebe.document.account.AccountDocument;
 import box.bookstorebe.document.account.CustomerDocument;
+import box.bookstorebe.document.account.Role;
 import box.bookstorebe.document.book.BookDocument;
 import box.bookstorebe.document.book.BookInventory;
 import box.bookstorebe.document.order.OrderDocument;
 import box.bookstorebe.document.order.OrderItemDocument;
 import box.bookstorebe.document.payment.PaymentDocument;
 import box.bookstorebe.dto.common.AddressDto;
+import box.bookstorebe.dto.order.CombinedOrderDto;
 import box.bookstorebe.dto.order.OrderDto;
 import box.bookstorebe.dto.order.OrderItemDto;
 import box.bookstorebe.exception.BizException;
@@ -27,33 +29,21 @@ import box.bookstorebe.repository.order.OrderRepository;
 import box.bookstorebe.repository.user.AccountRepository;
 import box.bookstorebe.service.BaseService;
 import box.bookstorebe.service.account.AccountService;
-import box.bookstorebe.service.book.BookInventoryService;
-import box.bookstorebe.service.book.BookService;
 import box.bookstorebe.service.common.AddressService;
 import box.bookstorebe.service.common.MailService;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 @AllArgsConstructor
@@ -220,6 +210,179 @@ public class OrderService extends BaseService {
         return savedOrder;
     }
 
+    @Transactional
+    public Object createOrderV2(HttpServletRequest request, CreateOrderModel order, String returnUrl) throws BizException, MessagingException {
+        RequestScope currentUser = this.getCurrentUserInfo();
+        if (currentUser == null) {
+            throw new BizException("Invalid token");
+        }
+
+        AccountDocument user = accountRepository.findById(currentUser.getAccountId()).orElseThrow(() -> new BizException("Invalid account id"));
+        CustomerDocument customer = customerRepository.findByAccountId(user.getId());
+        if (customer == null) {
+            throw new BizException("Invalid customer");
+        }
+
+        if (order.getDiscountPoint() == null || order.getDiscountPoint().compareTo(BigDecimal.valueOf(customer.getPoint())) > 0) {
+            throw new BizException("Invalid discount point");
+        }
+
+        BigDecimal totalAmount = new BigDecimal(0);
+        List<String> bookInventoryIds = order.getOrderItems().stream()
+                .map(OrderItem::getBookInventoryId).collect(Collectors.toList());
+        List<BookInventory> bookInventories = bookInventoryRepository.findAllByIdIn(bookInventoryIds);
+        if (bookInventories.size() != bookInventoryIds.size()) {
+            throw new BizException("Some books are not available in inventory.");
+        }
+
+        for (OrderItem orderItem : order.getOrderItems()) {
+            BookInventory inventory = bookInventories.stream()
+                    .filter(book -> book.getId().equals(orderItem.getBookInventoryId()))
+                    .findFirst()
+                    .orElseThrow(() -> new BizException("Book inventory ID " + orderItem.getBookInventoryId() + " not found"));
+
+            List<BookInventory> relatedInventories = bookInventoryRepository.findAllByRelatedBookId(inventory.getId());
+
+            if (inventory.getRelatedBookId() != null) {
+                relatedInventories.add(inventory);
+                relatedInventories.add(0, inventory);
+            }
+
+            int totalAvailableQuantityForAnotherStore = !relatedInventories.isEmpty() ? relatedInventories.stream()
+                    .mapToInt(BookInventory::getQuantity)
+                    .sum() : inventory.getQuantity();
+            int totalAvailable = totalAvailableQuantityForAnotherStore + inventory.getQuantity();
+
+            if (totalAvailable < orderItem.getQuantity()) {
+                throw new BizException("Not enough quantity for book inventory ID " + orderItem.getBookInventoryId());
+            }
+        }
+
+        OrderDocument orderDocument = new OrderDocument();
+
+        orderDocument.setCreatedAt(ZonedDateTime.now());
+        orderDocument.setStreet(order.getStreet());
+        orderDocument.setReceiverName(order.getCustomerName());
+        orderDocument.setReceiverPhone(order.getCustomerPhone());
+        orderDocument.setAccountId(currentUser.getAccountId());
+        orderDocument.setPaymentType(order.isPaymentMethod());
+        orderDocument.setOrderCode(getSaltString());
+        orderDocument.setStatus(Const.OrderStatus.CREATED);
+        orderDocument.setNote(order.getNote());
+        orderDocument.setShippingCompany("GIAO HÀNG TIẾT KIỆM");
+        OrderDocument savedOrder = orderRepository.save(orderDocument);
+        if (order.getDistrictCode() != null && order.getWardCode() != null && order.getProvinceCode() != null) {
+            AddressDto addressDto = addressService.getAddress(order.getProvinceCode(), order.getDistrictCode(), order.getWardCode());
+            orderDocument.setProvince(addressDto.getProvince());
+            orderDocument.setDistrict(addressDto.getDistrict());
+            orderDocument.setWard(addressDto.getWard());
+            // cho gom don
+            if (order.isPaymentMethod() && order.getCombinedOrder() == 1) {
+                if (!order.getRelatedOrderId().isEmpty()) {
+                    OrderDocument rootOrder = orderRepository.findByOrderCode(order.getRelatedOrderId());
+                    if(rootOrder == null) {
+                        return new BizException("Bạn chưa chọn đơn gom gốc");
+                    }
+                    orderDocument.setRelatedOrderId(rootOrder.getOrderCode());
+                } else {
+                    orderDocument.setRelatedOrderId(savedOrder.getOrderCode());
+                }
+            } else if (order.isPaymentMethod() && order.getCombinedOrder() == 2) {
+                // da gom xong va thanh toan
+                OrderDocument rootOrder = orderRepository.findByOrderCode(order.getRelatedOrderId());
+                orderDocument.setRelatedOrderId(rootOrder.getOrderCode());
+            }
+            orderDocument.setShippingStatus(order.getCombinedOrder());
+            BigDecimal fee = calculateCombinedOrderFee(order);
+            orderDocument.setShippingFee(fee);
+            totalAmount = totalAmount.add(fee);
+        }
+        List<OrderItemDocument> orderItemDocuments = new ArrayList<>();
+        for (OrderItem orderItem : order.getOrderItems()) {
+            BookInventory inventory = bookInventories.stream()
+                    .filter(book -> book.getId().equals(orderItem.getBookInventoryId()))
+                    .findFirst()
+                    .orElseThrow(() -> new BizException("Book inventory ID " + orderItem.getBookInventoryId() + " not found"));
+
+            List<BookInventory> relatedInventories = bookInventoryRepository.findAllByRelatedBookId(inventory.getId());
+
+            if (inventory.getRelatedBookId() != null) {
+                relatedInventories.add(inventory);
+            } else {
+                relatedInventories.add(0, inventory);
+            }
+
+            int remainingQuantity = orderItem.getQuantity();
+
+            for (BookInventory relatedInventory : relatedInventories) {
+                if (remainingQuantity <= 0) break;
+
+                if (relatedInventory.getQuantity() > 0) {
+                    int quantityToSubtract = Math.min(remainingQuantity, relatedInventory.getQuantity());
+                    relatedInventory.setQuantity(relatedInventory.getQuantity() - quantityToSubtract);
+                    remainingQuantity -= quantityToSubtract;
+
+                    bookInventoryRepository.save(relatedInventory);
+                    OrderItemDocument orderItemDocument = new OrderItemDocument();
+                    orderItemDocument.setOrderId(savedOrder.getId());
+                    orderItemDocument.setBookInventoryId(relatedInventory.getId());
+                    orderItemDocument.setQuantity(quantityToSubtract);
+                    orderItemDocuments.add(orderItemDocument);
+                    totalAmount = totalAmount.add(relatedInventory.getPrice().multiply(BigDecimal.valueOf(quantityToSubtract)));
+                }
+            }
+        }
+
+        if (order.getDiscountPoint() != null) {
+            totalAmount = totalAmount.subtract(order.getDiscountPoint());
+            savedOrder.setDiscountPoint(order.getDiscountPoint());
+            customer.setPoint(customer.getPoint() - order.getDiscountPoint().intValue());
+            customerRepository.save(customer);
+        }
+
+        savedOrder.setTotalAmount(totalAmount);
+        orderRepository.save(savedOrder);
+
+        orderItemRepository.saveAll(orderItemDocuments);
+        messagingTemplate.convertAndSend("/topic/order", savedOrder);
+
+        if (order.isPaymentMethod()) {
+            return paymentService.createOrder(request, totalAmount, savedOrder.getOrderCode(), returnUrl);
+        } else {
+            mailService.sendEmailOrderDetail(order.getEmail(), savedOrder, orderItemDocuments);
+        }
+
+        return savedOrder;
+    }
+
+    public List<CombinedOrderDto> getListCombinedOrder() throws BizException {
+        RequestScope currentUser = this.getCurrentUserInfo();
+        if (currentUser == null) {
+            throw new BizException("Invalid token");
+        }
+
+        AccountDocument user = accountRepository.findById(currentUser.getAccountId()).orElseThrow(() -> new BizException("Invalid account id"));
+        CustomerDocument customer = customerRepository.findByAccountId(user.getId());
+        if (customer == null) {
+            throw new BizException("Invalid customer");
+        }
+        List<OrderDocument> orderDocuments = orderRepository.findAllByAccountIdAndStatusAndRelatedOrderIdIsNotNull(user.getId(), Const.OrderStatus.COMBINED_ORDER);
+        List<String> uniqueRelatedOrderIds = orderDocuments.stream()
+                .map(OrderDocument::getRelatedOrderId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+        List<OrderDocument> combinedOrder = orderRepository.findAllByOrderCodeIn(uniqueRelatedOrderIds);
+        List<CombinedOrderDto> combinedOrderDtos = new ArrayList<>();
+        for (OrderDocument orderDocument : combinedOrder) {
+            CombinedOrderDto combinedOrderDto = new CombinedOrderDto();
+            combinedOrderDto.setOrderCode(orderDocument.getOrderCode());
+            combinedOrderDto.setTotalAmount(orderDocument.getTotalAmount());
+            combinedOrderDtos.add(combinedOrderDto);
+        }
+        return combinedOrderDtos;
+    }
+
 
     public String retryPayment(String id, String returnUrl, HttpServletRequest request) throws BizException {
         BigDecimal total = new BigDecimal(0);
@@ -238,7 +401,7 @@ public class OrderService extends BaseService {
         return "create link payment success!";
     }
 
-    public Page<OrderDto> getOrders(String customerPhone, String id, String paymentType, String status, String startAt, String endAt,
+    public Page<OrderDto> getOrders(Integer type, String customerPhone, String id, String paymentType, String status, String startAt, String endAt,
                                     Integer page, Integer size) throws BizException {
         ZonedDateTime created = null;
         ZonedDateTime updated = null;
@@ -246,7 +409,17 @@ public class OrderService extends BaseService {
             created = ZonedDateTime.parse(startAt);
             updated = ZonedDateTime.parse(endAt);
         }
-        Page<OrderDocument> orderDocuments = orderRepository.getOrders(customerPhone, id, paymentType, status, created, updated, page, size);
+        RequestScope currentUser = this.getCurrentUserInfo();
+        if (currentUser == null) {
+            throw new BizException("Invalid token");
+        }
+
+        AccountDocument account = accountRepository.findById(currentUser.getAccountId()).orElseThrow(() -> new BizException("Invalid account id"));
+        String accountId = null;
+        if (account.getRole().equals(Role.USER)) {
+            accountId = account.getId();
+        }
+        Page<OrderDocument> orderDocuments = orderRepository.getOrders(type,accountId, customerPhone, id, paymentType, status, created, updated, page, size);
         List<OrderDto> orderDtos = orderDocuments.getContent().stream()
                 .map(order -> {
                     OrderDto orderDto = new OrderDto();
@@ -260,6 +433,7 @@ public class OrderService extends BaseService {
                     orderDto.setOrderCode(order.getOrderCode());
                     orderDto.setDiscountPoint(order.getDiscountPoint());
                     orderDto.setPaid(order.getTransactionId() != null);
+                    orderDto.setRelatedOrderId(order.getRelatedOrderId());
                     try {
                         orderDto.setAccount(accountService.getAccountDetail(order.getAccountId()));
                     } catch (BizException e) {
@@ -413,5 +587,130 @@ public class OrderService extends BaseService {
         });
         orderItemRepository.saveAll(listOrderItems);
     }
+    public BigDecimal calculateCombinedOrderFee(CreateOrderModel order) throws BizException {
+        if (order.getDistrictCode() != null && order.getWardCode() != null && order.getProvinceCode() != null) {
+            ShippingFeeRequest shippingFeeRequest = new ShippingFeeRequest();
+            AddressDto addressDto = addressService.getAddress(order.getProvinceCode(), order.getDistrictCode(), order.getWardCode());
+            shippingFeeRequest.setProvince(addressDto.getProvince().getFullName());
+            shippingFeeRequest.setDistrict(addressDto.getDistrict().getFullName());
+            shippingFeeRequest.setPickDistrict(Const.PICK_ADDRESS_DISTRICT);
+            shippingFeeRequest.setPickProvince(Const.PICK_ADDRESS_CITY);
+            float totalWeight =0.0f;
+            List<BookInventory> bookInventories = bookInventoryRepository.findAllByIdIn(order.getOrderItems().stream().map(OrderItem::getBookInventoryId).toList());
+            List<String> bookIds = bookInventories.stream()
+                    .map(BookInventory::getBookId)
+                    .toList();
+
+
+            List<BookDocument> books = bookRepository.findAllById(bookIds);
+            for (OrderItem item : order.getOrderItems()) {
+                BookInventory inventory = bookInventories.stream()
+                        .filter(bi -> bi.getId().equals(item.getBookInventoryId()))
+                        .findFirst()
+                        .orElse(null);
+
+                if (inventory != null) {
+                    BookDocument book = books.stream()
+                            .filter(b -> b.getId().equals(inventory.getBookId()))
+                            .findFirst()
+                            .orElse(null);
+
+                    if (book != null) {
+                        Long pages = book.getNumberOfPage();
+                        int quantity = item.getQuantity();
+                        totalWeight += pages * quantity;
+                    }
+                }
+            }
+            float relatedWeight=0.0f;
+             relatedWeight = calculateWeight(order.getRelatedOrderId(), 2);
+             totalWeight += relatedWeight;
+            shippingFeeRequest.setWeight(Float.toString(totalWeight));
+
+            return commonClient.calculateShippingFee(shippingFeeRequest);
+        }else {
+            throw new BizException("missing code");
+        }
+    }
+    public Float calculateWeight(String orderId, Integer combined) {
+        float totalWeight = 0.0f;
+
+        if (combined == 2) {
+            List<OrderDocument> orderDocuments = orderRepository.findAllByRelatedOrderId(orderId);
+            List<String> ids = orderDocuments.stream()
+                    .map(OrderDocument::getId)
+                    .toList();
+
+            List<OrderItemDocument> orderItemDocuments = orderItemRepository.findALlByOrderIdIn(ids);
+            List<String> orderItemIds = orderItemDocuments.stream()
+                    .map(OrderItemDocument::getBookInventoryId)
+                    .toList();
+
+            List<BookInventory> bookInventories = bookInventoryRepository.findAllByIdIn(orderItemIds);
+            List<String> bookIds = bookInventories.stream()
+                    .map(BookInventory::getBookId)
+                    .toList();
+
+
+            List<BookDocument> books = bookRepository.findAllById(bookIds);
+
+            // Tính trọng lượng
+            for (OrderItemDocument item : orderItemDocuments) {
+                BookInventory inventory = bookInventories.stream()
+                        .filter(bi -> bi.getId().equals(item.getBookInventoryId()))
+                        .findFirst()
+                        .orElse(null);
+
+                if (inventory != null) {
+                    BookDocument book = books.stream()
+                            .filter(b -> b.getId().equals(inventory.getBookId()))
+                            .findFirst()
+                            .orElse(null);
+
+                    if (book != null) {
+                        Long pages = book.getNumberOfPage();
+                        int quantity = item.getQuantity();
+                        totalWeight += pages * quantity;
+                    }
+                }
+            }
+        } else {
+            OrderDocument orderDocument = orderRepository.findByOrderCode(orderId);
+            List<OrderItemDocument> orderItems = orderItemRepository.findAllByOrderId(orderDocument.getId());
+            List<String> orderItemIds = orderItems.stream()
+                    .map(OrderItemDocument::getId)
+                    .toList();
+
+            List<BookInventory> bookInventories = bookInventoryRepository.findAllByIdIn(orderItemIds);
+            List<String> bookIds = bookInventories.stream()
+                    .map(BookInventory::getBookId)
+                    .toList();
+
+            List<BookDocument> books = bookRepository.findAllById(bookIds);
+
+            for (OrderItemDocument item : orderItems) {
+                BookInventory inventory = bookInventories.stream()
+                        .filter(bi -> bi.getId().equals(item.getBookInventoryId()))
+                        .findFirst()
+                        .orElse(null);
+
+                if (inventory != null) {
+                    BookDocument book = books.stream()
+                            .filter(b -> b.getId().equals(inventory.getBookId()))
+                            .findFirst()
+                            .orElse(null);
+
+                    if (book != null) {
+                        Long pages = book.getNumberOfPage();
+                        int quantity = item.getQuantity();
+                        totalWeight += pages * quantity;
+                    }
+                }
+            }
+        }
+
+        return totalWeight;
+    }
+
 
 }

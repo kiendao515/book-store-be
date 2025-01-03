@@ -46,6 +46,11 @@ public class ShipController {
         return new BaseResponse<>(Const.ResultCode.SUCCESS, shipService.createGhtkOrders(request));
     }
 
+    @PostMapping("/order/combine/create")
+    public BaseResponse<GhtkOrderDto.OrderResult> createOrder(@RequestBody @Valid CreateOrder request) throws BizException {
+     return new BaseResponse<>(Const.ResultCode.SUCCESS, shipService.createCombinedOrder(request));
+    }
+
     @GetMapping("/label")
     public BaseResponse<byte[]> printLabel(@RequestParam @Valid String orderId) throws BizException {
         OrderDocument orderDocument = orderRepository.findByOrderCode(orderId);
