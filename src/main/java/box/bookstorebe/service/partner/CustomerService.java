@@ -77,18 +77,18 @@ public class CustomerService {
         return customerDocument;
     }
 
-    public void createCustomerInfoAndAccount(CustomerModel customerModel) throws BizException {
-        CustomerDocument customerDocument = new CustomerDocument();
-        List<String> address = new ArrayList<>();
-        address.add(customerModel.getAddress());
-        customerDocument.setAddress(address);
-        customerDocument.setPhoneNumber(customerModel.getPhone());
-        customerDocument.setName(customerModel.getName());
-        customerDocument.setAvatar(customerModel.getAvatar());
-        AccountDocument accountDocument = accountService.createAccount(new UserModel(customerModel.getEmail(), customerModel.getPassword()), Role.USER, 1);
-        customerDocument.setAccountId(accountDocument.getId());
-        customerRepository.save(customerDocument);
-    }
+//    public void createCustomerInfoAndAccount(CustomerModel customerModel) throws BizException {
+//        CustomerDocument customerDocument = new CustomerDocument();
+//        List<String> address = new ArrayList<>();
+//        address.add(customerModel.getAddress());
+//        customerDocument.setAddress(address);
+//        customerDocument.setPhoneNumber(customerModel.getPhone());
+//        customerDocument.setName(customerModel.getName());
+//        customerDocument.setAvatar(customerModel.getAvatar());
+//        AccountDocument accountDocument = accountService.createAccount(new UserModel(customerModel.getEmail(), customerModel.getPassword()), Role.USER, 1);
+//        customerDocument.setAccountId(accountDocument.getId());
+//        customerRepository.save(customerDocument);
+//    }
 
     @Transactional(rollbackFor = Exception.class)
     public void updateCustomerInfo(String id, UpdateCustomerModel userModel) throws BizException {

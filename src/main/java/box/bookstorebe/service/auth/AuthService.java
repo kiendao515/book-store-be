@@ -61,6 +61,7 @@ public class AuthService extends BaseService {
         UserModel userModel = new UserModel();
         userModel.setEmail(request.getEmail());
         userModel.setPassword(request.getPassword());
+        userModel.setFullName(request.getFullName());
 
         AccountDocument user = accountService.createAccount(userModel, Role.USER, 0);
         applicationEventPublisher.publishEvent(new OnRegistrationCompleteEvent(this, user, clientUrl));
@@ -69,6 +70,9 @@ public class AuthService extends BaseService {
 
     public AuthResponseDto login(LoginRequestModel request) throws BizException {
         AccountDocument user = accountRepository.findByEmail(request.getEmail()).orElseThrow(() -> new BizException("thông tin tài khoản hoặc mật khẩu không chính xác"));
+        if (user.getDeletedAt() != null) {
+            throw new BizException("account deleted");
+        }
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
@@ -78,7 +82,11 @@ public class AuthService extends BaseService {
         }
 
         if (user.getEnabled() == 0) {
-            throw new BizException("tài khoản chưa được xác thực. Vui lòng kiểm tra email để xác thực tài khoản");
+            if(user.getRole().equals(Role.USER)) {
+                throw new BizException("tài khoản chưa được xác thực. Vui lòng kiểm tra email để xác thực tài khoản");
+            }else{
+               throw new BizException("Tài khoản chưa đuợc xác thực. Vui lòng liên hệ người quan tri");
+            }
         }
         String jwtToken = jwtService.generateToken(user);
         AccountDto userDto = new AccountDto();

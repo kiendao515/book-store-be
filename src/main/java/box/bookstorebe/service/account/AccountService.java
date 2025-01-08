@@ -19,12 +19,14 @@ import box.bookstorebe.repository.user.ShippingAddressRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -48,31 +50,56 @@ public class AccountService {
         return Base64.getEncoder().encodeToString(saltBytes);
     }
 
-    public Page<AccountDto> getAccounts(String role, String email, Integer page, Integer size) {
+    public Page<AccountDto> getAccounts(String q,String role, String email, Integer page, Integer size) {
         Page<AccountDto> accounts = accountRepository.getUsers(role, email, page, size);
         List<String> listAccountId = accounts.stream().map(AccountDto::getId).toList();
         if ("USER".equals(role)) {
-            List<CustomerDocument> customerDocuments = customerRepository.findAllByAccountIdIn(listAccountId);
+            List<CustomerDocument> customerDocuments;
+            if (q != null && !q.isEmpty()) {
+                // Filter customers matching the search query
+                customerDocuments = customerRepository.findAllByAccountIdIn(listAccountId).stream()
+                        .filter(customer -> customer.getName().toLowerCase().contains(q.toLowerCase()))
+                        .collect(Collectors.toList());
+            } else {
+                // Fetch all customers if query is null or empty
+                customerDocuments = customerRepository.findAllByAccountIdIn(listAccountId);
+            }
+
             Map<String, CustomerDocument> customerMap = customerDocuments.stream()
                     .collect(Collectors.toMap(CustomerDocument::getAccountId, customer -> customer));
-            accounts.forEach(account -> {
+
+// Convert account content to a modifiable list
+            List<AccountDto> accountContent = new ArrayList<>(accounts.getContent());
+
+            accountContent.removeIf(account -> {
                 CustomerDocument customer = customerMap.get(account.getId());
-                if (customer != null) {
+                if (customer == null) {
+                    return true;
+                } else {
                     account.setAvatar(customer.getAvatar());
                     account.setName(customer.getName());
                     account.setPhone(customer.getPhoneNumber());
                     account.setCreatedAt(customer.getCreatedAt());
+                    return false;
                 }
             });
-            List<String> accountIds = accounts.stream()
+
+            List<String> accountIds = accountContent.stream()
                     .map(AccountDto::getId)
                     .collect(Collectors.toList());
-            List<ShippingAddressDocument> addresses = shippingAddressRepository.findAllByUserIdInAndIsDefault(accountIds, true);
 
+// Fetch default addresses
+            List<ShippingAddressDocument> addresses = shippingAddressRepository.findAllByUserIdInAndIsDefault(accountIds, true);
             Map<String, ShippingAddressDocument> addressMap = addresses.stream()
                     .collect(Collectors.toMap(ShippingAddressDocument::getUserId, address -> address));
 
-            accounts.forEach(account -> {
+// Fetch completed orders
+            List<OrderDocument> completedOrders = orderRepository.findAllByAccountIdInAndStatus(accountIds, Const.OrderStatus.DONE);
+            Map<String, Long> completedOrderCountMap = completedOrders.stream()
+                    .collect(Collectors.groupingBy(OrderDocument::getAccountId, Collectors.counting()));
+
+// Process accounts for additional data
+            accountContent.forEach(account -> {
                 ShippingAddressDocument address = addressMap.get(account.getId());
                 if (address != null) {
                     account.setAddress(
@@ -82,16 +109,15 @@ public class AccountService {
                                     address.getProvince().getFullName()
                     );
                 }
-            });
 
-            List<OrderDocument> completedOrders = orderRepository.findAllByAccountIdInAndStatus(accountIds, Const.OrderStatus.DONE);
-            Map<String, Long> completedOrderCountMap = completedOrders.stream()
-                    .collect(Collectors.groupingBy(OrderDocument::getAccountId, Collectors.counting()));
-
-            accounts.forEach(account -> {
                 Long completedOrderCount = completedOrderCountMap.getOrDefault(account.getId(), 0L);
                 account.setOrdersCompleted(completedOrderCount);
             });
+
+// Re-create Page with modified content
+            accounts = new PageImpl<>(accountContent, accounts.getPageable(), accounts.getTotalElements());
+
+
         }
         if ("STORE".equals(role)) {
             List<StoreDocument> storeDocuments = storeRepository.findAllByAccountIdInAndDeletedAtIsNull(listAccountId);
@@ -134,7 +160,15 @@ public class AccountService {
         newUser.setEnabled(isEnable);
         newUser.setExpiryDate(calculateExpiryDate(60 * 24));
         newUser.setCreatedAt(ZonedDateTime.now());
-        return accountRepository.save(newUser);
+        AccountDocument accountDocument = accountRepository.save(newUser);
+        if (role.equals(Role.USER)){
+            CustomerDocument customerDocument = new CustomerDocument();
+            customerDocument.setName(userModel.getFullName());
+            customerDocument.setAccountId(accountDocument.getId());
+            customerDocument.setCreatedAt(ZonedDateTime.now());
+            customerRepository.save(customerDocument);
+        }
+        return accountDocument;
     }
     public AccountDocument resetPass(String id, UserModel userModel) throws BizException {
         AccountDocument user = accountRepository.findById(id).orElseThrow(()-> new BizException("invalid id"));

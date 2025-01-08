@@ -68,7 +68,7 @@ public class OrderController {
 
     @GetMapping()
     public BasePagingResponse<OrderDto> getOrders(
-            @RequestParam(name = "customer_phone", required = false) String customerPhone,
+            @RequestParam(name = "q", required = false) String q,
             @RequestParam(name = "id", required = false) String id,
             @RequestParam(name = "payment_type", required = false) String paymentType,
             @RequestParam(name = "status", required = false) String status,
@@ -78,7 +78,7 @@ public class OrderController {
             @RequestParam(name = "page", required = false) Integer page,
             @RequestParam(name = "size", required = false) Integer size
     ) throws BizException {
-        return new BasePagingResponse<>(orderService.getOrders(type, customerPhone, id, paymentType, status, startAt, endAt, page, size));
+        return new BasePagingResponse<>(orderService.getOrders(type, q, id, paymentType, status, startAt, endAt, page, size));
     }
 
     @GetMapping("{id}")

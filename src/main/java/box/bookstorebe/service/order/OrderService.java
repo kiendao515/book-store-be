@@ -401,7 +401,7 @@ public class OrderService extends BaseService {
         return "create link payment success!";
     }
 
-    public Page<OrderDto> getOrders(Integer type, String customerPhone, String id, String paymentType, String status, String startAt, String endAt,
+    public Page<OrderDto> getOrders(Integer type, String search, String id, String paymentType, String status, String startAt, String endAt,
                                     Integer page, Integer size) throws BizException {
         ZonedDateTime created = null;
         ZonedDateTime updated = null;
@@ -419,7 +419,7 @@ public class OrderService extends BaseService {
         if (account.getRole().equals(Role.USER)) {
             accountId = account.getId();
         }
-        Page<OrderDocument> orderDocuments = orderRepository.getOrders(type,accountId, customerPhone, id, paymentType, status, created, updated, page, size);
+        Page<OrderDocument> orderDocuments = orderRepository.getOrders(type,accountId, search, id, paymentType, status, created, updated, page, size);
         List<OrderDto> orderDtos = orderDocuments.getContent().stream()
                 .map(order -> {
                     OrderDto orderDto = new OrderDto();
@@ -507,6 +507,7 @@ public class OrderService extends BaseService {
                 .createdAt(orderDocument.getCreatedAt())
                 .orderItems(orderItems)
                 .isPaid(isPaid)
+                .relatedOrderId(orderDocument.getRelatedOrderId())
                 .paymentType(orderDocument.isPaymentType())
                 .note(orderDocument.getNote())
                 .orderCode(orderDocument.getOrderCode())

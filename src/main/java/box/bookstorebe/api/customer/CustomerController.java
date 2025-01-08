@@ -40,11 +40,11 @@ public class CustomerController {
         return new BaseResponse<>(Const.ResultCode.SUCCESS, customerService.getCustomerInfoDetail(id));
     }
 
-    @PostMapping()
-    public BaseResponse<String> createNewCustomerInfoAndAccount(@RequestBody @Valid CustomerModel userModel) throws BizException {
-        customerService.createCustomerInfoAndAccount(userModel);
-        return new BaseResponse<>(Const.ResultCode.SUCCESS, "Create new customer info and account successfully");
-    }
+//    @PostMapping()
+//    public BaseResponse<String> createNewCustomerInfoAndAccount(@RequestBody @Valid CustomerModel userModel) throws BizException {
+//        customerService.createCustomerInfoAndAccount(userModel);
+//        return new BaseResponse<>(Const.ResultCode.SUCCESS, "Create new customer info and account successfully");
+//    }
 
     @PutMapping("{id}")
     public BaseResponse<String> updateCustomerInfo(@PathVariable String id, @RequestBody @Valid UpdateCustomerModel userModel) throws BizException {

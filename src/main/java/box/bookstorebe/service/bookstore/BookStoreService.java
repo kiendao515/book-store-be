@@ -111,7 +111,7 @@ public class BookStoreService {
         bookStoreDocument.setCommissionPercentage(bookStoreModel.getCommissionPercentage());
         bookStoreDocument.setCreatedAt(ZonedDateTime.now());
         bookStoreDocument.setUpdatedAt(ZonedDateTime.now());
-        AccountDocument acc = accountService.createAccount(new UserModel(bookStoreModel.getEmail(), bookStoreModel.getPassword()), Role.STORE, 1);
+        AccountDocument acc = accountService.createAccount(new UserModel(bookStoreModel.getEmail(), bookStoreModel.getPassword(),null), Role.STORE, 1);
         bookStoreDocument.setAccountId(acc.getId());
         bookStoreRepository.save(bookStoreDocument);
         mailService.sendMailStoreInfo(bookStoreModel.getEmail(), bookStoreModel.getPassword(), bookStoreDocument);

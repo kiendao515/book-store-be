@@ -25,12 +25,15 @@ public class OrderExRepositoryImpl implements OrderExRepository {
     private MongoTemplate mongoTemplate;
 
     @Override
-    public Page<OrderDocument> getOrders(Integer type, String accountId, String customerPhone, String id, String paymentType, String status, ZonedDateTime startAt, ZonedDateTime endAt,
+    public Page<OrderDocument> getOrders(Integer type, String accountId, String search, String id, String paymentType, String status, ZonedDateTime startAt, ZonedDateTime endAt,
                                          Integer page, Integer size) {
         PageRequest pageRequest;
         Criteria criteria = new Criteria();
-        if (customerPhone != null) {
-            criteria = criteria.and("customer_phone").regex(".*" + customerPhone + ".*");
+        if (search != null) {
+            criteria = criteria.orOperator(
+                    Criteria.where("receiver_name").regex(".*" + search + ".*", "i"),
+                    Criteria.where("receiver_phone").regex(".*" + search + ".*", "i")
+            );
         }
         if (accountId != null) {
             criteria = criteria.and("account_id").is(accountId);

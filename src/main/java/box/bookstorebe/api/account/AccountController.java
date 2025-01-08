@@ -26,9 +26,10 @@ public class AccountController {
             @RequestParam(name = "role", required = false) String role,
             @RequestParam(name = "email", required = false) String email,
             @RequestParam(value = "page", required = false) Integer page,
-            @RequestParam(value = "size", required = false) Integer size
+            @RequestParam(value = "size", required = false) Integer size,
+            @RequestParam(value = "q", required = false) String q
     ) {
-        return new BasePagingResponse<>(userService.getAccounts(role, email, page, size));
+        return new BasePagingResponse<>(userService.getAccounts(q, role, email, page, size));
     }
 
     @GetMapping("{id}")
@@ -47,7 +48,7 @@ public class AccountController {
     @PreAuthorize("hasAnyAuthority('ADMIN')")
     public BaseResponse<String> resetPass(@PathVariable String id, @RequestBody @Valid UserModel userModel) throws BizException {
         userService.resetPass(id, userModel);
-        return new BaseResponse<>(Const.ResultCode.SUCCESS, "Create new user successfully");
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, "reset pass success");
     }
 
     @PutMapping("{id}")

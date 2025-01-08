@@ -32,7 +32,7 @@ public class ShipController {
     }
 
     @GetMapping()
-    public BaseResponse<OrderDetail> getDetailOrder(@RequestParam String id) {
+    public BaseResponse<OrderDetail> getDetailOrder(@RequestParam String id) throws BizException {
         return new BaseResponse<>(Const.ResultCode.SUCCESS, shipService.getOrderDetail(id));
     }
 

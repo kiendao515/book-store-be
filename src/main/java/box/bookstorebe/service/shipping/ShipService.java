@@ -37,8 +37,11 @@ public class ShipService {
     public BigDecimal calculateShippingFee(ShippingFeeRequest request){
         return commonClient.calculateShippingFee(request);
     }
-    public OrderDetail getOrderDetail(String orderId){
-        return commonClient.getOrderDetail(orderId);
+    public OrderDetail getOrderDetail(String orderId) throws BizException {
+        if(orderId != null && !orderId.isEmpty()){
+            return commonClient.getOrderDetail(orderId);
+        }
+        throw new BizException("Thiếu thông tin");
     }
     public List<PickAddressDto.PickupData> getListPickAddress(){
         return commonClient.getPickAddress();
