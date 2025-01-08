@@ -1,6 +1,7 @@
 package box.bookstorebe.api.order;
 
 import box.bookstorebe.common.Const;
+import box.bookstorebe.document.common.WebContentDocument;
 import box.bookstorebe.document.order.OrderDocument;
 import box.bookstorebe.dto.auth.AuthResponseDto;
 import box.bookstorebe.dto.book.BookDto;
@@ -16,6 +17,7 @@ import box.bookstorebe.model.book.bookreality.CreateBookRealityModel;
 import box.bookstorebe.model.order.CreateOrderModel;
 import box.bookstorebe.model.order.ShippingFeeRequest;
 import box.bookstorebe.model.order.UpdateOrderModel;
+import box.bookstorebe.repository.common.webcontent.WebContentRepository;
 import box.bookstorebe.service.auth.AuthService;
 import box.bookstorebe.service.order.OrderService;
 import box.bookstorebe.service.order.PaymentService;
@@ -39,6 +41,7 @@ import java.util.List;
 public class OrderController {
     private final OrderService orderService;
     private final PaymentService paymentService;
+    private final WebContentRepository webContentRepository;
     @Value("${app.client.url}")
     private String checkoutUrl;
     @Value("${app.domain.url}")
@@ -52,7 +55,8 @@ public class OrderController {
 
     @PostMapping("/combine")
     public BaseResponse<?> createOrderV2(@RequestBody @Valid CreateOrderModel orderModel, HttpServletRequest request) throws BizException, MessagingException {
-        Object result = orderService.createOrderV2(request, orderModel, serverUrl);
+        WebContentDocument webContentDocument = webContentRepository.findByKey(Const.BackendDomain);
+        Object result = orderService.createOrderV2(request, orderModel, webContentDocument.getValue());
         return new BaseResponse<>(Const.ResultCode.SUCCESS, result);
     }
 
@@ -122,7 +126,9 @@ public class OrderController {
         if (paymentStatus == 1) {
             paymentService.createPayment(orderInfo, transactionId);
         }
-        return new RedirectView(checkoutUrl + "/order-result?orderId=" + orderInfo);
+        WebContentDocument webContentDocument = webContentRepository.findByKey(Const.UserDomain);
+        if (webContentDocument == null) throw new BizException("missing config client domain");
+        return new RedirectView(webContentDocument.getValue() + "/order-result?orderId=" + orderInfo);
     }
 
 }

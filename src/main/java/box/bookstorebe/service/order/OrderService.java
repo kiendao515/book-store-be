@@ -280,22 +280,28 @@ public class OrderService extends BaseService {
             if (order.isPaymentMethod() && order.getCombinedOrder() == 1) {
                 if (!order.getRelatedOrderId().isEmpty()) {
                     OrderDocument rootOrder = orderRepository.findByOrderCode(order.getRelatedOrderId());
-                    if(rootOrder == null) {
+                    if (rootOrder == null) {
                         return new BizException("Bạn chưa chọn đơn gom gốc");
                     }
                     orderDocument.setRelatedOrderId(rootOrder.getOrderCode());
+                    orderDocument.setShippingFee(BigDecimal.ZERO);
                 } else {
                     orderDocument.setRelatedOrderId(savedOrder.getOrderCode());
+                    orderDocument.setShippingFee(BigDecimal.ZERO);
                 }
             } else if (order.isPaymentMethod() && order.getCombinedOrder() == 2) {
                 // da gom xong va thanh toan
                 OrderDocument rootOrder = orderRepository.findByOrderCode(order.getRelatedOrderId());
                 orderDocument.setRelatedOrderId(rootOrder.getOrderCode());
+                BigDecimal fee = calculateCombinedOrderFee(order);
+                orderDocument.setShippingFee(fee);
+                totalAmount = totalAmount.add(fee);
+            } else if (order.getCombinedOrder() == 3) {
+                BigDecimal fee = calculateCombinedOrderFee(order);
+                orderDocument.setShippingFee(fee);
+                totalAmount = totalAmount.add(fee);
             }
             orderDocument.setShippingStatus(order.getCombinedOrder());
-            BigDecimal fee = calculateCombinedOrderFee(order);
-            orderDocument.setShippingFee(fee);
-            totalAmount = totalAmount.add(fee);
         }
         List<OrderItemDocument> orderItemDocuments = new ArrayList<>();
         for (OrderItem orderItem : order.getOrderItems()) {
@@ -419,7 +425,7 @@ public class OrderService extends BaseService {
         if (account.getRole().equals(Role.USER)) {
             accountId = account.getId();
         }
-        Page<OrderDocument> orderDocuments = orderRepository.getOrders(type,accountId, search, id, paymentType, status, created, updated, page, size);
+        Page<OrderDocument> orderDocuments = orderRepository.getOrders(type, accountId, search, id, paymentType, status, created, updated, page, size);
         List<OrderDto> orderDtos = orderDocuments.getContent().stream()
                 .map(order -> {
                     OrderDto orderDto = new OrderDto();
@@ -588,6 +594,7 @@ public class OrderService extends BaseService {
         });
         orderItemRepository.saveAll(listOrderItems);
     }
+
     public BigDecimal calculateCombinedOrderFee(CreateOrderModel order) throws BizException {
         if (order.getDistrictCode() != null && order.getWardCode() != null && order.getProvinceCode() != null) {
             ShippingFeeRequest shippingFeeRequest = new ShippingFeeRequest();
@@ -596,7 +603,7 @@ public class OrderService extends BaseService {
             shippingFeeRequest.setDistrict(addressDto.getDistrict().getFullName());
             shippingFeeRequest.setPickDistrict(Const.PICK_ADDRESS_DISTRICT);
             shippingFeeRequest.setPickProvince(Const.PICK_ADDRESS_CITY);
-            float totalWeight =0.0f;
+            float totalWeight = 0.0f;
             List<BookInventory> bookInventories = bookInventoryRepository.findAllByIdIn(order.getOrderItems().stream().map(OrderItem::getBookInventoryId).toList());
             List<String> bookIds = bookInventories.stream()
                     .map(BookInventory::getBookId)
@@ -623,16 +630,19 @@ public class OrderService extends BaseService {
                     }
                 }
             }
-            float relatedWeight=0.0f;
-             relatedWeight = calculateWeight(order.getRelatedOrderId(), 2);
-             totalWeight += relatedWeight;
+            log.info("current order weight {}",totalWeight);
+            float relatedWeight = 0.0f;
+            relatedWeight = calculateWeight(order.getRelatedOrderId(), 2);
+            log.info("combined order weight {}", relatedWeight);
+            totalWeight += relatedWeight;
             shippingFeeRequest.setWeight(Float.toString(totalWeight));
 
             return commonClient.calculateShippingFee(shippingFeeRequest);
-        }else {
+        } else {
             throw new BizException("missing code");
         }
     }
+
     public Float calculateWeight(String orderId, Integer combined) {
         float totalWeight = 0.0f;
 

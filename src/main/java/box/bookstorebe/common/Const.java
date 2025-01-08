@@ -155,4 +155,7 @@ public final class Const {
     public enum GHTK{
         GHTK_URL, GHTK_TOKEN, GHTK_URL_PROD, GHTK_TOKEN_PROD, WEB_GHTK_URL, WEB_GHTK_TOKEN
     }
+    public static String UserDomain = "USER_DOMAIN";
+    public static String AdminDomain = "ADMIN_DOMAIN";
+    public static String BackendDomain = "BACKEND_DOMAIN";
 }
