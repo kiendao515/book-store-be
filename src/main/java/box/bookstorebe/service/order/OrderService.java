@@ -391,20 +391,9 @@ public class OrderService extends BaseService {
 
 
     public String retryPayment(String id, String returnUrl, HttpServletRequest request) throws BizException {
-        BigDecimal total = new BigDecimal(0);
-        OrderDocument orderDocument = orderRepository.findById(id).orElseThrow(() -> new BizException("orderId is invalid"));
-        PaymentDocument paymentDocument = paymentService.getPaymentByOrderId(id);
-//        if(paymentDocument == null && orderDocument.isPaymentType()){
-//            for (BookRealityDocument b:orderDocument.getItems()) {
-//                total.add(new BigDecimal(b.getPrice()));
-//            }
-//            if(total.compareTo(Const.AMOUNT_CAN_FREESHIP) < 0){
-//                total.add(Const.SHIPPING_FEE);
-//            }
-//            String url = paymentService.createOrder(request,total,id,returnUrl);
-//            return url;
-//        }
-        return "create link payment success!";
+        OrderDocument orderDocument = orderRepository.findByOrderCode(id);
+        if(orderDocument == null) throw new BizException("Order not found");
+        return paymentService.createOrder(request, orderDocument.getTotalAmount(), orderDocument.getOrderCode(), returnUrl);
     }
 
     public Page<OrderDto> getOrders(Integer type, String search, String id, String paymentType, String status, String startAt, String endAt,

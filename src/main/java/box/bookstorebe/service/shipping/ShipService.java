@@ -70,7 +70,7 @@ public class ShipService {
 
         for (CreateOrder orderDto : orders) {
             futures.add(executorService.submit(() -> {
-                return createGhtkOrder(orderDto);
+                return createGhtkOrder(orderDto, false);
             }));
         }
 
@@ -90,7 +90,7 @@ public class ShipService {
     }
 
     public GhtkOrderDto.OrderResult createCombinedOrder(CreateOrder createOrder) throws BizException {
-        GhtkOrderDto.OrderResult orderResult = createGhtkOrder(createOrder);
+        GhtkOrderDto.OrderResult orderResult = createGhtkOrder(createOrder, true);
         if(orderResult != null){
             List<OrderDocument> orderDocuments = orderRepository.findAllByRelatedOrderId(createOrder.getOrderCode());
             for(OrderDocument orderDocument : orderDocuments){
@@ -104,7 +104,7 @@ public class ShipService {
         return orderResult;
     }
 
-    private GhtkOrderDto.OrderResult createGhtkOrder(CreateOrder orderDto) throws BizException {
+    private GhtkOrderDto.OrderResult createGhtkOrder(CreateOrder orderDto, boolean isCombined) throws BizException {
         // Logic xử lý cho một đơn hàng, như đã có trong mã của bạn
         OrderDocument orderDocument = orderRepository.findByOrderCode(orderDto.getOrderCode());
         GhtkOrderRequest ghtkOrderRequest = new GhtkOrderRequest();
@@ -141,7 +141,15 @@ public class ShipService {
             order.setPick_money(BigDecimal.ZERO);
         }
         order.setNote(orderDto.getNote());
-        order.setValue(orderDocument.getTotalAmount());
+        if(isCombined){
+            List<OrderDocument> orderDocuments = orderRepository.findAllByRelatedOrderId(orderDto.getOrderCode());
+            BigDecimal totalFee = orderDocuments.stream()
+                    .map(OrderDocument::getTotalAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            order.setValue(totalFee);
+        }else{
+            order.setValue(orderDocument.getTotalAmount());
+        }
         ghtkOrderRequest.setOrder(order);
 
         List<GhtkOrderRequest.Product> product = new ArrayList<>();

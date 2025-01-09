@@ -98,7 +98,9 @@ public class OrderController {
 
     @GetMapping("/repayment/{id}")
     public BaseResponse<String> retryPayment(@PathVariable String id, HttpServletRequest request) throws BizException, MessagingException {
-        String url = orderService.retryPayment(id, serverUrl, request);
+        WebContentDocument webContentDocument = webContentRepository.findByKey(Const.BackendDomain);
+        if (webContentDocument == null) throw new BizException("missing config client domain");
+        String url = orderService.retryPayment(id, webContentDocument.getValue(), request);
         return new BaseResponse<>(Const.ResultCode.SUCCESS, url);
     }
 
@@ -122,7 +124,6 @@ public class OrderController {
         int paymentStatus = paymentService.orderReturn(request);
         String orderInfo = request.getParameter("vnp_OrderInfo");
         String transactionId = request.getParameter("vnp_TransactionNo");
-//        String totalPrice = request.getParameter("vnp_Amount");
         if (paymentStatus == 1) {
             paymentService.createPayment(orderInfo, transactionId);
         }

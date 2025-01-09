@@ -164,6 +164,7 @@ public class PaymentService {
             for (OrderDocument orderDoc : orderDocuments) {
                 orderDoc.setStatus(Const.OrderStatus.READY_TO_PACKAGE);
             }
+            orderDocument.setStatus(Const.OrderStatus.READY_TO_PACKAGE);
             orderRepository.saveAll(orderDocuments);
         } else if (orderDocument.getShippingStatus() == 1) {
             orderDocument.setStatus(Const.OrderStatus.COMBINED_ORDER);
