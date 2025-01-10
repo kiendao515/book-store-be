@@ -82,10 +82,10 @@ public class AuthService extends BaseService {
         }
 
         if (user.getEnabled() == 0) {
-            if(user.getRole().equals(Role.USER)) {
+            if (user.getRole().equals(Role.USER)) {
                 throw new BizException("tài khoản chưa được xác thực. Vui lòng kiểm tra email để xác thực tài khoản");
-            }else{
-               throw new BizException("Tài khoản chưa đuợc xác thực. Vui lòng liên hệ người quan tri");
+            } else {
+                throw new BizException("Tài khoản chưa đuợc xác thực. Vui lòng liên hệ người quan tri");
             }
         }
         String jwtToken = jwtService.generateToken(user);
@@ -138,7 +138,7 @@ public class AuthService extends BaseService {
         if (passwordResetToken.getExpiryDate().isBefore(ZonedDateTime.now())) throw new BizException("Token expired");
         AccountDocument user = accountRepository.findById(passwordResetToken.getUserId()).orElseThrow(() -> new BizException("Invalid user"));
 
-        user.setPassword(passwordEncoder.encode(password));
+        user.setPassword(passwordEncoder.encode(user.getSalt() + password));
         accountRepository.save(user);
         return "Change password successfully";
     }
@@ -153,7 +153,7 @@ public class AuthService extends BaseService {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(user.getEmail(), model.getOldPassword())
         );
-        user.setPassword(passwordEncoder.encode(model.getNewPassword()));
+        user.setPassword(passwordEncoder.encode(user.getSalt() + model.getNewPassword()));
         accountRepository.save(user);
         return "Change password successfully";
     }

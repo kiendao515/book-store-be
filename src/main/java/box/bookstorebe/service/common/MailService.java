@@ -53,7 +53,7 @@ public class MailService {
     private final BookInventoryRepository bookInventoryRepository;
 
     public SimpleMailMessage constructResetTokenEmail(String baseUrl, String token, AccountDocument user, String message) {
-        final String url = baseUrl + "/reset-password?token=" + token;
+        final String url = baseUrl + "/reset-password?token=" + token + "&is_reset_pwd=1";
         final SimpleMailMessage email = new SimpleMailMessage();
         email.setTo(user.getEmail());
         email.setSubject("Reset Password");

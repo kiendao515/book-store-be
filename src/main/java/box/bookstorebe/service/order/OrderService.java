@@ -384,6 +384,12 @@ public class OrderService extends BaseService {
             CombinedOrderDto combinedOrderDto = new CombinedOrderDto();
             combinedOrderDto.setOrderCode(orderDocument.getOrderCode());
             combinedOrderDto.setTotalAmount(orderDocument.getTotalAmount());
+            combinedOrderDto.setCustomerName(orderDocument.getReceiverName());
+            combinedOrderDto.setCustomerPhone(orderDocument.getReceiverPhone());
+            combinedOrderDto.setProvince(orderDocument.getProvince());
+            combinedOrderDto.setDistrict(orderDocument.getDistrict());
+            combinedOrderDto.setWard(orderDocument.getWard());
+            combinedOrderDto.setStreet(orderDocument.getStreet());
             combinedOrderDtos.add(combinedOrderDto);
         }
         return combinedOrderDtos;

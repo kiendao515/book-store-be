@@ -1,6 +1,6 @@
 package box.bookstorebe.dto.order;
 
-import box.bookstorebe.document.book.BookDocument;
+import box.bookstorebe.dto.common.AddressDto;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.AllArgsConstructor;
@@ -18,4 +18,11 @@ import java.math.BigDecimal;
 public class CombinedOrderDto {
     private String orderCode;
     private BigDecimal totalAmount;
+    private String customerName;
+    private String customerPhone;
+    private String customerEmail;
+    private AddressDto.AddressDetail province;
+    private AddressDto.AddressDetail district;
+    private AddressDto.AddressDetail ward;
+    private String street;
 }
