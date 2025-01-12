@@ -43,6 +43,11 @@ public class AuthController {
         return new BaseResponse<>(Const.ResultCode.SUCCESS, authService.sendResetPassword(model.getEmail()));
     }
 
+    @PostMapping("/send-reset-password-admin")
+    public BaseResponse<String> sendAdminResetPassword(@RequestBody SendResetPasswordRequestModel model) throws BizException {
+        return new BaseResponse<>(Const.ResultCode.SUCCESS, authService.sendAdminResetPassword(model.getEmail()));
+    }
+
     @PostMapping("/reset-password")
     public BaseResponse<String> resetPassword(@RequestBody @Valid ResetPasswordRequestModel model) throws BizException {
         return new BaseResponse<>(Const.ResultCode.SUCCESS, authService.resetPassword(model.getToken(), model.getNewPassword()));

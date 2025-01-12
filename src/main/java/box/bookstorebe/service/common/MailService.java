@@ -96,10 +96,6 @@ public class MailService {
     public String formatOrderDetail(OrderDocument order, List<OrderItemDocument> orderItemDocuments) throws BizException {
         StringBuilder builder = new StringBuilder();
         ZonedDateTime dateCreated = order.getCreatedAt();
-        PaymentDocument paymentDocument = mongoTemplate.findOne(
-                new Query(Criteria.where("order._id").is(order.getId())),
-                PaymentDocument.class
-        );
 
         builder.append("<html>")
                 .append("<head>")
@@ -179,7 +175,7 @@ public class MailService {
 
         builder.append("<h3>Tình trạng đơn hàng</h3>")
                 .append("<p>")
-                .append(paymentDocument != null ? "Đơn hàng đã được thanh toán thành công" : "Đơn hàng chưa được thanh toán")
+                .append(order.getTransactionId() != null ? "Đơn hàng đã được thanh toán thành công" : "Đơn hàng chưa được thanh toán")
                 .append("</p>")
                 .append("<p>Mong rằng bạn đã có trải nghiệm sản phẩm dễ chịu. Nếu bạn có bất kỳ thắc mắc nào, vui lòng liên hệ với chúng tôi qua email hoặc gửi đơn khiếu nại qua website: <<link web>>. Chúng tôi sẽ liên hệ với bạn trong vòng 24h kể từ khi nhận được thông tin.</p>")
                 .append("<p>Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi!</p>")

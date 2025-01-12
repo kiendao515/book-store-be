@@ -1,10 +1,12 @@
 package box.bookstorebe.service.auth;
 
+import box.bookstorebe.common.Const;
 import box.bookstorebe.configuration.security.RequestScope;
 import box.bookstorebe.document.account.AccountDocument;
 import box.bookstorebe.document.account.CustomerDocument;
 import box.bookstorebe.document.account.PasswordResetToken;
 import box.bookstorebe.document.account.Role;
+import box.bookstorebe.document.common.WebContentDocument;
 import box.bookstorebe.dto.account.AccountDto;
 import box.bookstorebe.dto.auth.AuthResponseDto;
 import box.bookstorebe.dto.auth.UserProfileDto;
@@ -15,6 +17,7 @@ import box.bookstorebe.model.auth.LoginRequestModel;
 import box.bookstorebe.model.auth.RegisterRequestModel;
 import box.bookstorebe.model.auth.UpdateUserInfoModel;
 import box.bookstorebe.model.user.UserModel;
+import box.bookstorebe.repository.common.webcontent.WebContentRepository;
 import box.bookstorebe.repository.customer.CustomerRepository;
 import box.bookstorebe.repository.user.AccountRepository;
 import box.bookstorebe.repository.user.PasswordResetTokenRepository;
@@ -54,8 +57,7 @@ public class AuthService extends BaseService {
     private final JavaMailSenderImpl mailSender;
     private final PasswordEncoder passwordEncoder;
     private final ExecutorService executor = Executors.newFixedThreadPool(10);
-    @Value("${app.client.url}")
-    private String clientUrl;
+    private final WebContentRepository webContentRepository;
 
     public String register(RegisterRequestModel request) throws BizException {
         UserModel userModel = new UserModel();
@@ -64,7 +66,8 @@ public class AuthService extends BaseService {
         userModel.setFullName(request.getFullName());
 
         AccountDocument user = accountService.createAccount(userModel, Role.USER, 0);
-        applicationEventPublisher.publishEvent(new OnRegistrationCompleteEvent(this, user, clientUrl));
+        WebContentDocument webContentDocument = webContentRepository.findByKey(Const.UserDomain);
+        applicationEventPublisher.publishEvent(new OnRegistrationCompleteEvent(this, user, webContentDocument.getValue()));
         return "Register successfully. Please check your email to confirm your account.";
     }
 
@@ -118,7 +121,28 @@ public class AuthService extends BaseService {
         String token = UUID.randomUUID().toString();
         this.createPasswordResetTokenForUser(user, token);
         try {
-            SimpleMailMessage emailMessage = mailService.constructResetTokenEmail(clientUrl, token, user, "You have requested to reset your password");
+            WebContentDocument webContentDocument = webContentRepository.findByKey(Const.UserDomain);
+            SimpleMailMessage emailMessage = mailService.constructResetTokenEmail(webContentDocument.getValue(), token, user, "Bạn đã yêu cầu đổi mật khẩu");
+            executor.execute(() -> {
+                mailSender.send(emailMessage);
+            });
+        } catch (MailAuthenticationException e) {
+            log.error("Error sending reset password email to user: {}", user.getEmail());
+            throw new BizException("Error sending reset password email to user: " + user.getEmail());
+        } catch (Exception e) {
+            log.error("Some error when sending reset password email: {}", e.getMessage());
+            throw new BizException("Error sending reset password email to user: " + user.getEmail());
+        }
+        return "Send reset password email successfully";
+    }
+
+    public String sendAdminResetPassword(String email) throws BizException {
+        AccountDocument user = accountRepository.findByEmail(email).orElseThrow(() -> new BizException("Invalid email"));
+        String token = UUID.randomUUID().toString();
+        this.createPasswordResetTokenForUser(user, token);
+        try {
+            WebContentDocument webContentDocument = webContentRepository.findByKey(Const.AdminDomain);
+            SimpleMailMessage emailMessage = mailService.constructResetTokenEmail(webContentDocument.getValue(), token, user, "Bạn đã yêu cầu đổi mật khẩu");
             executor.execute(() -> {
                 mailSender.send(emailMessage);
             });

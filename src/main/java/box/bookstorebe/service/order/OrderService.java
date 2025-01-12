@@ -445,6 +445,7 @@ public class OrderService extends BaseService {
                     orderDto.setShippingFee(order.getShippingFee());
                     orderDto.setTotalAmount(order.getTotalAmount());
                     orderDto.setTransactionId(order.getTransactionId());
+                    orderDto.setShippingCode(order.getShippingCode());
                     return orderDto;
                 }).collect(Collectors.toList());
 

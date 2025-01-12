@@ -156,7 +156,7 @@ public class PaymentService {
         if (orderDocument == null) {
             return;
         }
-        List<OrderItemDocument> orderItems = orderItemRepository.findAllByOrderId(orderId);
+        List<OrderItemDocument> orderItems = orderItemRepository.findAllByOrderId(orderDocument.getId());
         AccountDocument accountDocument = accountRepository.findById(orderDocument.getAccountId()).orElseThrow(() -> new BizException("account id k hop le"));
         orderDocument.setTransactionId(transactionId);
         if (orderDocument.getShippingStatus() == 2) {

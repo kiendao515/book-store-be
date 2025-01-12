@@ -150,7 +150,7 @@ public class OfflineOrderService extends BaseService {
         AccountDocument accountDocument = accountRepository.findById(offlineOrderDocument.getAccountId()).orElseThrow(() -> new BizException("Invalid params"));
         OfflineOrderDetailDto.Seller seller = new OfflineOrderDetailDto.Seller();
         seller.setId(accountDocument.getId());
-        seller.setName(accountDocument.getEmail()); 
+        seller.setName(accountDocument.getEmail());
         seller.setRole(accountDocument.getRole().toString());
 
         OfflineOrderDetailDto offlineOrderDto = new OfflineOrderDetailDto();
@@ -177,15 +177,18 @@ public class OfflineOrderService extends BaseService {
             detail.setBookName(bookDocument.getName());
             detail.setAuthor(bookDocument.getAuthorName());
             detail.setType(bookInventory.getType().name());
-            detail.setQuantity(bookInventory.getQuantity());
             detail.setPrice(bookInventory.getPrice());
             OfflineOrderDetailDocument offlineOrderDetailDocument = offlineOrderDetailDocuments.stream().filter(d -> d.getBookInventoryId().equals(bookInventory.getId())).findFirst().orElseGet(() -> null);
             detail.setCreatedAt(bookInventory.getCreatedAt());
             detail.setUpdatedAt(bookInventory.getUpdatedAt());
+            detail.setQuantity(offlineOrderDetailDocument != null ? offlineOrderDetailDocument.getQuantity() : 0);
             if (offlineOrderDetailDocument != null) {
                 detail.setDiscount(offlineOrderDetailDocument.getDiscount());
                 detail.setNote(offlineOrderDetailDocument.getNote());
-                detail.setTotalPrice(bookInventory.getPrice().multiply(BigDecimal.valueOf(bookInventory.getQuantity())).multiply(BigDecimal.valueOf((100 - offlineOrderDetailDocument.getDiscount()) / 100)));
+                detail.setTotalPrice(bookInventory.getPrice()
+                        .multiply(BigDecimal.valueOf(offlineOrderDetailDocument.getQuantity()))
+                        .multiply(BigDecimal.valueOf(100).subtract(BigDecimal.valueOf(offlineOrderDetailDocument.getDiscount())).divide(BigDecimal.valueOf(100)))
+                );
             }
             details.add(detail);
         }
