@@ -77,7 +77,7 @@ public class MailService {
         MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
         helper.setTo(to);
         helper.setSubject("[Mở hộp] Sách bạn yêu thích hiện mới có thêm hàng");
-        helper.setText("Truy cap ngay de mua them sách mới:"+ "https://hopsach.sytes.net/"+bookDocument, true);
+        helper.setText("Truy cap ngay de mua them sách mới:"+ "https://hopsach.sytes.net/book-detail/"+bookDocument, true);
         javaMailSender.send(mimeMessage);
     }
 
