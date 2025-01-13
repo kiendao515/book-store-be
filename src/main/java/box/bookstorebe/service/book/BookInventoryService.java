@@ -2,6 +2,7 @@ package box.bookstorebe.service.book;
 
 import box.bookstorebe.common.Const;
 import box.bookstorebe.document.account.AccountDocument;
+import box.bookstorebe.document.book.BookFavoriteDocument;
 import box.bookstorebe.document.bookstore.StoreDocument;
 import box.bookstorebe.document.book.BookDocument;
 import box.bookstorebe.document.book.BookInventory;
@@ -9,11 +10,14 @@ import box.bookstorebe.exception.BizException;
 import box.bookstorebe.model.book.bookreality.CreateBookAndInventory;
 import box.bookstorebe.model.book.bookreality.CreateBookRealityModel;
 import box.bookstorebe.model.book.bookreality.UpdateBookRealityModel;
+import box.bookstorebe.repository.book.BookFavoriteRepository;
 import box.bookstorebe.repository.book.BookInventoryRepository;
 import box.bookstorebe.repository.book.BookRepository;
 import box.bookstorebe.repository.bookstore.BookStoreRepository;
 import box.bookstorebe.repository.user.AccountRepository;
+import box.bookstorebe.service.common.MailService;
 import box.bookstorebe.util.GenerateDataUtils;
+import jakarta.mail.MessagingException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,6 +35,8 @@ public class BookInventoryService {
     private final BookRepository bookRepository;
     private final BookStoreRepository storeRepository;
     private final AccountRepository accountRepository;
+    private final BookFavoriteRepository bookFavoriteRepository;
+    private final MailService mailService;
 
     public List<BookInventory> getDetailBookInventory(String bookId, String storeId) throws BizException {
         if (bookId.isBlank() || storeId.isBlank()) throw new BizException("invalid params");
@@ -53,7 +59,7 @@ public class BookInventoryService {
         bookInventoryRepository.save(bookInventory);
     }
 
-    public void updateBookInventory(UpdateBookRealityModel bookRealityModel) throws BizException {
+    public void updateBookInventory(UpdateBookRealityModel bookRealityModel) throws BizException, MessagingException {
         // kiểm tra xem có inventory id k, nếu có thì là update còn k có thì là thêm mới
         Optional<BookInventory> bookInventoryOptional = bookInventoryRepository.findById(bookRealityModel.getId());
         BookInventory bookInventory;
@@ -78,6 +84,12 @@ public class BookInventoryService {
         bookInventory.setType(bookRealityModel.getType());
         bookInventory.setCoverImage(bookRealityModel.getCoverImage());
         bookInventory.setQuantity(bookRealityModel.getQuantity());
+        List<BookFavoriteDocument> list = bookFavoriteRepository.findAllByBookId(bookDocument.getId());
+        for(BookFavoriteDocument bookFavoriteDocument: list){
+            AccountDocument accountDocument = accountRepository.findById(bookFavoriteDocument.getAccountId()).get();
+            mailService.sendMailInStock(accountDocument.getEmail(), bookFavoriteDocument.getBookId());
+        }
+
         bookInventory.setPrice(bookRealityModel.getPrice());
         bookInventory.setStoreId(store.getId());
         bookInventory.setLocation(bookRealityModel.getLocation());

@@ -8,6 +8,7 @@ import box.bookstorebe.model.book.bookreality.CreateBookAndInventory;
 import box.bookstorebe.model.book.bookreality.CreateBookRealityModel;
 import box.bookstorebe.model.book.bookreality.UpdateBookRealityModel;
 import box.bookstorebe.service.book.BookInventoryService;
+import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -38,7 +39,7 @@ public class BookInventoryController {
     }
 
     @PutMapping()
-    public BaseResponse<String> updateBook(@RequestBody @Valid UpdateBookRealityModel bookModel) throws BizException {
+    public BaseResponse<String> updateBook(@RequestBody @Valid UpdateBookRealityModel bookModel) throws BizException, MessagingException {
         bookInventoryService.updateBookInventory(bookModel);
         return new BaseResponse<>(Const.ResultCode.SUCCESS, "Update reality book successfully");
     }

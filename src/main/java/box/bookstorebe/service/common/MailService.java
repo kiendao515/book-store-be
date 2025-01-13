@@ -72,6 +72,14 @@ public class MailService {
         email.setText(message);
         return email;
     }
+    public void sendMailInStock(String to, String bookDocument) throws MessagingException {
+        MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+        helper.setTo(to);
+        helper.setSubject("[Mở hộp] Sách bạn yêu thích hiện mới có thêm hàng");
+        helper.setText("Truy cap ngay de mua them sách mới:"+ "https://hopsach.sytes.net/"+bookDocument, true);
+        javaMailSender.send(mimeMessage);
+    }
 
     public void sendMailStoreInfo(String to, String pass, StoreDocument storeDocument) throws MessagingException {
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
