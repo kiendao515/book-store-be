@@ -111,7 +111,7 @@ public class BookStoreService {
         bookStoreDocument.setCommissionPercentage(bookStoreModel.getCommissionPercentage());
         bookStoreDocument.setCreatedAt(ZonedDateTime.now());
         bookStoreDocument.setUpdatedAt(ZonedDateTime.now());
-        AccountDocument acc = accountService.createAccount(new UserModel(bookStoreModel.getEmail(), bookStoreModel.getPassword(),null), Role.STORE, 1);
+        AccountDocument acc = accountService.createAccount(new UserModel(bookStoreModel.getEmail(), bookStoreModel.getPassword(), null), Role.STORE, 1);
         bookStoreDocument.setAccountId(acc.getId());
         bookStoreRepository.save(bookStoreDocument);
         mailService.sendMailStoreInfo(bookStoreModel.getEmail(), bookStoreModel.getPassword(), bookStoreDocument);
@@ -173,7 +173,7 @@ public class BookStoreService {
         StoreDocument storeDocument = bookStoreRepository.findById(id)
                 .orElseThrow(() -> new BizException("Invalid store id"));
 
-        List<BookInventory> bookInventories = bookInventoryRepository.findAllByStoreIdAndCreatedAtBetween(id, from, to);
+        List<BookInventory> bookInventories = bookInventoryRepository.findAllByStoreId(id);
 
         if (bookInventories.isEmpty()) {
             throw new BizException("No books found for the store id: " + id);
@@ -210,9 +210,17 @@ public class BookStoreService {
                         .toList();
                 int sold = itemsForInventory.stream().mapToInt(OrderItemDocument::getQuantity).sum();
                 int settled = itemsForInventory.stream()
-                        .filter(orderItem -> orderItem.getSettledStatus() == 1)
-                        .mapToInt(OrderItemDocument::getQuantity)
+                        .filter(orderItem -> {
+                            Integer settledStatus = orderItem.getSettledStatus();
+                            return settledStatus != null && settledStatus == 1;
+                        })
+                        .mapToInt(orderItem -> {
+                            // Kiểm tra null trong trường hợp `getQuantity` không tồn tại
+                            Integer quantity = orderItem.getQuantity();
+                            return quantity != null ? quantity : 0;
+                        })
                         .sum();
+
                 BigDecimal price = inventory.getPrice();
                 totalSettledAmount = totalSettledAmount.add(price.multiply(BigDecimal.valueOf(settled)));
                 totalNotSettledAmount = totalNotSettledAmount.add(price.multiply(BigDecimal.valueOf(sold - settled)));
@@ -319,7 +327,7 @@ public class BookStoreService {
         List<String> bookInventoryIds = inventories.stream().map(BookInventory::getId).toList();
         List<OrderItemDocument> orderItems = orderItemRepository.findAllByBookInventoryIdIn(bookInventoryIds);
         for (OrderItemDocument orderItem : orderItems) {
-            if (orderItem.getSettledStatus() == 0) {
+            if (orderItem.getSettledStatus() != null && orderItem.getSettledStatus() == 0) {
                 orderItem.setSettledStatus(1);
                 orderItemRepository.save(orderItem);
             }

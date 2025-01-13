@@ -91,7 +91,7 @@ public class HandleOrderStateSchedule {
             orderRepository.save(order);
         }
     }
-    @Scheduled(fixedRate = 30 * 60 * 1000L)
+    @Scheduled(fixedDelay = 60 * 5000L)
     @SchedulerLock(name = "updateShippingStatus", lockAtLeastFor = "1M", lockAtMostFor = "10M")
     @Transactional
     public void updateShippingStatus() {
@@ -133,18 +133,35 @@ public class HandleOrderStateSchedule {
     }
 
     private void updateOrderStatus(OrderDocument order, Integer newStatus) {
+        List<OrderDocument> listRelatedOrder = orderRepository.findAllByRelatedOrderId(order.getRelatedOrderId());
         switch (newStatus) {
             case -1:
                 order.setStatus(Const.OrderStatus.CANCEL);
+                listRelatedOrder.forEach(order1->{
+                    order1.setStatus(Const.OrderStatus.CANCEL);
+                });
+                orderRepository.saveAll(listRelatedOrder);
                 break;
             case 1:
                 order.setStatus(Const.OrderStatus.READY_TO_SHIP);
+                listRelatedOrder.forEach(order1->{
+                    order1.setStatus(Const.OrderStatus.READY_TO_SHIP);
+                });
+                orderRepository.saveAll(listRelatedOrder);
                 break;
             case 2,3:
                 order.setStatus(Const.OrderStatus.SHIPPING);
+                listRelatedOrder.forEach(order1->{
+                    order1.setStatus(Const.OrderStatus.SHIPPING);
+                });
+                orderRepository.saveAll(listRelatedOrder);
                 break;
             case 5,6,11:
                 order.setStatus(Const.OrderStatus.DONE);
+                listRelatedOrder.forEach(order1->{
+                    order1.setStatus(Const.OrderStatus.DONE);
+                });
+                orderRepository.saveAll(listRelatedOrder);
                 break;
             default:
                 log.warn("Unknown status '{}' for order '{}'", newStatus, order.getId());

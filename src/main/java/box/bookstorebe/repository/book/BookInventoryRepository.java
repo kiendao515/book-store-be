@@ -24,6 +24,7 @@ public interface BookInventoryRepository extends MongoRepository<BookInventory, 
 
     List<BookInventory> findAllByIdIn(List<String> bookIds);
     List<BookInventory> findAllByStoreIdAndCreatedAtBetween(String storeId, ZonedDateTime start, ZonedDateTime end);
+    List<BookInventory> findAllByStoreId(String id);
 
     List<BookInventory> findAllByBarcodeIn(List<String> barcodes);
 

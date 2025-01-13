@@ -23,7 +23,7 @@ public class UserPointSchedule {
     private final CustomerRepository userRepository;
     private final AccountRepository accountRepository;
 
-    @Scheduled(cron = "0 0 8 * * ?", zone = "UTC")
+//    @Scheduled(fixedDelay = 60 * 10000L)
     @SchedulerLock(name = "calculateUserPoint", lockAtLeastFor = "10M", lockAtMostFor = "20M")
     @Transactional
     public void calculateUserPoint() {

@@ -578,6 +578,12 @@ public class OrderService extends BaseService {
     private void handleOrderStatus(OrderDocument orderDocument, String currentStatus, String newStatus, String errorMessage) throws BizException {
         if (orderDocument.getStatus().equals(currentStatus)) {
             orderDocument.setStatus(newStatus);
+            List<OrderDocument> listRelatedOrders = orderRepository.findAllByRelatedOrderId(orderDocument.getRelatedOrderId());
+            listRelatedOrders.forEach(order->{
+                order.setStatus(newStatus);
+                order.setShippingCode(orderDocument.getShippingCode());
+            });
+            orderRepository.saveAll(listRelatedOrders);
         } else {
             throw new BizException(errorMessage);
         }

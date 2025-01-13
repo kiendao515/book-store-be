@@ -156,12 +156,12 @@ public class CommonClient {
 
     public GhtkOrderDetailDto getOrderStatus(String label){
         try {
-            String url = ghtkUrl + "/services/shipment/v2/" + label;
+            String url = ghtkUrlProd + "/services/shipment/v2/" + label;
             RestTemplate restTemplate = new RestTemplate();
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(null, headers);
-            headers.add("Token", ghtkToken);
+            headers.add("Token", ghtkTokenProd);
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
             log.info(response.toString());
             ObjectMapper objectMapper = new ObjectMapper();
